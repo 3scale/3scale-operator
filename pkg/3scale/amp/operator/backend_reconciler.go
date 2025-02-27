@@ -6,6 +6,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/pkg/upgrade"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -37,7 +38,26 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
 
-	err = r.ReconcileDeployment(backend.CronDeployment(ampImages.Options.BackendImage), reconcilers.DeploymentMutator(cronDeploymentMutator...))
+	if r.apiManager.IsBackendRedisTLSEnabled() {
+		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
+		cronDeploymentMutator = append(cronDeploymentMutator, r.backendRedisTLSEnvVarMutator)
+	} else {
+		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
+		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveEnvMutator)
+	}
+	if r.apiManager.IsQueuesRedisTLSEnabled() {
+		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSSyncVolumesAndMountsMutator)
+		cronDeploymentMutator = append(cronDeploymentMutator, r.backendQueuesRedisTLSEnvVarMutator)
+	} else {
+		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveVolumesAndMountsMutator)
+		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveEnvMutator)
+	}
+
+	cronDeployment, err := backend.CronDeployment(r.Context(), r.Client(), ampImages.Options.BackendImage)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileDeployment(cronDeployment, reconcilers.DeploymentMutator(cronDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -63,7 +83,26 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
 
-	err = r.ReconcileDeployment(backend.ListenerDeployment(ampImages.Options.BackendImage), reconcilers.DeploymentMutator(listenerDeploymentMutator...))
+	if r.apiManager.IsBackendRedisTLSEnabled() {
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, r.backendRedisTLSEnvVarMutator)
+	} else {
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveEnvMutator)
+	}
+	if r.apiManager.IsQueuesRedisTLSEnabled() {
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSSyncVolumesAndMountsMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, r.backendQueuesRedisTLSEnvVarMutator)
+	} else {
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveVolumesAndMountsMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveEnvMutator)
+	}
+
+	listenerDeployment, err := backend.ListenerDeployment(r.Context(), r.Client(), ampImages.Options.BackendImage)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileDeployment(listenerDeployment, reconcilers.DeploymentMutator(listenerDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -105,7 +144,26 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
 
-	err = r.ReconcileDeployment(backend.WorkerDeployment(ampImages.Options.BackendImage), reconcilers.DeploymentMutator(workerDeploymentMutator...))
+	if r.apiManager.IsBackendRedisTLSEnabled() {
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
+		workerDeploymentMutator = append(workerDeploymentMutator, r.backendRedisTLSEnvVarMutator)
+	} else {
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveEnvMutator)
+	}
+	if r.apiManager.IsQueuesRedisTLSEnabled() {
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSSyncVolumesAndMountsMutator)
+		workerDeploymentMutator = append(workerDeploymentMutator, r.backendQueuesRedisTLSEnvVarMutator)
+	} else {
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveVolumesAndMountsMutator)
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveEnvMutator)
+	}
+
+	workerDeployment, err := backend.WorkerDeployment(r.Context(), r.Client(), ampImages.Options.BackendImage)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileDeployment(workerDeployment, reconcilers.DeploymentMutator(workerDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -217,4 +275,38 @@ func containsAsyncDisable(m map[string]string, key, value string) bool {
 		return v == value
 	}
 	return false
+}
+
+func (r *BackendReconciler) backendRedisTLSEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	// Reconcile EnvVar only for Redis TLS
+	var changed bool
+
+	for _, envVar := range []string{
+		"CONFIG_REDIS_CA_FILE",
+		"CONFIG_REDIS_CERT",
+		"CONFIG_REDIS_PRIVATE_KEY",
+		"CONFIG_REDIS_SSL",
+	} {
+		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
+		changed = changed || tmpChanged
+	}
+
+	return changed, nil
+}
+
+func (r *BackendReconciler) backendQueuesRedisTLSEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	// Reconcile EnvVar only for Redis QUEUES TLS
+	var changed bool
+
+	for _, envVar := range []string{
+		"CONFIG_QUEUES_CA_FILE",
+		"CONFIG_QUEUES_CERT",
+		"CONFIG_QUEUES_PRIVATE_KEY",
+		"CONFIG_QUEUES_SSL",
+	} {
+		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
+		changed = changed || tmpChanged
+	}
+
+	return changed, nil
 }

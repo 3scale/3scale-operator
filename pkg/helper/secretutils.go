@@ -3,7 +3,6 @@ package helper
 import (
 	"context"
 	"fmt"
-
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -189,6 +188,27 @@ func IsSecretWatchedBy3scale(secret *v1.Secret) bool {
 
 	existingLabels := secret.Labels
 
+	if existingLabels != nil {
+		if _, ok := existingLabels["apimanager.apps.3scale.net/watched-by"]; ok {
+			return true
+		}
+	}
+
+	return false
+}
+
+func IsSecretWatchedBy3scaleBySecretName(client k8sclient.Client, secretName, namespace string) bool {
+	secret := &v1.Secret{}
+	secretKey := k8sclient.ObjectKey{
+		Name:      secretName,
+		Namespace: namespace,
+	}
+	err := client.Get(context.TODO(), secretKey, secret)
+	if err != nil {
+		return false
+	}
+
+	existingLabels := secret.Labels
 	if existingLabels != nil {
 		if _, ok := existingLabels["apimanager.apps.3scale.net/watched-by"]; ok {
 			return true

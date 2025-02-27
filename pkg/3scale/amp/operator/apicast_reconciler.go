@@ -784,6 +784,20 @@ func (r *ApicastReconciler) getSecretUIDs(ctx context.Context) (map[string]strin
 		})
 	}
 
+	if helper.IsSecretWatchedBy3scaleBySecretName(r.Client(), component.SystemSecretSystemRedisSecretName, r.apiManager.Namespace) {
+		secretKeys = append(secretKeys, client.ObjectKey{
+			Name:      component.SystemSecretSystemRedisSecretName,
+			Namespace: r.apiManager.Namespace,
+		})
+	}
+
+	if helper.IsSecretWatchedBy3scaleBySecretName(r.Client(), component.BackendSecretBackendRedisSecretName, r.apiManager.Namespace) {
+		secretKeys = append(secretKeys, client.ObjectKey{
+			Name:      component.BackendSecretBackendRedisSecretName,
+			Namespace: r.apiManager.Namespace,
+		})
+	}
+
 	uidMap := map[string]string{}
 	for idx := range secretKeys {
 		secret := &v1.Secret{}

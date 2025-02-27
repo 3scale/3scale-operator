@@ -1,6 +1,8 @@
 package component
 
 import (
+	"context"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -48,6 +50,17 @@ const (
 	BackendListenerMetricsPort = 9394
 )
 
+const (
+	ConfigRedisCaFilePath     = "/tls/backend-redis-ca.crt"
+	ConfigRedisClientCertPath = "/tls/backend-redis-client.crt"
+	ConfigRedisPrivateKeyPath = "/tls/backend-redis-private.key"
+
+	ConfigQueuesCaFilePath             = "/tls/queues/config-queues-ca.crt"
+	ConfigQueuesClientCertPath         = "/tls/queues/config-queues-client.crt"
+	ConfigQueuesPrivateKeyPath         = "/tls/queues/config-queues-private.key"
+	BackendRedisSecretResverAnnotation = "apimanager.apps.3scale.net/backend-redis-secret-resource-version"
+)
+
 var (
 	BackendWorkerMetricsPortStr   = strconv.FormatInt(BackendWorkerMetricsPort, 10)
 	BackendListenerMetricsPortStr = strconv.FormatInt(BackendListenerMetricsPort, 10)
@@ -61,7 +74,13 @@ func NewBackend(options *BackendOptions) *Backend {
 	return &Backend{Options: options}
 }
 
-func (backend *Backend) WorkerDeployment(containerImage string) *k8sappsv1.Deployment {
+func (backend *Backend) WorkerDeployment(ctx context.Context, k8sclient client.Client, containerImage string) (*k8sappsv1.Deployment, error) {
+	watchedSecretAnnotations, err := ComputeWatchedSecretAnnotations(ctx, k8sclient, BackendWorkerName, backend.Options.Namespace, backend)
+	if err != nil {
+		return nil, err
+	}
+	deploymentAnnotations := helper.MergeMapsStringString(watchedSecretAnnotations, backend.Options.WorkerPodTemplateAnnotations)
+
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
@@ -92,11 +111,12 @@ func (backend *Backend) WorkerDeployment(containerImage string) *k8sappsv1.Deplo
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      backend.Options.WorkerPodTemplateLabels,
-					Annotations: backend.Options.WorkerPodTemplateAnnotations,
+					Annotations: deploymentAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:    backend.Options.WorkerAffinity,
 					Tolerations: backend.Options.WorkerTolerations,
+					Volumes:     backend.backendVolumes(),
 					InitContainers: []v1.Container{
 						{
 							Name:  "backend-redis-svc",
@@ -107,7 +127,8 @@ func (backend *Backend) WorkerDeployment(containerImage string) *k8sappsv1.Deplo
 								"-c",
 								"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
 							},
-							Env: append(backend.buildBackendCommonEnv(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
+							VolumeMounts: backend.backendContainerVolumeMounts(),
+							Env:          append(backend.buildBackendCommonEnv(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
 						},
 					},
 					Containers: []v1.Container{
@@ -117,6 +138,7 @@ func (backend *Backend) WorkerDeployment(containerImage string) *k8sappsv1.Deplo
 							Args:            []string{"bin/3scale_backend_worker", "run"},
 							Env:             backend.buildBackendWorkerEnv(),
 							Resources:       backend.Options.WorkerResourceRequirements,
+							VolumeMounts:    backend.backendContainerVolumeMounts(),
 							ImagePullPolicy: v1.PullIfNotPresent,
 							Ports:           backend.workerPorts(),
 							LivenessProbe: &v1.Probe{
@@ -141,10 +163,16 @@ func (backend *Backend) WorkerDeployment(containerImage string) *k8sappsv1.Deplo
 				},
 			},
 		},
-	}
+	}, nil
 }
 
-func (backend *Backend) CronDeployment(containerImage string) *k8sappsv1.Deployment {
+func (backend *Backend) CronDeployment(ctx context.Context, k8sclient client.Client, containerImage string) (*k8sappsv1.Deployment, error) {
+	watchedSecretAnnotations, err := ComputeWatchedSecretAnnotations(ctx, k8sclient, BackendCronName, backend.Options.Namespace, backend)
+	if err != nil {
+		return nil, err
+	}
+	deploymentAnnotations := helper.MergeMapsStringString(watchedSecretAnnotations, backend.Options.CronPodTemplateAnnotations)
+
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
@@ -175,11 +203,12 @@ func (backend *Backend) CronDeployment(containerImage string) *k8sappsv1.Deploym
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      backend.Options.CronPodTemplateLabels,
-					Annotations: backend.Options.CronPodTemplateAnnotations,
+					Annotations: deploymentAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:    backend.Options.CronAffinity,
 					Tolerations: backend.Options.CronTolerations,
+					Volumes:     backend.backendVolumes(),
 					InitContainers: []v1.Container{
 						{
 							Name:  "backend-redis-svc",
@@ -190,7 +219,8 @@ func (backend *Backend) CronDeployment(containerImage string) *k8sappsv1.Deploym
 								"-c",
 								"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
 							},
-							Env: append(backend.buildBackendCommonEnv(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
+							VolumeMounts: backend.backendContainerVolumeMounts(),
+							Env:          append(backend.buildBackendCommonEnv(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
 						},
 					},
 					Containers: []v1.Container{
@@ -199,6 +229,7 @@ func (backend *Backend) CronDeployment(containerImage string) *k8sappsv1.Deploym
 							Image:           containerImage,
 							Args:            []string{"touch /tmp/healthy && backend-cron"},
 							Env:             backend.buildBackendCronEnv(),
+							VolumeMounts:    backend.backendContainerVolumeMounts(),
 							Resources:       backend.Options.CronResourceRequirements,
 							ImagePullPolicy: v1.PullIfNotPresent,
 							LivenessProbe: &v1.Probe{
@@ -218,10 +249,16 @@ func (backend *Backend) CronDeployment(containerImage string) *k8sappsv1.Deploym
 				},
 			},
 		},
-	}
+	}, nil
 }
 
-func (backend *Backend) ListenerDeployment(containerImage string) *k8sappsv1.Deployment {
+func (backend *Backend) ListenerDeployment(ctx context.Context, k8sclient client.Client, containerImage string) (*k8sappsv1.Deployment, error) {
+	watchedSecretAnnotations, err := ComputeWatchedSecretAnnotations(ctx, k8sclient, BackendListenerName, backend.Options.Namespace, backend)
+	if err != nil {
+		return nil, err
+	}
+	deploymentAnnotations := helper.MergeMapsStringString(watchedSecretAnnotations, backend.Options.ListenerPodTemplateAnnotations)
+
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
@@ -252,19 +289,21 @@ func (backend *Backend) ListenerDeployment(containerImage string) *k8sappsv1.Dep
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      backend.Options.ListenerPodTemplateLabels,
-					Annotations: backend.Options.ListenerPodTemplateAnnotations,
+					Annotations: deploymentAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:    backend.Options.ListenerAffinity,
 					Tolerations: backend.Options.ListenerTolerations,
+					Volumes:     backend.backendVolumes(),
 					Containers: []v1.Container{
 						{
-							Name:      BackendListenerName,
-							Image:     containerImage,
-							Args:      []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"},
-							Ports:     backend.listenerPorts(),
-							Env:       backend.buildBackendListenerEnv(),
-							Resources: backend.Options.ListenerResourceRequirements,
+							Name:         BackendListenerName,
+							Image:        containerImage,
+							Args:         []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"},
+							Ports:        backend.listenerPorts(),
+							Env:          backend.buildBackendListenerEnv(),
+							Resources:    backend.Options.ListenerResourceRequirements,
+							VolumeMounts: backend.backendContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
@@ -299,7 +338,7 @@ func (backend *Backend) ListenerDeployment(containerImage string) *k8sappsv1.Dep
 				},
 			},
 		},
-	}
+	}, nil
 }
 
 func (backend *Backend) ListenerService() *v1.Service {
@@ -372,7 +411,8 @@ func (backend *Backend) EnvironmentConfigMap() *v1.ConfigMap {
 }
 
 func (backend *Backend) buildBackendCommonEnv() []v1.EnvVar {
-	return []v1.EnvVar{
+	result := []v1.EnvVar{}
+	result = append(result,
 		helper.EnvVarFromSecret("CONFIG_REDIS_PROXY", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageURLFieldName),
 		helper.EnvVarFromSecret("CONFIG_REDIS_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelHostsFieldName),
 		helper.EnvVarFromSecret("CONFIG_REDIS_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelRoleFieldName),
@@ -380,7 +420,14 @@ func (backend *Backend) buildBackendCommonEnv() []v1.EnvVar {
 		helper.EnvVarFromSecret("CONFIG_QUEUES_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesSentinelHostsFieldName),
 		helper.EnvVarFromSecret("CONFIG_QUEUES_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesSentinelRoleFieldName),
 		helper.EnvVarFromConfigMap("RACK_ENV", "backend-environment", "RACK_ENV"),
+	)
+	if backend.Options.BackendRedisTLSEnabled {
+		result = append(result, backend.BackendRedisTLSEnvVars()...)
 	}
+	if backend.Options.QueuesRedisTLSEnabled {
+		result = append(result, backend.QueuesRedisTLSEnvVars()...)
+	}
+	return result
 }
 
 func (backend *Backend) buildBackendWorkerEnv() []v1.EnvVar {
@@ -422,6 +469,7 @@ func (backend *Backend) buildBackendListenerEnv() []v1.EnvVar {
 			v1.EnvVar{Name: "CONFIG_LISTENER_PROMETHEUS_METRICS_ENABLED", Value: "true"},
 		)
 	}
+
 	return result
 }
 
@@ -538,4 +586,104 @@ func (backend *Backend) workerPorts() []v1.ContainerPort {
 	}
 
 	return ports
+}
+
+func (backend *Backend) BackendRedisTLSEnvVars() []v1.EnvVar {
+	return []v1.EnvVar{
+		helper.EnvVarFromValue("CONFIG_REDIS_CA_FILE", ConfigRedisCaFilePath),
+		helper.EnvVarFromValue("CONFIG_REDIS_CERT", ConfigRedisClientCertPath),
+		helper.EnvVarFromValue("CONFIG_REDIS_PRIVATE_KEY", ConfigRedisPrivateKeyPath),
+		helper.EnvVarFromValue("CONFIG_REDIS_SSL", "1"),
+	}
+}
+func (backend *Backend) QueuesRedisTLSEnvVars() []v1.EnvVar {
+	return []v1.EnvVar{
+		helper.EnvVarFromValue("CONFIG_QUEUES_CA_FILE", ConfigQueuesCaFilePath),
+		helper.EnvVarFromValue("CONFIG_QUEUES_CERT", ConfigQueuesClientCertPath),
+		helper.EnvVarFromValue("CONFIG_QUEUES_PRIVATE_KEY", ConfigQueuesPrivateKeyPath),
+		helper.EnvVarFromValue("CONFIG_QUEUES_SSL", "1"),
+	}
+}
+
+func (backend *Backend) backendVolumes() []v1.Volume {
+	res := []v1.Volume{}
+
+	if backend.Options.BackendRedisTLSEnabled {
+		backendRedisTlsVolume := v1.Volume{
+			Name: "backend-redis-tls",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: BackendSecretBackendRedisSecretName,
+					Items: []v1.KeyToPath{
+						{
+							Key:  "REDIS_SSL_CA",
+							Path: "backend-redis-ca.crt",
+						},
+						{
+							Key:  "REDIS_SSL_CERT",
+							Path: "backend-redis-client.crt",
+						},
+						{
+							Key:  "REDIS_SSL_KEY",
+							Path: "backend-redis-private.key",
+						},
+					},
+				},
+			},
+		}
+		res = append(res, backendRedisTlsVolume)
+	}
+	if backend.Options.QueuesRedisTLSEnabled {
+		backendRedisTlsVolume := v1.Volume{
+			Name: "queues-redis-tls",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: BackendSecretBackendRedisSecretName,
+					Items: []v1.KeyToPath{
+						{
+							Key:  "REDIS_SSL_QUEUES_CA",
+							Path: "config-queues-ca.crt",
+						},
+						{
+							Key:  "REDIS_SSL_QUEUES_CERT",
+							Path: "config-queues-client.crt",
+						},
+						{
+							Key:  "REDIS_SSL_QUEUES_KEY",
+							Path: "config-queues-private.key",
+						},
+					},
+				},
+			},
+		}
+		res = append(res, backendRedisTlsVolume)
+	}
+	return res
+}
+
+func (backend *Backend) backendContainerVolumeMounts() []v1.VolumeMount {
+	res := []v1.VolumeMount{}
+	if backend.Options.BackendRedisTLSEnabled {
+		res = append(res, backend.backendRedisContainerVolumeMounts())
+	}
+	if backend.Options.QueuesRedisTLSEnabled {
+		res = append(res, backend.queuesRedisContainerVolumeMounts())
+	}
+	return res
+}
+
+func (backend *Backend) backendRedisContainerVolumeMounts() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      "backend-redis-tls",
+		ReadOnly:  false,
+		MountPath: "/tls",
+	}
+}
+
+func (backend *Backend) queuesRedisContainerVolumeMounts() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      "queues-redis-tls",
+		ReadOnly:  false,
+		MountPath: "/tls/queues",
+	}
 }
