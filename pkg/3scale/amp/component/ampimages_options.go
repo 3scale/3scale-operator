@@ -29,7 +29,5 @@ func (a *AmpImagesOptions) Validate() error {
 }
 
 func AmpImagesDefaultImagePullSecrets() []v1.LocalObjectReference {
-	return []v1.LocalObjectReference{
-		v1.LocalObjectReference{Name: "threescale-registry-auth"},
-	}
+	return []v1.LocalObjectReference{}
 }
