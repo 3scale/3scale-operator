@@ -135,9 +135,5 @@ func DefaultZyncDatabaseContainerResourceRequirements() v1.ResourceRequirements 
 }
 
 func DefaultZyncQueServiceAccountImagePullSecrets() []v1.LocalObjectReference {
-	return []v1.LocalObjectReference{
-		v1.LocalObjectReference{
-			Name: "threescale-registry-auth",
-		},
-	}
+	return []v1.LocalObjectReference{}
 }
