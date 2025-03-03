@@ -417,11 +417,7 @@ func (b *APIManagerRestore) ServiceAccount() *v1.ServiceAccount {
 			Namespace: b.options.Namespace,
 		},
 		// TODO: instead of default one, read from the CR
-		ImagePullSecrets: []v1.LocalObjectReference{
-			v1.LocalObjectReference{
-				Name: "threescale-registry-auth",
-			},
-		},
+		ImagePullSecrets: []v1.LocalObjectReference{},
 	}
 }
 
