@@ -2,9 +2,8 @@ package helper
 
 import (
 	"context"
-	"strconv"
-	"strings"
 
+	"github.com/blang/semver/v4"
 	"github.com/go-logr/logr"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -21,29 +20,20 @@ const (
 	RHTThreescaleBackendRedisRequirements = "rht_backend_redis_requirements"
 )
 
-func CompareVersions(a, b string) bool {
-	// Split version strings into components
-	componentsA := strings.Split(a, ".")
-	componentsB := strings.Split(b, ".")
-
-	// Compare major versions
-	majorA, _ := strconv.Atoi(componentsA[0])
-	majorB, _ := strconv.Atoi(componentsB[0])
-	if majorA != majorB {
-		return majorB > majorA // Return false if b's major version is less than a's major version
+func CompareVersions(required, current string) (bool, error) {
+	currentVersion, err := semver.ParseTolerant(current)
+	if err != nil {
+		return false, err
+	}
+	requiredVersion, err := semver.ParseTolerant(required)
+	if err != nil {
+		return false, err
 	}
 
-	// Compare minor versions
-	minorA, _ := strconv.Atoi(componentsA[1])
-	minorB, _ := strconv.Atoi(componentsB[1])
-	if minorA != minorB {
-		return minorB > minorA // Return false if b's minor version is less than a's minor version
+	if requiredVersion.LTE(currentVersion) {
+		return true, nil
 	}
-
-	// Compare patch versions
-	patchA, _ := strconv.Atoi(componentsA[2])
-	patchB, _ := strconv.Atoi(componentsB[2])
-	return patchB >= patchA // Return false if b's patch version is greater than a's patch version
+	return false, nil
 }
 
 func fetchSecret(k8sclient client.Client, secretName, namespace string) (*v1.Secret, error) {

@@ -1,113 +1,168 @@
 package helper
 
 import (
+	"context"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
-	"github.com/go-logr/logr"
+	goredis "github.com/redis/go-redis/v9"
 	v1 "k8s.io/api/core/v1"
 )
 
-func reconcileSystemRedisSecret(secret v1.Secret) Redis {
-	redis := Redis{}
+const (
+	// Timeout for Read operations.
+	//  it's just for sanity.
+	defaultReadTimeout = 3 * time.Second
+	// Timeout for Write operations.
+	defaultWriteTimeout = 3 * time.Second
+	// Timeout before killing Idle connections in the pool.
+	defaultIdleTimeout = 3 * time.Minute
+)
 
-	sentinelHosts, url := retrieveSystemHostAndUrl(secret)
-	if sentinelHosts != "" {
-		redis.sentinelHost, redis.sentinelPort, redis.sentinelPassword = retrieveSentinelRedisHostPortAndPassword(sentinelHosts)
-		redis.sentinelGroup = retrieveSentinelRedisGroup(url)
-		if redis.sentinelPort == "" {
-			redis.sentinelPort = "6379"
+type RedisSecretKey struct {
+	SentinelURL string
+	URL         string
+}
+
+// Convert secret values to RedisConfig
+func reconcileRedisSecret(secret v1.Secret, config RedisSecretKey) *RedisConfig {
+	return &RedisConfig{
+		SentinelURL: string(secret.Data[config.SentinelURL]),
+		URL:         string(secret.Data[config.URL]),
+	}
+}
+
+func reconcileSystemRedisSecret(secret v1.Secret) *RedisConfig {
+	config := RedisSecretKey{
+		SentinelURL: systemRedisSentinelHosts,
+		URL:         systemRedisUrl,
+	}
+	return reconcileRedisSecret(secret, config)
+}
+
+func reconcileStorageRedisSecret(secret v1.Secret) *RedisConfig {
+	config := RedisSecretKey{
+		SentinelURL: backendRedisStorageSentinelHosts,
+		URL:         backendRedisStorageURL,
+	}
+	return reconcileRedisSecret(secret, config)
+}
+
+func reconcileQueuesRedisSecret(secret v1.Secret) *RedisConfig {
+	config := RedisSecretKey{
+		SentinelURL: backendRedisQueuesSentinelHosts,
+		URL:         backendRedisQueuesURL,
+	}
+	return reconcileRedisSecret(secret, config)
+}
+
+type RedisConfig struct {
+	URL            string
+	SentinelURL    string
+	SentinelMaster string
+}
+
+func Configure(cfg *RedisConfig) (*goredis.Client, error) {
+	if cfg == nil {
+		return nil, nil
+	}
+
+	var rdb *goredis.Client
+	var err error
+
+	if cfg.SentinelURL != "" {
+		rdb, err = configureRedisSentinel(cfg)
+	} else {
+		rdb, err = configureRedis(cfg)
+	}
+	return rdb, err
+}
+
+func configureRedis(cfg *RedisConfig) (*goredis.Client, error) {
+	opts, err := goredis.ParseURL(cfg.URL)
+	if err != nil {
+		return nil, err
+	}
+
+	opts.ReadTimeout = defaultReadTimeout
+	opts.WriteTimeout = defaultWriteTimeout
+	opts.ConnMaxIdleTime = defaultIdleTimeout
+
+	return goredis.NewClient(opts), nil
+}
+
+func configureRedisSentinel(cfg *RedisConfig) (*goredis.Client, error) {
+	opts, err := sentinelOptions(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	client := goredis.NewFailoverClient(opts)
+
+	return client, nil
+}
+
+func sentinelOptions(cfg *RedisConfig) (*goredis.FailoverOptions, error) {
+	master_url, err := url.Parse(cfg.URL)
+	if err != nil {
+		return nil, err
+	}
+
+	username := master_url.User.Username()
+	password, _ := master_url.User.Password()
+
+	urls := strings.Split(cfg.SentinelURL, ",")
+	if len(urls) == 0 {
+		return nil, fmt.Errorf("invalid sentinel URLs")
+	}
+
+	sentinels := make([]string, len(urls))
+
+	// 3scale system does not support username/password in the sentinel URL.
+	for i := range urls {
+		url := strings.TrimSpace(urls[i])
+		opt, err := goredis.ParseURL(url)
+		if err != nil {
+			return nil, err
 		}
-	}
-	redis.redisHost, redis.redisPort, redis.redisPassword = retrieveRedisHostPortPassword(url)
-	if redis.redisPort == "" {
-		redis.redisPort = "6379"
+
+		sentinels[i] = opt.Addr
 	}
 
-	return redis
+	opts := &goredis.FailoverOptions{
+		MasterName:      master_url.Hostname(),
+		SentinelAddrs:   sentinels,
+		Username:        username,
+		Password:        password,
+		ConnMaxIdleTime: defaultIdleTimeout,
+		ReadTimeout:     defaultReadTimeout,
+		WriteTimeout:    defaultWriteTimeout,
+	}
+
+	return opts, nil
 }
 
-func reconcileQueuesRedisSecret(secret v1.Secret) Redis {
-	redis := Redis{}
+func verifyRedisVersion(client *goredis.Client, requiredVersion string) (bool, error) {
+	info, err := client.Info(context.Background(), "server").Result()
 
-	sentinelHosts, url := retrieveQueuesHostAndUrl(secret)
-	if sentinelHosts != "" {
-		redis.sentinelHost, redis.sentinelPort, redis.sentinelPassword = retrieveSentinelRedisHostPortAndPassword(sentinelHosts)
-		redis.sentinelGroup = retrieveSentinelRedisGroup(url)
-		if redis.sentinelPort == "" {
-			redis.sentinelPort = "6379"
-		}
-	}
-	redis.redisHost, redis.redisPort, redis.redisPassword = retrieveRedisHostPortPassword(url)
-	if redis.redisPort == "" {
-		redis.redisPort = "6379"
+	if err != nil {
+		return false, fmt.Errorf("failed to execute command to retrieve the Redis version - error: %w", err)
 	}
 
-	return redis
-}
-
-func reconcileStorageRedisSecret(secret v1.Secret) Redis {
-	redis := Redis{}
-
-	sentinelHosts, url := retrieveStorageHostAndUrl(secret)
-	if sentinelHosts != "" {
-		redis.sentinelHost, redis.sentinelPort, redis.sentinelPassword = retrieveSentinelRedisHostPortAndPassword(sentinelHosts)
-		redis.sentinelGroup = retrieveSentinelRedisGroup(url)
-		if redis.sentinelPort == "" {
-			redis.sentinelPort = "6379"
-		}
-	}
-	redis.redisHost, redis.redisPort, redis.redisPassword = retrieveRedisHostPortPassword(url)
-	if redis.redisPort == "" {
-		redis.redisPort = "6379"
+	currentRedisVersion, err := retrieveCurrentVersionOfRedis(info)
+	if err != nil {
+		return false, fmt.Errorf("failed to retrieve current version of system Redis from the cli command - error: %w", err)
 	}
 
-	return redis
-}
-
-func retrieveQueuesHostAndUrl(secret v1.Secret) (string, string) {
-	return string(secret.Data[backendRedisQueuesSentinelHosts]), string(secret.Data[backendRedisQueuesURL])
-}
-
-func retrieveStorageHostAndUrl(secret v1.Secret) (string, string) {
-	return string(secret.Data[backendRedisStorageSentinelHosts]), string(secret.Data[backendRedisStorageURL])
-}
-
-func retrieveSystemHostAndUrl(secret v1.Secret) (string, string) {
-	return string(secret.Data[systemRedisSentinelHosts]), string(secret.Data[systemRedisUrl])
-}
-
-func extractPassword(input string) string {
-	pattern := `^redis://(?:[^:@]*:)?([^@]*)@`
-	re := regexp.MustCompile(pattern)
-	matches := re.FindStringSubmatch(input)
-	var password string
-	if len(matches) > 1 {
-		password = matches[1]
+	redisVersionConfirmed, err := CompareVersions(requiredVersion, currentRedisVersion)
+	if err != nil {
+		return false, err
 	}
 
-	return password
-}
-
-func retrieveSentinelRedisGroup(input string) string {
-	if strings.HasPrefix(input, "redis://") {
-		input = strings.TrimPrefix(input, "redis://")
-		if strings.Contains(input, "@") {
-			input = input[strings.Index(input, "@")+1:]
-		}
-		parts := strings.Split(input, "/")
-		hostParts := strings.Split(parts[0], ":")
-		return hostParts[0]
-	}
-
-	if strings.Contains(input, ":") && strings.Contains(input, "@") {
-		input = input[strings.Index(input, "@")+1:]
-	}
-
-	parts := strings.Split(input, "/")
-	hostParts := strings.Split(parts[0], ":")
-	return hostParts[0]
+	return redisVersionConfirmed, nil
 }
 
 func retrieveCurrentVersionOfRedis(stdString string) (string, error) {
@@ -125,120 +180,4 @@ func retrieveCurrentVersionOfRedis(stdString string) (string, error) {
 	}
 
 	return currentRedisVersion, nil
-}
-
-func executeRedisCliCommand(pod v1.Pod, command string, logger logr.Logger) (string, error) {
-	redisCommand := []string{"/bin/bash", "-c", command}
-	podExecutor := NewPodExecutor(logger)
-	stdout, stderr, err := podExecutor.ExecuteRemoteCommand(pod.Namespace, pod.Name, redisCommand)
-	if err != nil {
-		return stdout, err
-	}
-	if stderr != "" {
-		return "", fmt.Errorf("error when executing pod exec command against redis")
-	}
-
-	return stdout, nil
-}
-
-func retrieveRedisHostPortPassword(input string) (string, string, string) {
-	var host string
-	var port string
-	var password string
-	re := regexp.MustCompile(`^(?:redis://)?(?::([^@]+)@)?([^:/]+)(?::(\d+))?`)
-
-	matches := re.FindStringSubmatch(input)
-
-	if len(matches) >= 3 {
-		password = matches[1]
-		host = matches[2]
-	}
-	if len(matches) >= 4 {
-		port = matches[3]
-	}
-
-	return host, port, password
-}
-
-func retrieveSentinelRedisHostPortAndPassword(secretDataString string) (string, string, string) {
-	sentinelHost, sentinelPort, sentinelPassword := retrieveFirstSentinelHostPortPassword(string(secretDataString))
-	return sentinelHost, sentinelPort, sentinelPassword
-}
-
-func retrieveFirstSentinelHostPortPassword(hosts string) (string, string, string) {
-	addresses := strings.Split(hosts, ",")
-	if len(addresses) == 0 {
-		return "", "", ""
-	}
-
-	for i := range addresses {
-		addresses[i] = strings.TrimSpace(addresses[i])
-	}
-
-	var hostParts []string
-	if strings.Contains(addresses[0], "://") {
-		parts := strings.SplitN(addresses[0], "://", 2)
-		if len(parts) != 2 {
-			return "", "", ""
-		}
-		hostParts = strings.Split(parts[1], "@")
-	} else {
-		hostParts = strings.Split(addresses[0], "@")
-	}
-
-	var password string
-	if len(hostParts) == 1 {
-		hostParts = append([]string{""}, hostParts[0])
-	} else {
-		credentials := strings.Split(hostParts[0], ":")
-		if len(credentials) != 2 {
-			return "", "", ""
-		}
-		password = credentials[1]
-	}
-
-	hostPort := strings.Split(hostParts[len(hostParts)-1], ":")
-	if len(hostPort) == 2 {
-		return hostPort[0], hostPort[1], password
-	} else if len(hostPort) == 1 {
-		return hostPort[0], "", password
-	} else {
-		return "", "", password
-	}
-}
-
-func parseRedisSentinelResponse(response string) (string, string) {
-	lines := strings.Split(strings.TrimSpace(response), "\r\n")
-
-	var ipAddress, port string
-
-	for _, line := range lines {
-		parts := strings.Split(line, " ")
-		if len(parts) >= 2 {
-			switch parts[0] {
-			case "1)":
-				ipAddress = strings.Trim(parts[1], "\"")
-			case "2)":
-				port = strings.Trim(parts[1], "\"")
-			}
-		}
-	}
-
-	return ipAddress, port
-}
-
-func retrieveRedisSentinelCommand(host, port, password, redisGroup string) string {
-	if password != "" {
-		return fmt.Sprintf("redis-cli -h %s -p %s -a %s sentinel get-master-addr-by-name %s", host, port, password, redisGroup)
-	} else {
-		return fmt.Sprintf("redis-cli -h %s -p %s sentinel get-master-addr-by-name %s", host, port, redisGroup)
-	}
-}
-
-func retrieveRedisCliCommand(host, port, redisInstancePass string) string {
-	if redisInstancePass != "" {
-		return fmt.Sprintf("redis-cli -h %s -p %s -a %s INFO SERVER | grep redis_version", host, port, redisInstancePass)
-	} else {
-		return fmt.Sprintf("redis-cli -h %s -p %s INFO SERVER | grep redis_version", host, port)
-	}
 }
