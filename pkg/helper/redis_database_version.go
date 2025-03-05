@@ -9,12 +9,37 @@ import (
 )
 
 const (
-	systemRedisSentinelHosts         = "SENTINEL_HOSTS"
-	systemRedisUrl                   = "URL"
-	backendRedisQueuesSentinelHosts  = "REDIS_QUEUES_SENTINEL_HOSTS"
-	backendRedisStorageSentinelHosts = "REDIS_STORAGE_SENTINEL_HOSTS"
-	backendRedisQueuesURL            = "REDIS_QUEUES_URL"
-	backendRedisStorageURL           = "REDIS_STORAGE_URL"
+	systemRedisUrl              = "URL"
+	systemRedisUsername         = "REDIS_USERNAME"
+	systemRedisPassword         = "REDIS_PASSWORD"
+	systemRedisSentinelHosts    = "SENTINEL_HOSTS"
+	systemRedisSentinelUsername = "REDIS_SENTINEL_USERNAME"
+	systemRedisSentinelPassword = "REDIS_SENTINEL_PASSWORD"
+	systemRedisCA               = "REDIS_SSL_CA"
+	systemRedisCertificate      = "REDIS_SSL_CERT"
+	systemRedisKey              = "REDIS_SSL_KEY"
+
+	backendRedisQueuesURL              = "REDIS_QUEUES_URL"
+	backendRedisQueuesUsername         = "REDIS_QUEUES_USERNAME"
+	backendRedisQueuesPassword         = "REDIS_QUEUES_PASSWORD"
+	backendRedisQueuesSentinelHosts    = "REDIS_QUEUES_SENTINEL_HOSTS"
+	backendRedisQueuesSentinelRole     = "REDIS_QUEUES_SENTINEL_ROLE"
+	backendRedisQueuesSentinelUsername = "REDIS_QUEUES_SENTINEL_USERNAME"
+	backendRedisQueuesSentinelPassword = "REDIS_QUEUES_SENTINEL_PASSWORD"
+	backendRedisQueuesCA               = "REDIS_SSL_CA"
+	backendRedisQueuesCertificate      = "REDIS_SSL_CERT"
+	backendRedisQueuesKey              = "REDIS_SSL_KEY"
+
+	backendRedisStorageURL              = "REDIS_STORAGE_URL"
+	backendRedisStorageUsername         = "REDIS_STORAGE_USERNAME"
+	backendRedisStoragePassword         = "REDIS_STORAGE_PASSWORD"
+	backendRedisStorageSentinelHosts    = "REDIS_STORAGE_SENTINEL_HOSTS"
+	backendRedisStorageSentinelRole     = "REDIS_STORAGE_SENTINEL_ROLE"
+	backendRedisStorageSentinelUsername = "REDIS_STORAGE_SENTINEL_USERNAME"
+	backendRedisStorageSentinelPassword = "REDIS_STORAGE_SENTINEL_PASSWORD"
+	backendRedisStorageCA               = "REDIS_SSL_STORAGE_CA"
+	backendRedisStorageCertificate      = "REDIS_SSL_STORAGE_CERT"
+	backendRedisStorageKey              = "REDIS_SSL_STORAGE_KEY"
 )
 
 func VerifySystemRedis(k8sclient client.Client, reqConfigMap *v1.ConfigMap, systemRedisRequirement string, apimInstance *appsv1alpha1.APIManager, logger logr.Logger) (bool, error) {

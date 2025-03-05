@@ -2,6 +2,7 @@ package helper
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -23,46 +24,88 @@ const (
 )
 
 type RedisSecretKey struct {
-	SentinelURL string
-	URL         string
+	SentinelURL      string
+	SentinelUsername string
+	SentinelPassword string
+	URL              string
+	Username         string
+	Password         string
+	CACertificate    string
+	Cert             string
+	Key              string
 }
 
 // Convert secret values to RedisConfig
 func reconcileRedisSecret(secret v1.Secret, config RedisSecretKey) *RedisConfig {
 	return &RedisConfig{
-		SentinelURL: string(secret.Data[config.SentinelURL]),
-		URL:         string(secret.Data[config.URL]),
+		SentinelURL:      string(secret.Data[config.SentinelURL]),
+		SentinelUsername: string(secret.Data[config.SentinelUsername]),
+		SentinelPassword: string(secret.Data[config.SentinelPassword]),
+		URL:              string(secret.Data[config.URL]),
+		Username:         string(secret.Data[config.Username]),
+		Password:         string(secret.Data[config.Password]),
+		TLS: &TLSConfig{
+			CACertificate: string(secret.Data[config.CACertificate]),
+			Certificate:   string(secret.Data[config.Cert]),
+			Key:           string(secret.Data[config.Key]),
+		},
 	}
 }
 
 func reconcileSystemRedisSecret(secret v1.Secret) *RedisConfig {
 	config := RedisSecretKey{
-		SentinelURL: systemRedisSentinelHosts,
-		URL:         systemRedisUrl,
+		SentinelURL:      systemRedisSentinelHosts,
+		SentinelUsername: systemRedisSentinelUsername,
+		SentinelPassword: systemRedisSentinelPassword,
+		URL:              systemRedisUrl,
+		Username:         systemRedisUsername,
+		Password:         systemRedisPassword,
+		CACertificate:    systemRedisCA,
+		Cert:             systemRedisCertificate,
+		Key:              systemRedisKey,
 	}
 	return reconcileRedisSecret(secret, config)
 }
 
 func reconcileStorageRedisSecret(secret v1.Secret) *RedisConfig {
 	config := RedisSecretKey{
-		SentinelURL: backendRedisStorageSentinelHosts,
-		URL:         backendRedisStorageURL,
+		SentinelURL:      backendRedisStorageSentinelHosts,
+		SentinelUsername: backendRedisStorageSentinelUsername,
+		SentinelPassword: backendRedisStorageSentinelPassword,
+		URL:              backendRedisStorageURL,
+		Username:         backendRedisStorageUsername,
+		Password:         backendRedisStoragePassword,
+		CACertificate:    backendRedisStorageCA,
+		Cert:             backendRedisStorageCertificate,
+		Key:              backendRedisStorageKey,
 	}
 	return reconcileRedisSecret(secret, config)
 }
 
 func reconcileQueuesRedisSecret(secret v1.Secret) *RedisConfig {
 	config := RedisSecretKey{
-		SentinelURL: backendRedisQueuesSentinelHosts,
-		URL:         backendRedisQueuesURL,
+		SentinelURL:      backendRedisQueuesSentinelHosts,
+		SentinelUsername: backendRedisQueuesSentinelUsername,
+		SentinelPassword: backendRedisQueuesSentinelPassword,
+		URL:              backendRedisQueuesURL,
+		Username:         backendRedisQueuesUsername,
+		Password:         backendRedisQueuesPassword,
+		CACertificate:    backendRedisQueuesCA,
+		Cert:             backendRedisQueuesCertificate,
+		Key:              backendRedisQueuesKey,
 	}
 	return reconcileRedisSecret(secret, config)
 }
 
 type RedisConfig struct {
-	URL            string
-	SentinelURL    string
-	SentinelMaster string
+	URL              string
+	Username         string
+	Password         string
+	SentinelURL      string
+	SentinelMaster   string
+	SentinelUsername string
+	SentinelPassword string
+	TLS              *TLSConfig
 }
 
 func Configure(cfg *RedisConfig) (*goredis.Client, error) {
@@ -90,6 +133,24 @@ func configureRedis(cfg *RedisConfig) (*goredis.Client, error) {
 	opts.ReadTimeout = defaultReadTimeout
 	opts.WriteTimeout = defaultWriteTimeout
 	opts.ConnMaxIdleTime = defaultIdleTimeout
+
+	if cfg.Username != "" {
+		opts.Username = cfg.Username
+	}
+
+	if cfg.Password != "" {
+		opts.Password = cfg.Password
+	}
+
+	if cfg.TLS != nil && cfg.TLS.Enabled {
+		tlsConfig, err := LoadCerts(cfg.TLS)
+
+		if err != nil {
+			return nil, err
+		}
+
+		opts.TLSConfig = tlsConfig
+	}
 
 	return goredis.NewClient(opts), nil
 }
@@ -133,13 +194,26 @@ func sentinelOptions(cfg *RedisConfig) (*goredis.FailoverOptions, error) {
 	}
 
 	opts := &goredis.FailoverOptions{
-		MasterName:      master_url.Hostname(),
-		SentinelAddrs:   sentinels,
-		Username:        username,
-		Password:        password,
-		ConnMaxIdleTime: defaultIdleTimeout,
-		ReadTimeout:     defaultReadTimeout,
-		WriteTimeout:    defaultWriteTimeout,
+		MasterName:       master_url.Hostname(),
+		SentinelAddrs:    sentinels,
+		Username:         username,
+		Password:         password,
+		SentinelUsername: cfg.SentinelUsername,
+		SentinelPassword: cfg.SentinelPassword,
+		ConnMaxIdleTime:  defaultIdleTimeout,
+		ReadTimeout:      defaultReadTimeout,
+		WriteTimeout:     defaultWriteTimeout,
+	}
+
+	if cfg.TLS != nil && cfg.TLS.Enabled {
+		var tlsConfig *tls.Config
+
+		tlsConfig, err := LoadCerts(cfg.TLS)
+		if err != nil {
+			return nil, err
+		}
+
+		opts.TLSConfig = tlsConfig
 	}
 
 	return opts, nil
