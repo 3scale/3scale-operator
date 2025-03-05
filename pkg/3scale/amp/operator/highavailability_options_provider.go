@@ -7,6 +7,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
 type HighAvailabilityOptionsProvider struct {
@@ -125,6 +126,30 @@ func (h *HighAvailabilityOptionsProvider) setBackendRedisOptions() error {
 		*option.field = val
 	}
 
+	// Check Redis URL
+	var redisUrlsErrors []string
+	redisUrl, err := h.secretSource.FieldValueFromRequiredSecret(component.BackendSecretBackendRedisSecretName, component.BackendSecretBackendRedisStorageURLFieldName, "")
+	if err != nil {
+		return err
+	}
+	err = helper.ValidateRedisURLPrefix(redisUrl, h.apimanager.IsBackendRedisTLSEnabled())
+	if err != nil {
+		redisUrlsErrors = append(redisUrlsErrors, fmt.Sprintf("ERROR: Failed to validate Redis URL prefix for secret '%s' and field '%s': %s : %v",
+			component.BackendSecretBackendRedisSecretName, component.BackendSecretBackendRedisStorageURLFieldName, redisUrl, err))
+	}
+	redisUrl, err = h.secretSource.FieldValueFromRequiredSecret(component.BackendSecretBackendRedisSecretName, component.BackendSecretBackendRedisQueuesURLFieldName, "")
+	if err != nil {
+		return err
+	}
+	err = helper.ValidateRedisURLPrefix(redisUrl, h.apimanager.IsQueuesRedisTLSEnabled())
+	if err != nil {
+		redisUrlsErrors = append(redisUrlsErrors, fmt.Sprintf("ERROR: Failed to validate Redis URL prefix for secret '%s' and field '%s': %s : %v",
+			component.BackendSecretBackendRedisSecretName, component.BackendSecretBackendRedisQueuesURLFieldName, redisUrl, err))
+	}
+	if len(redisUrlsErrors) > 0 {
+		return fmt.Errorf(strings.Join(redisUrlsErrors, "\n"))
+	}
+
 	// Redis TLS fields
 	var tlsFieldsErrs []error
 	if h.apimanager.IsBackendRedisTLSEnabled() {
@@ -203,6 +228,17 @@ func (h *HighAvailabilityOptionsProvider) setSystemRedisOptions() error {
 			return err
 		}
 		*option.field = val
+	}
+
+	// Check Redis URL
+	redisUrl, err := h.secretSource.FieldValueFromRequiredSecret(component.SystemSecretSystemRedisSecretName, component.SystemSecretSystemRedisURLFieldName, "")
+	if err != nil {
+		return err
+	}
+	err = helper.ValidateRedisURLPrefix(redisUrl, h.apimanager.IsSystemRedisTLSEnabled())
+	if err != nil {
+		return fmt.Errorf("ERROR: Failed to validate Redis URL prefix for secret '%s' and field '%s': %s : %v\n",
+			component.SystemSecretSystemRedisSecretName, component.SystemSecretSystemRedisURLFieldName, redisUrl, err)
 	}
 
 	// Redis TLS fields

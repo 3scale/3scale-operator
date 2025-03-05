@@ -7,6 +7,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
 func GetSecretDataValueOrDefault(secretData map[string][]byte, fieldName string, defaultValue string) string {
@@ -216,4 +217,24 @@ func IsSecretWatchedBy3scaleBySecretName(client k8sclient.Client, secretName, na
 	}
 
 	return false
+}
+
+func ValidateRedisURLPrefix(redisUrl string, isTLS bool) error {
+	if redisUrl == "" {
+		return fmt.Errorf("Redis URL cannot be empty in secret")
+	}
+	// If TLS is enabled, URL should start with "rediss://"
+	if isTLS {
+		if !strings.HasPrefix(redisUrl, "rediss://") {
+			return fmt.Errorf("invalid URL, when TLS is enabled, URL must start with 'rediss://'," +
+				" also confirm your port matches the TLS port set in your redis.conf")
+		}
+	} else {
+		// If TLS is not enabled, URL should start with "redis://"
+		if !strings.HasPrefix(redisUrl, "redis://") {
+			return fmt.Errorf("invalid URL, when TLS is not enabled, URL must start with 'redis://', " +
+				" also confirm your port matches the Non-TLS port set in your redis.conf.")
+		}
+	}
+	return nil
 }
