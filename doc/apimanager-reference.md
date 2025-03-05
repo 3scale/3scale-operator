@@ -720,11 +720,19 @@ The available configurable secrets are:
 | **Field** | **Description** | **Default value** |
 | --- | --- | --- |
 | REDIS_STORAGE_URL | Backend's redis storage database URL. | Mandatory when the instance is managed externally. Otherwise the default value is: `redis://backend-redis:6379/0` |
+| REDIS_STORAGE_USERNAME | Backend's redis ACL creds - username. | `""` |
+| REDIS_STORAGE_PASSWORD | Backend's redis ACL creds - password. | `""` |
 | REDIS_STORAGE_SENTINEL_ROLE | Backend's redis storage sentinel role name. Used only when Redis sentinel is configured in the Redis database being used | `""` |
 | REDIS_STORAGE_SENTINEL_HOSTS | Backend's redis storage sentinel hosts name. Used only when Redis sentinel is configured in the Redis database being used | `""` |
+| REDIS_STORAGE_SENTINEL_USERNAME | Backend's redis sentinel ACL creds - username. | `""` |
+| REDIS_STORAGE_SENTINEL_PASSWORD | Backend's redis sentinel ACL creds - password. | `""` |
 | REDIS_QUEUES_URL | Backend's redis queues database URL  | Mandatory when the instance is managed externally. Otherwise the default value is: `redis://backend-redis:6379/1` |
+| REDIS_QUEUES_USERNAME | Backend's redis queues ACL creds - username. | `""` |
+| REDIS_QUEUES_PASSWORD | Backend's redis queues ACL creds - password. | `""` |
 | REDIS_QUEUES_SENTINEL_ROLE | Backend's redis queues sentinel role name. Used only when Redis sentinel is configured in the Redis database being used | `""` |
 | REDIS_QUEUES_SENTINEL_HOSTS | Backend's redis queues sentinel hosts name. Used only when Redis sentinel is configured in the Redis database being used | `""` |
+| REDIS_QUEUES_SENTINEL_USERNAME | Backend's redis queues sentinel ACL creds - username. | `""` |
+| REDIS_QUEUES_SENTINEL_PASSWORD | Backend's redis queues sentinel ACL creds - password. | `""` |
 
 ### system-app
 
@@ -804,6 +812,10 @@ For Oracle:
 | NAMESPACE | Define the namespace to be used by System's Redis Database. The empty value means not namespaced | `""` |
 | SENTINEL_HOSTS | System's Redis sentinel hosts. Used only when Redis sentinel is configured | `""` |
 | SENTINEL_ROLE | System's Redis sentinel role name. Used only when Redis sentinel is configured | `""` |
+| REDIS_USERNAME | System's redis ACL creds - username. | `""` |
+| REDIS_PASSWORD | System's redis ACL creds - password. | `""` |
+| REDIS_SENTINEL_USERNAME | System's redis sentinel ACL creds - username. | `""` |
+| REDIS_SENTINEL_PASSWORD | System's redis sentinel ACL creds - password. | `""` |
 
 ### system-seed
 
