@@ -2,6 +2,7 @@ package helper
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -29,6 +30,9 @@ type RedisSecretKey struct {
 	URL              string
 	Username         string
 	Password         string
+	CACertificate    string
+	Cert             string
+	Key              string
 }
 
 // Convert secret values to RedisConfig
@@ -40,6 +44,11 @@ func reconcileRedisSecret(secret v1.Secret, config RedisSecretKey) *RedisConfig 
 		URL:              string(secret.Data[config.URL]),
 		Username:         string(secret.Data[config.Username]),
 		Password:         string(secret.Data[config.Password]),
+		TLS: &TLSConfig{
+			CACertificate: string(secret.Data[config.CACertificate]),
+			Certificate:   string(secret.Data[config.Cert]),
+			Key:           string(secret.Data[config.Key]),
+		},
 	}
 }
 
@@ -51,6 +60,9 @@ func reconcileSystemRedisSecret(secret v1.Secret) *RedisConfig {
 		URL:              systemRedisUrl,
 		Username:         systemRedisUsername,
 		Password:         systemRedisPassword,
+		CACertificate:    systemRedisCA,
+		Cert:             systemRedisCertificate,
+		Key:              systemRedisKey,
 	}
 	return reconcileRedisSecret(secret, config)
 }
@@ -63,6 +75,9 @@ func reconcileStorageRedisSecret(secret v1.Secret) *RedisConfig {
 		URL:              backendRedisStorageURL,
 		Username:         backendRedisStorageUsername,
 		Password:         backendRedisStoragePassword,
+		CACertificate:    backendRedisStorageCA,
+		Cert:             backendRedisStorageCertificate,
+		Key:              backendRedisStorageKey,
 	}
 	return reconcileRedisSecret(secret, config)
 }
@@ -75,6 +90,9 @@ func reconcileQueuesRedisSecret(secret v1.Secret) *RedisConfig {
 		URL:              backendRedisQueuesURL,
 		Username:         backendRedisQueuesUsername,
 		Password:         backendRedisQueuesPassword,
+		CACertificate:    backendRedisQueuesCA,
+		Cert:             backendRedisQueuesCertificate,
+		Key:              backendRedisQueuesKey,
 	}
 	return reconcileRedisSecret(secret, config)
 }
@@ -87,6 +105,7 @@ type RedisConfig struct {
 	SentinelMaster   string
 	SentinelUsername string
 	SentinelPassword string
+	TLS              *TLSConfig
 }
 
 func Configure(cfg *RedisConfig) (*goredis.Client, error) {
@@ -121,6 +140,16 @@ func configureRedis(cfg *RedisConfig) (*goredis.Client, error) {
 
 	if cfg.Password != "" {
 		opts.Password = cfg.Password
+	}
+
+	if cfg.TLS != nil && cfg.TLS.Enabled {
+		tlsConfig, err := LoadCerts(cfg.TLS)
+
+		if err != nil {
+			return nil, err
+		}
+
+		opts.TLSConfig = tlsConfig
 	}
 
 	return goredis.NewClient(opts), nil
@@ -174,6 +203,17 @@ func sentinelOptions(cfg *RedisConfig) (*goredis.FailoverOptions, error) {
 		ConnMaxIdleTime:  defaultIdleTimeout,
 		ReadTimeout:      defaultReadTimeout,
 		WriteTimeout:     defaultWriteTimeout,
+	}
+
+	if cfg.TLS != nil && cfg.TLS.Enabled {
+		var tlsConfig *tls.Config
+
+		tlsConfig, err := LoadCerts(cfg.TLS)
+		if err != nil {
+			return nil, err
+		}
+
+		opts.TLSConfig = tlsConfig
 	}
 
 	return opts, nil
