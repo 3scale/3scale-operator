@@ -1,6 +1,8 @@
 package helper
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net/url"
 	"os"
@@ -76,4 +78,47 @@ func GetStringPointerValueOrDefault(val *string, def string) string {
 func DNS1123Name(in string) string {
 	tmp := strings.ToLower(in)
 	return InvalidDNS1123Regexp.ReplaceAllString(tmp, "")
+}
+
+type TLSConfig struct {
+	Enabled       bool
+	CACertificate string
+	Certificate   string
+	Key           string
+}
+
+// HasCA returns whether the configuration has a certificate authority or not.
+func (c *TLSConfig) HasCA() bool {
+	return c.CACertificate != ""
+}
+
+// HasCertAuth returns whether the configuration has certificate authentication or not.
+func (c *TLSConfig) HasCertAuth() bool {
+	return (c.Certificate != "" && c.Key != "")
+}
+
+func LoadCerts(cfg *TLSConfig) (*tls.Config, error) {
+	tlsConfig := &tls.Config{ //nolint:gosec
+		MinVersion: tls.VersionTLS12,
+	}
+
+	if cfg.HasCA() {
+		certPool := x509.NewCertPool()
+		ok := certPool.AppendCertsFromPEM([]byte(cfg.CACertificate))
+		if !ok {
+			return nil, fmt.Errorf("unable to load root certificate")
+		}
+		tlsConfig.RootCAs = certPool
+	}
+
+	// If key/cert were provided
+	if cfg.HasCertAuth() {
+		cert, err := tls.X509KeyPair([]byte(cfg.Certificate), []byte(cfg.Key))
+		if err != nil {
+			return nil, err
+		}
+		tlsConfig.Certificates = []tls.Certificate{cert}
+	}
+
+	return tlsConfig, nil
 }

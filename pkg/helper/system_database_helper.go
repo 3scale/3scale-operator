@@ -14,17 +14,26 @@ import (
 )
 
 const (
-	systemDatabaseURL = "URL"
-	secretName        = "system-database"
+	secretName                = "system-database"
+	systemDatabaseURL         = "URL"
+	systemDatabaseCA          = "DB_SSL_CA"
+	systemDatabaseCertificate = "DB_SSL_CERT"
+	systemDatabaseKey         = "DB_SSL_KEY"
 )
 
 type DatabaseConfig struct {
 	URL string
+	TLS *TLSConfig
 }
 
 func reconcileSystemDBSecret(secret v1.Secret) *DatabaseConfig {
 	return &DatabaseConfig{
 		URL: string(secret.Data[systemDatabaseURL]),
+		TLS: &TLSConfig{
+			CACertificate: string(secret.Data[systemDatabaseCA]),
+			Certificate:   string(secret.Data[systemDatabaseCertificate]),
+			Key:           string(secret.Data[systemDatabaseKey]),
+		},
 	}
 }
 
@@ -54,6 +63,24 @@ func verifyMySQLVersion(cfg *DatabaseConfig, requiredVersion string) (bool, erro
 	}
 	dbConfig.Params = params
 
+	if cfg.TLS != nil && cfg.TLS.Enabled {
+		tlsConfig, err := LoadCerts(cfg.TLS)
+
+		if err != nil {
+			return false, err
+		}
+
+		tlsConfig.ServerName = url.Hostname()
+		dbConfig.TLS = tlsConfig
+		dbConfig.TLSConfig = "preflight"
+
+		if err := mysql.RegisterTLSConfig("preflight", tlsConfig); err != nil {
+			return false, err
+		}
+
+		defer mysql.DeregisterTLSConfig("preflight")
+	}
+
 	connector, err := mysql.NewConnector(dbConfig)
 	if err != nil {
 		return false, err
@@ -81,6 +108,15 @@ func verifyPostgresVersion(cfg *DatabaseConfig, requiredVersion string) (bool, e
 		return false, err
 	}
 
+	if cfg.TLS != nil && cfg.TLS.Enabled {
+		tlsConfig, err := LoadCerts(cfg.TLS)
+		if err != nil {
+			return false, err
+		}
+
+		dbConfig.TLSConfig = tlsConfig
+	}
+
 	db := pgxstd.OpenDB(*dbConfig)
 	var version string
 
@@ -105,7 +141,7 @@ func retrievePostgresVersion(stdout string) (string, error) {
 	if len(match) > 1 {
 		currentPostgresVersion = match[1]
 	} else {
-		return currentPostgresVersion, fmt.Errorf("postgres version not found in stdout")
+		return "", fmt.Errorf("postgres version not found in stdout")
 	}
 
 	return currentPostgresVersion, nil
@@ -120,7 +156,7 @@ func retrieveMysqlVersion(stdout string) (string, error) {
 		// The version number is captured by the first group
 		currentMysqlVersion = match[0]
 	} else {
-		return currentMysqlVersion, fmt.Errorf("redis version not found in stdout")
+		return "", fmt.Errorf("mysql version not found in stdout")
 	}
 
 	return currentMysqlVersion, nil
