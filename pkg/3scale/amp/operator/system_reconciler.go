@@ -219,13 +219,10 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 
 		if r.apiManager.IsSystemRedisTLSEnabled() {
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSSyncVolumesAndMountsMutator)
+			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
 		} else {
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveVolumesAndMountsMutator)
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveEnvMutator)
-		}
-		if r.apiManager.IsBackendRedisTLSEnabled() {
-			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
-		} else {
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
 		}
 
@@ -300,13 +297,11 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 
 	if r.apiManager.IsSystemRedisTLSEnabled() {
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSSyncVolumesAndMountsMutator)
-	} else {
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveVolumesAndMountsMutator)
-	}
-	if r.apiManager.IsBackendRedisTLSEnabled() {
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
 	} else {
+		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveVolumesAndMountsMutator)
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveEnvMutator)
+		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
 	}
 
 	sidekiqDeployment, err := system.SidekiqDeployment(r.Context(), r.Client(), ampImages.Options.SystemImage)

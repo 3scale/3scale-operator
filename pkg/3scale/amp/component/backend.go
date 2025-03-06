@@ -51,9 +51,9 @@ const (
 )
 
 const (
-	ConfigRedisCaFilePath     = "/tls/backend-redis-ca.crt"
-	ConfigRedisClientCertPath = "/tls/backend-redis-client.crt"
-	ConfigRedisPrivateKeyPath = "/tls/backend-redis-private.key"
+	ConfigRedisCaFilePath     = "/tls/backend-redis/backend-redis-ca.crt"
+	ConfigRedisClientCertPath = "/tls/backend-redis/backend-redis-client.crt"
+	ConfigRedisPrivateKeyPath = "/tls/backend-redis/backend-redis-private.key"
 
 	ConfigQueuesCaFilePath             = "/tls/queues/config-queues-ca.crt"
 	ConfigQueuesClientCertPath         = "/tls/queues/config-queues-client.crt"
@@ -676,7 +676,7 @@ func (backend *Backend) backendRedisContainerVolumeMounts() v1.VolumeMount {
 	return v1.VolumeMount{
 		Name:      "backend-redis-tls",
 		ReadOnly:  false,
-		MountPath: "/tls",
+		MountPath: "/tls/backend-redis",
 	}
 }
 

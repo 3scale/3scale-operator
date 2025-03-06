@@ -903,6 +903,7 @@ func DeploymentSystemRedisTLSSyncVolumesAndMountsMutator(desired, existing *k8sa
 	volumeMountsToAdd := []v1.VolumeMount{
 		{
 			Name:      volumeMountNameToAdd,
+			ReadOnly:  false,
 			MountPath: "/tls/system-redis",
 		},
 	}
@@ -951,6 +952,7 @@ func DeploymentBackendRedisTLSSyncVolumesAndMountsMutator(desired, existing *k8s
 	volumeMountsToAdd := []v1.VolumeMount{
 		{
 			Name:      volumeMountNameToAdd,
+			ReadOnly:  false,
 			MountPath: "/tls/backend-redis",
 		},
 	}
@@ -999,6 +1001,7 @@ func DeploymentQueuesRedisTLSSyncVolumesAndMountsMutator(desired, existing *k8sa
 	volumeMountsToAdd := []v1.VolumeMount{
 		{
 			Name:      volumeMountNameToAdd,
+			ReadOnly:  false,
 			MountPath: "/tls/queues",
 		},
 	}
