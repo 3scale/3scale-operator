@@ -219,11 +219,18 @@ func IsSecretWatchedBy3scaleBySecretName(client k8sclient.Client, secretName, na
 	return false
 }
 
-func ValidateRedisURLPrefix(redisUrl string, isTLS bool) error {
+func ValidateRedisURLPrefix(redisUrl string, isTLS, isSentinel bool) error {
 	if redisUrl == "" {
 		return fmt.Errorf("Redis URL cannot be empty in secret")
 	}
-	if !isTLS {
+	// If TLS is enabled and we are not using Sentinel, the URL should start with "rediss://"
+	// If Sentinel is used, the Redis URL is irrelevant, as the client communicates with Redis Sentinel, not the Redis master.
+	if isTLS {
+		if !isSentinel && !strings.HasPrefix(redisUrl, "rediss://") {
+			return fmt.Errorf("invalid URL, when TLS is enabled, URL must start with 'rediss://'," +
+				" also confirm your port matches the TLS port set in your redis.conf")
+		}
+	} else {
 		// If TLS is not enabled, URL should start with "redis://"
 		if !strings.HasPrefix(redisUrl, "redis://") {
 			return fmt.Errorf("invalid URL, when TLS is not enabled, URL must start with 'redis://', " +
