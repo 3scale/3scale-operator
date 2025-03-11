@@ -1208,7 +1208,6 @@ kind: APIManager
 metadata:
   name: example-apimanager
 spec:
-  sentinelIsUsed: true
   system:
     fileStorage:
       simpleStorageService:
