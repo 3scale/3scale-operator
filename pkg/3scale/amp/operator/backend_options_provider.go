@@ -47,6 +47,8 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.setPriorityClassNames()
 	o.setTopologySpreadConstraints()
 	o.setPodTemplateAnnotations()
+	o.setBackendRedisTLSEnabled()
+	o.setQueuesRedisTLSEnabled()
 
 	o.backendOptions.CommonLabels = o.commonLabels()
 	o.backendOptions.CommonListenerLabels = o.commonListenerLabels()
@@ -275,4 +277,11 @@ func (o *OperatorBackendOptionsProvider) setTopologySpreadConstraints() {
 	if o.apimanager.Spec.Backend.CronSpec.TopologySpreadConstraints != nil {
 		o.backendOptions.TopologySpreadConstraintsCron = o.apimanager.Spec.Backend.CronSpec.TopologySpreadConstraints
 	}
+}
+
+func (o *OperatorBackendOptionsProvider) setBackendRedisTLSEnabled() {
+	o.backendOptions.BackendRedisTLSEnabled = o.apimanager.IsBackendRedisTLSEnabled()
+}
+func (o *OperatorBackendOptionsProvider) setQueuesRedisTLSEnabled() {
+	o.backendOptions.QueuesRedisTLSEnabled = o.apimanager.IsQueuesRedisTLSEnabled()
 }

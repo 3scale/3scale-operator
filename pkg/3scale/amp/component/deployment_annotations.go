@@ -208,6 +208,20 @@ func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, d
 			annotations[annotationKey] = systemDatabase.ResourceVersion
 		}
 
+		systemRedisSecret := &corev1.Secret{}
+		systemRedisSecretKey := k8sclient.ObjectKey{
+			Name:      "system-redis",
+			Namespace: system.Options.Namespace,
+		}
+		err = client.Get(ctx, systemRedisSecretKey, systemRedisSecret)
+		if err != nil {
+			return nil, err
+		}
+		if helper.IsSecretWatchedBy3scale(systemRedisSecret) {
+			annotationKey := fmt.Sprintf("%s", SystemRedisSecretResverAnnotation)
+			annotations[annotationKey] = systemRedisSecret.ResourceVersion
+		}
+
 	case *SystemSearchd:
 		systemDatabase := &corev1.Secret{}
 		systemDatabaseSecretKey := k8sclient.ObjectKey{
@@ -238,6 +252,22 @@ func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, d
 		if helper.IsSecretWatchedBy3scale(zyncSecret) {
 			annotationKey := fmt.Sprintf("%s%s", ZyncSecretResverAnnotationPrefix, zyncSecret.Name)
 			annotations[annotationKey] = zyncSecret.ResourceVersion
+		}
+
+	case *Backend:
+		backend := c
+		backendRedisSecret := &corev1.Secret{}
+		backendRedisSecretKey := k8sclient.ObjectKey{
+			Name:      "backend-redis",
+			Namespace: backend.Options.Namespace,
+		}
+		err := client.Get(ctx, backendRedisSecretKey, backendRedisSecret)
+		if err != nil {
+			return nil, err
+		}
+		if helper.IsSecretWatchedBy3scale(backendRedisSecret) {
+			annotationKey := fmt.Sprintf("%s", BackendRedisSecretResverAnnotation)
+			annotations[annotationKey] = backendRedisSecret.ResourceVersion
 		}
 
 	default:
@@ -274,6 +304,8 @@ func HasSecretHashChanged(ctx context.Context, client k8sclient.Client, deployme
 		switch {
 		case strings.HasPrefix(deploymentAnnotation, SystemDatabaseSecretResverAnnotationPrefix):
 			secretToCheckKey.Name = strings.TrimPrefix(deploymentAnnotation, SystemDatabaseSecretResverAnnotationPrefix)
+		case strings.HasPrefix(deploymentAnnotation, SystemRedisSecretResverAnnotation):
+			secretToCheckKey.Name = strings.TrimPrefix(deploymentAnnotation, SystemRedisSecretResverAnnotation)
 		default:
 			return false
 		}
@@ -288,6 +320,13 @@ func HasSecretHashChanged(ctx context.Context, client k8sclient.Client, deployme
 		switch {
 		case strings.HasPrefix(deploymentAnnotation, ZyncSecretResverAnnotationPrefix):
 			secretToCheckKey.Name = strings.TrimPrefix(deploymentAnnotation, ZyncSecretResverAnnotationPrefix)
+		default:
+			return false
+		}
+	case *Backend:
+		switch {
+		case strings.HasPrefix(deploymentAnnotation, BackendRedisSecretResverAnnotation):
+			secretToCheckKey.Name = strings.TrimPrefix(deploymentAnnotation, BackendRedisSecretResverAnnotation)
 		default:
 			return false
 		}

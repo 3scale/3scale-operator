@@ -7,72 +7,72 @@ One APIManager custom resource per project is allowed.
 ## Table of Contents
 
 <!--ts-->
-* [APIManager CRD reference](#apimanager-crd-reference)
-   * [Table of Contents](#table-of-contents)
-   * [APIManager](#apimanager)
-      * [APIManagerSpec](#apimanagerspec)
-      * [APIManagerMetaData](#apimanagermetadata)
-      * [ApicastSpec](#apicastspec)
-      * [ApicastProductionSpec](#apicastproductionspec)
-      * [ApicastStagingSpec](#apicaststagingspec)
-      * [CustomPolicySpec](#custompolicyspec)
-      * [CustomPolicySecret](#custompolicysecret)
-      * [APIcastOpenTracingSpec](#apicastopentracingspec)
-      * [OpenTelemetrySpec](#opentelemetryspec)
-      * [APIcastTracingConfigSecret](#apicasttracingconfigsecret)
-         * [CustomEnvironmentSpec](#customenvironmentspec)
-         * [CustomEnvironmentSecret](#customenvironmentsecret)
-      * [BackendSpec](#backendspec)
-      * [BackendRedisPersistentVolumeClaimSpec](#backendredispersistentvolumeclaimspec)
-      * [BackendListenerSpec](#backendlistenerspec)
-      * [BackendWorkerSpec](#backendworkerspec)
-      * [BackendCronSpec](#backendcronspec)
-      * [SystemSpec](#systemspec)
-      * [SystemRedisPersistentVolumeClaimSpec](#systemredispersistentvolumeclaimspec)
-      * [FileStorageSpec](#filestoragespec)
-      * [SystemPVCSpec](#systempvcspec)
-      * [SystemS3Spec](#systems3spec)
-      * [STSSpec](#stsspec)
-      * [DeprecatedSystemS3Spec](#deprecatedsystems3spec)
-      * [DatabaseSpec](#databasespec)
-      * [MySQLSpec](#mysqlspec)
-      * [SystemMySQLPVCSpec](#systemmysqlpvcspec)
-      * [PostgreSQLSpec](#postgresqlspec)
-      * [SystemPostgreSQLPVCSpec](#systempostgresqlpvcspec)
-      * [SystemAppSpec](#systemappspec)
-      * [SystemSidekiqSpec](#systemsidekiqspec)
-      * [SystemSphinxSpec](#systemsphinxspec)
-      * [SystemSearchdSpec](#systemsearchdspec)
-      * [PVCGenericSpec](#pvcgenericspec)
-      * [ZyncSpec](#zyncspec)
-      * [ZyncAppSpec](#zyncappspec)
-      * [ZyncQueSpec](#zyncquespec)
-      * [HighAvailabilitySpec](#highavailabilityspec)
-      * [ExternalComponentsSpec](#externalcomponentsspec)
-      * [ExternalSystemComponents](#externalsystemcomponents)
-      * [ExternalBackendComponents](#externalbackendcomponents)
-      * [ExternalZyncComponents](#externalzynccomponents)
-      * [PodDisruptionBudgetSpec](#poddisruptionbudgetspec)
-      * [MonitoringSpec](#monitoringspec)
-      * [APIManagerStatus](#apimanagerstatus)
-         * [ConditionSpec](#conditionspec)
-   * [PersistentVolumeClaimResourcesSpec](#persistentvolumeclaimresourcesspec)
-   * [APIManager Secrets](#apimanager-secrets)
-      * [backend-internal-api](#backend-internal-api)
-      * [backend-listener](#backend-listener)
-      * [backend-redis](#backend-redis)
-      * [system-app](#system-app)
-      * [system-database](#system-database)
-      * [system-events-hook](#system-events-hook)
-      * [system-master-apicast](#system-master-apicast)
-      * [system-memcache](#system-memcache)
-      * [system-recaptcha](#system-recaptcha)
-      * [system-redis](#system-redis)
-      * [system-seed](#system-seed)
-      * [zync](#zync)
-      * [fileStorage-S3-credentials-secret](#filestorage-s3-credentials-secret)
-      * [system-smtp](#system-smtp)
-   * [Default APIManager components compute resources](#default-apimanager-components-compute-resources)
+- [APIManager CRD reference](#apimanager-crd-reference)
+  - [Table of Contents](#table-of-contents)
+  - [APIManager](#apimanager)
+    - [APIManagerSpec](#apimanagerspec)
+    - [APIManagerMetaData](#apimanagermetadata)
+    - [ApicastSpec](#apicastspec)
+    - [ApicastProductionSpec](#apicastproductionspec)
+    - [ApicastStagingSpec](#apicaststagingspec)
+    - [CustomPolicySpec](#custompolicyspec)
+    - [CustomPolicySecret](#custompolicysecret)
+    - [APIcastOpenTracingSpec](#apicastopentracingspec)
+    - [OpenTelemetrySpec](#opentelemetryspec)
+    - [APIcastTracingConfigSecret](#apicasttracingconfigsecret)
+      - [CustomEnvironmentSpec](#customenvironmentspec)
+      - [CustomEnvironmentSecret](#customenvironmentsecret)
+    - [BackendSpec](#backendspec)
+    - [BackendRedisPersistentVolumeClaimSpec](#backendredispersistentvolumeclaimspec)
+    - [BackendListenerSpec](#backendlistenerspec)
+    - [BackendWorkerSpec](#backendworkerspec)
+    - [BackendCronSpec](#backendcronspec)
+    - [SystemSpec](#systemspec)
+    - [SystemRedisPersistentVolumeClaimSpec](#systemredispersistentvolumeclaimspec)
+    - [FileStorageSpec](#filestoragespec)
+    - [SystemPVCSpec](#systempvcspec)
+    - [SystemS3Spec](#systems3spec)
+    - [STSSpec](#stsspec)
+    - [DeprecatedSystemS3Spec](#deprecatedsystems3spec)
+    - [DatabaseSpec](#databasespec)
+    - [MySQLSpec](#mysqlspec)
+    - [SystemMySQLPVCSpec](#systemmysqlpvcspec)
+    - [PostgreSQLSpec](#postgresqlspec)
+    - [SystemPostgreSQLPVCSpec](#systempostgresqlpvcspec)
+    - [SystemAppSpec](#systemappspec)
+    - [SystemSidekiqSpec](#systemsidekiqspec)
+    - [SystemSphinxSpec](#systemsphinxspec)
+    - [SystemSearchdSpec](#systemsearchdspec)
+    - [PVCGenericSpec](#pvcgenericspec)
+    - [ZyncSpec](#zyncspec)
+    - [ZyncAppSpec](#zyncappspec)
+    - [ZyncQueSpec](#zyncquespec)
+    - [HighAvailabilitySpec](#highavailabilityspec)
+    - [ExternalComponentsSpec](#externalcomponentsspec)
+    - [ExternalSystemComponents](#externalsystemcomponents)
+    - [ExternalBackendComponents](#externalbackendcomponents)
+    - [ExternalZyncComponents](#externalzynccomponents)
+    - [PodDisruptionBudgetSpec](#poddisruptionbudgetspec)
+    - [MonitoringSpec](#monitoringspec)
+    - [APIManagerStatus](#apimanagerstatus)
+      - [ConditionSpec](#conditionspec)
+  - [PersistentVolumeClaimResourcesSpec](#persistentvolumeclaimresourcesspec)
+  - [APIManager Secrets](#apimanager-secrets)
+    - [backend-internal-api](#backend-internal-api)
+    - [backend-listener](#backend-listener)
+    - [backend-redis](#backend-redis)
+    - [system-app](#system-app)
+    - [system-database](#system-database)
+    - [system-events-hook](#system-events-hook)
+    - [system-master-apicast](#system-master-apicast)
+    - [system-memcache](#system-memcache)
+    - [system-recaptcha](#system-recaptcha)
+    - [system-redis](#system-redis)
+    - [system-seed](#system-seed)
+    - [zync](#zync)
+    - [fileStorage-S3-credentials-secret](#filestorage-s3-credentials-secret)
+    - [system-smtp](#system-smtp)
+  - [Default APIManager components compute resources](#default-apimanager-components-compute-resources)
 <!--te-->
 
 ## APIManager
@@ -90,16 +90,26 @@ One APIManager custom resource per project is allowed.
 | WildcardDomain | `wildcardDomain` | string | Yes | N/A | Root domain for the wildcard routes. Eg. example.com will generate 3scale-admin.example.com. |
 | AppLabel | `appLabel` | string | No | `3scale-api-management` | The value of the `app` label that will be applied to the API management solution
 | TenantName | `tenantName` | string | No | `3scale` | Tenant name under the root that Admin UI will be available with -admin suffix.
-| ImagePullSecrets | `imagePullSecrets` | \[\][corev1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#localobjectreference-v1-core) | No | "" | List of image pull secrets to be used on the managed Deployments ServiceAccounts. See [imagePullSecrets field in K8s ServiceAccount documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#serviceaccount-v1-core) for details on Image pull secrets. Secret names that contain `dockercfg-` or `token-` anywhere in part of its name cannot be specified. If an update to this attribute is performed the corresponding Deployment pods have to be redeployed by the user to make the changes effective |
+| ImagePullSecrets | `imagePullSecrets` | \[\][corev1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#localobjectreference-v1-core) | No | `[ { name: "threescale-registry-auth" } ]` | List of image pull secrets to be used on the managed Deployments ServiceAccounts. See [imagePullSecrets field in K8s ServiceAccount documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#serviceaccount-v1-core) for details on Image pull secrets. If not specified, `threescale-registry-auth` is used. Secret names that contain `dockercfg-` or `token-` anywhere in part of its name cannot be specified. If an update to this attribute is performed the corresponding Deployment pods have to be redeployed by the user to make the changes effective |
 | ResourceRequirementsEnabled | `resourceRequirementsEnabled` | bool | No | `true` | When true, 3Scale API management solution is deployed with the optimal resource requirements and limits. Setting this to false removes those resource requirements. ***Warning*** Only set it to false for development and evaluation environments. When set to `true`, default compute resources are set for the APIManager components. See [Default APIManager components compute resources](#Default-APIManager-components-compute-resources) to see the default assigned values |
 | ApicastSpec | `apicast` | \*ApicastSpec | No | See [ApicastSpec](#ApicastSpec) | Spec of the Apicast part |
 | BackendSpec | `backend` | \*BackendSpec | No | See [BackendSpec](#BackendSpec) reference | Spec of the Backend part |
 | SystemSpec  | `system`  | \*SystemSpec  | No | See [SystemSpec](#SystemSpec) reference | Spec of the System part |
-| ZyncSpec    | `zync`    | \*ZyncSpec    | No | See [ZyncSpec](#ZyncSpec) reference | Spec of the Zync part    |
+| ZyncSpec    | `zync`    | \*ZyncSpec    | No | See [ZyncSpec](#ZyncSpec) reference | Spec of the Zync part  |
 | HighAvailabilitySpec | `highAvailability` | \*HighAvailabilitySpec | No | **[DEPRECATED**] See [ExternalComponentsSpec](#ExternalComponentsSpec) reference | |
-| ExternalComponentsSpec | `externalComponents` | \*ExternalComponentsSpec | No | See [ExternalComponentsSpec](#ExternalComponentsSpec) reference | Spec of the ExternalComponentsSpec part |
-| PodDisruptionBudgetSpec | `podDisruptionBudget` | \*PodDisruptionBudgetSpec | No | See [PodDisruptionBudgetSpec](#PodDisruptionBudgetSpec) reference | Spec of the PodDisruptionBudgetSpec part |
-| MonitoringSpec | `monitoring` | \*MonitoringSpec | No | Disabled | [MonitoringSpec](#MonitoringSpec) reference |
+| ExternalComponentsSpec | `externalComponents` | \*ExternalComponentsSpec | No | See [ExternalComponentsSpec](#ExternalComponentsSpec) reference | Spec of the ExternalComponentsSpec part  |
+| PodDisruptionBudgetSpec | `podDisruptionBudget` | \*PodDisruptionBudgetSpec | No | See [PodDisruptionBudgetSpec](#PodDisruptionBudgetSpec) reference | Spec of the PodDisruptionBudgetSpec part  |
+| MonitoringSpec | `monitoring` | \*MonitoringSpec | No | Disabled | [MonitoringSpec](#MonitoringSpec) reference  |
+
+
+**Notes**:
+To enable Redis TLS communication for system and/or backend 3scale components, the corresponding Redis flags must be set to true in the APIManager Custom Resource (CR):
+  - SystemRedisTLSEnabled in SystemSpec
+  - BackendRedisTLSEnabled in BackendSpec
+  - QueuesRedisTLSEnabled BackendSpec
+These flags are prerequisites for enabling Redis TLS. However, additional configuration is required to establish Redis TLS communication. This includes:
+- Correct definition of Redis certificates and URLs in the backend-redis and/or system-redis secrets, which are required to set the necessary Redis TLS environment variables in the pods. These environment variables will be used by the system and backend to establish the TLS connection.
+
 
 ### APIManagerMetaData
 
@@ -266,6 +276,8 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 | RedisTopologySpreadConstraints | `redisTopologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No | `nil`| **[DEPRECATED]** Use external databases only |
 | RedisLabels                    | `redisLabels` | map[string]string | No | `nil ` |  **[DEPRECATED]** Use external databases only |
 | RedisAnnotations | `redisAnnotations` | map[string]string | No | `nil ` |  **[DEPRECATED]** Use external databases only |
+| BackendRedisTLSEnabled | `backendRedisTLSEnabled` | `bool` | No | `nil` | This flag enables Redis Backend TLS communication. When set to true, and after successful backend-redis secret validation, Redis Backend TLS environment variables are injected into the backend pods: CONFIG_REDIS_CA_FILE, CONFIG_REDIS_CERT, CONFIG_REDIS_PRIVATE_KEY, and CONFIG_REDIS_SSL is set to true. These environment variables are required to establish Redis TLS communication. |
+| QueuesRedisTLSEnabled | `queuesRedisTLSEnabled` | `bool` | No | `nil` | This flag enables Redis Queues TLS communication. When set to true, and after successful backend-redis secret validation, Redis Queues TLS environment variables are injected into the backend pods: CONFIG_QUEUES_CA_FILE, CONFIG_QUEUES_CERT, CONFIG_QUEUES_PRIVATE_KEY, and CONFIG_QUEUES_SSL is set to true. These environment variables are required to establish Redis TLS communication.  |
 
 ### BackendRedisPersistentVolumeClaimSpec
 
@@ -343,6 +355,9 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 | RedisTopologySpreadConstraints | `redisTopologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
 | RedisLabels | `redisLabels` | map[string]string | No | `nil ` |  **[DEPRECATED]** Use external databases only |
 | RedisAnnotations | `redisAnnotations` | map[string]string | No | `nil `  |  **[DEPRECATED]** Use external databases only |
+| SystemRedisTLSEnabled | `systemRedisTLSEnabled` | `bool` | No | `nil` | This flag enables Redis System TLS communication. When set to true, and with the secret validation successfully passed, Redis TLS environment variables are injected into the system-app and system-sidekiq pods: REDIS_CA_FILE, REDIS_CLIENT_CERT, REDIS_PRIVATE_KEY, and REDIS_SSL is set to true. These environment variables are required to establish system Redis TLS communication. **Important**: To establish System Redis TLS communication, the REDIS_SSL_CA, REDIS_SSL_CERT, and REDIS_SSL_KEY fields must be populated with valid certificates, not only in the system-redis secret but also in the backend-redis secret|
+
+
 
 ### SystemRedisPersistentVolumeClaimSpec
 
@@ -717,14 +732,24 @@ The available configurable secrets are:
 
 ### backend-redis
 
-| **Field** | **Description** | **Default value** |
-| --- | --- | --- |
+| **Field** | **Description** | **Default value**                                                                                                 |
+| --- | --- |-------------------------------------------------------------------------------------------------------------------|
 | REDIS_STORAGE_URL | Backend's redis storage database URL. | Mandatory when the instance is managed externally. Otherwise the default value is: `redis://backend-redis:6379/0` |
-| REDIS_STORAGE_SENTINEL_ROLE | Backend's redis storage sentinel role name. Used only when Redis sentinel is configured in the Redis database being used | `""` |
-| REDIS_STORAGE_SENTINEL_HOSTS | Backend's redis storage sentinel hosts name. Used only when Redis sentinel is configured in the Redis database being used | `""` |
-| REDIS_QUEUES_URL | Backend's redis queues database URL  | Mandatory when the instance is managed externally. Otherwise the default value is: `redis://backend-redis:6379/1` |
-| REDIS_QUEUES_SENTINEL_ROLE | Backend's redis queues sentinel role name. Used only when Redis sentinel is configured in the Redis database being used | `""` |
-| REDIS_QUEUES_SENTINEL_HOSTS | Backend's redis queues sentinel hosts name. Used only when Redis sentinel is configured in the Redis database being used | `""` |
+| REDIS_STORAGE_SENTINEL_ROLE | Backend's redis storage sentinel role name. Used only when Redis sentinel is configured in the Redis database being used | `""`                                                                                                              |
+| REDIS_STORAGE_SENTINEL_HOSTS | Backend's redis storage sentinel hosts name. Used only when Redis sentinel is configured in the Redis database being used | `""`                                                                                                              |
+| REDIS_QUEUES_URL | Backend's redis queues database URL | Mandatory when the instance is managed externally. Otherwise the default value is: `redis://backend-redis:6379/1` |
+| REDIS_QUEUES_SENTINEL_ROLE | Backend's redis queues sentinel role name. Used only when Redis sentinel is configured in the Redis database being used | `""`                                                                                                              |
+| REDIS_QUEUES_SENTINEL_HOSTS | Backend's redis queues sentinel hosts name. Used only when Redis sentinel is configured in the Redis database being used | `""`                                                                                                              |
+| REDIS_SSL_CA | Redis Certificate Authority (CA) certificate | Required to set TLS Redis connection. Only for TLS  |
+| REDIS_SSL_CERT | Redis client certificate | Required to set TLS Redis connection. Only for TLS |
+| REDIS_SSL_KEY | The private key for the Redis client certificate | Required to set TLS Redis connection. Only for TLS |
+| REDIS_SSL_QUEUES_CA | Redis Queues Certificate Authority (CA) certificate | Required to set TLS Redis connection. Only for TLS |
+| REDIS_SSL_QUEUES_CERT | Redis Queues client certificate | Required to set TLS Redis connection. Only for TLS |
+| REDIS_SSL_QUEUES_KEY | The private key for the Redis Queues client certificate | Required to set TLS Redis connection. Only for TLS |
+
+**Notes** 
+- If Redis TLS is enabled (backendRedisTLSEnabled or/and queuesRedisTLSEnabled fields are set to true in APIManafer CR BackendSpec) - Sentinel must also use TLS communication. REDIS_STORAGE_SENTINEL_HOSTS or/and REDIS_QUEUES_SENTINEL_HOSTS should contain redis secure urls prefixes: `rediss://`.  If only one of the Sentinel hosts is secure, it may work, but it is not reliable (in case that secure sentinel host fails). It is strongly recommended to secure all Sentinel hosts for optimal reliability.
+- If Sentinel is not set, Redis clients will communicate directly with the Redis Master over TLS, bypassing Sentinel. This is a valid configuration when Sentinel is not needed
 
 ### system-app
 
@@ -804,6 +829,13 @@ For Oracle:
 | NAMESPACE | Define the namespace to be used by System's Redis Database. The empty value means not namespaced | `""` |
 | SENTINEL_HOSTS | System's Redis sentinel hosts. Used only when Redis sentinel is configured | `""` |
 | SENTINEL_ROLE | System's Redis sentinel role name. Used only when Redis sentinel is configured | `""` |
+| REDIS_SSL_CA | Redis Certificate Authority (CA) certificate | Required to set TLS Redis connection. Only for TLS |
+| REDIS_SSL_CERT | Redis client certificate | Required to set TLS Redis connection. Only for TLS |
+| REDIS_SSL_KEY | The private key for the Redis client certificate | Required to set TLS Redis connection. Only for TLS |
+
+**Notes** 
+- If Redis TLS is enabled (systemRedisTLSEnabled is set to true in APIManafer CR SystemSpec) - Sentinel must also use TLS communication. In this case,SENTINEL_HOSTS if populated, must have the `rediss://` URL prefix. If only one of the Sentinel hosts is secure, it may work, but it is not reliable (in case that host fails). It is strongly recommended to secure all Sentinel hosts for optimal reliability.
+- If Sentinel is not set, Redis clients will communicate directly with the Redis Master over TLS, bypassing Sentinel. This is a valid configuration when Sentinel is not needed.
 
 ### system-seed
 

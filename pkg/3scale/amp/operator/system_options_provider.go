@@ -66,6 +66,7 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	s.setPriorityClassNames()
 	s.setTopologySpreadConstraints()
 	s.setPodTemplateAnnotations()
+	s.setSystemRedisTLSEnabled()
 
 	s.options.SideKiqMetrics = true
 	s.options.AppMetrics = true
@@ -632,4 +633,8 @@ func (s *SystemOptionsProvider) setPodTemplateAnnotations() {
 
 func (s *SystemOptionsProvider) setSystemDBTLSEabled() {
 	s.options.SystemDbTLSEnabled = s.apimanager.IsSystemDatabaseTLSEnabled()
+}
+
+func (s *SystemOptionsProvider) setSystemRedisTLSEnabled() {
+	s.options.RedisTLSEnabled = s.apimanager.IsSystemRedisTLSEnabled()
 }

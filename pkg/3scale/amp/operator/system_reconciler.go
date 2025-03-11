@@ -205,6 +205,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 			reconcilers.DeploymentPodContainerImageMutator,
 			r.systemZyncEnvVarMutator,
 			r.systemDatabaseTLSEnvVarMutator,
+			r.systemRedisTLSEnvVarMutator,
 		}
 		if r.apiManager.Spec.System.AppSpec.Replicas != nil {
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentReplicasMutator)
@@ -215,6 +216,16 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		if !r.apiManager.IsSystemDatabaseTLSEnabled() {
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentRemoveTLSVolumesAndMountsMutator)
 		}
+
+		if r.apiManager.IsSystemRedisTLSEnabled() {
+			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSSyncVolumesAndMountsMutator)
+			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
+		} else {
+			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveVolumesAndMountsMutator)
+			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveEnvMutator)
+			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
+		}
+
 		appDeployment, err := system.AppDeployment(r.Context(), r.Client(), ampImages.Options.SystemImage)
 		if err != nil {
 			return reconcile.Result{}, err
@@ -272,6 +283,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPodInitContainerMutator,
 		r.systemZyncEnvVarMutator,
 		r.systemDatabaseTLSEnvVarMutator,
+		r.systemRedisTLSEnvVarMutator,
 	}
 	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentReplicasMutator)
@@ -281,6 +293,15 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 	if !r.apiManager.IsSystemDatabaseTLSEnabled() {
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentRemoveTLSVolumesAndMountsMutator)
+	}
+
+	if r.apiManager.IsSystemRedisTLSEnabled() {
+		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSSyncVolumesAndMountsMutator)
+		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
+	} else {
+		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveVolumesAndMountsMutator)
+		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveEnvMutator)
+		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
 	}
 
 	sidekiqDeployment, err := system.SidekiqDeployment(r.Context(), r.Client(), ampImages.Options.SystemImage)
@@ -522,6 +543,27 @@ func (r *SystemReconciler) systemDatabaseTLSEnvVarMutator(desired, existing *k8s
 		"DB_SSL_CA",
 		"DB_SSL_CERT",
 		"DB_SSL_KEY",
+	} {
+		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
+		changed = changed || tmpChanged
+	}
+
+	return changed, nil
+}
+
+func (r *SystemReconciler) systemRedisTLSEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	// Reconcile EnvVar only for Redis TLS for Porta - system-app and system-sidekiq
+	var changed bool
+
+	for _, envVar := range []string{
+		"REDIS_CA_FILE",
+		"REDIS_CLIENT_CERT",
+		"REDIS_PRIVATE_KEY",
+		"REDIS_SSL",
+		"BACKEND_REDIS_CA_FILE",
+		"BACKEND_REDIS_CLIENT_CERT",
+		"BACKEND_REDIS_PRIVATE_KEY",
+		"BACKEND_REDIS_SSL",
 	} {
 		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
 		changed = changed || tmpChanged
