@@ -2,9 +2,10 @@ package component
 
 import (
 	"context"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sort"
 	"strconv"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8sappsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -56,6 +57,12 @@ const (
 	SystemSecretSystemRedisURLFieldName  = "URL"
 	SystemSecretSystemRedisSentinelHosts = "SENTINEL_HOSTS"
 	SystemSecretSystemRedisSentinelRole  = "SENTINEL_ROLE"
+
+	// ACL
+	SystemSecretSystemRedisUsernameFieldName         = "REDIS_USERNAME"
+	SystemSecretSystemRedisPasswordFieldName         = "REDIS_PASSWORD"
+	SystemSecretSystemRedisSentinelUsernameFieldName = "REDIS_SENTINEL_USERNAME"
+	SystemSecretSystemRedisSentinelPasswordFieldName = "REDIS_SENTINEL_PASSWORD"
 )
 
 const (
@@ -194,6 +201,11 @@ func (system *System) SystemRedisEnvVars() []v1.EnvVar {
 		helper.EnvVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
 		helper.EnvVarFromSecret("REDIS_SENTINEL_HOSTS", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelHosts),
 		helper.EnvVarFromSecret("REDIS_SENTINEL_ROLE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelRole),
+		// ACL
+		helper.EnvVarFromSecretOptional("REDIS_USERNAME", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisUsernameFieldName),
+		helper.EnvVarFromSecretOptional("REDIS_PASSWORD", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisPasswordFieldName),
+		helper.EnvVarFromSecretOptional("REDIS_SENTINEL_USERNAME", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelUsernameFieldName),
+		helper.EnvVarFromSecretOptional("REDIS_SENTINEL_PASSWORD", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelPasswordFieldName),
 	)
 	if system.Options.RedisTLSEnabled {
 		result = append(result, system.SystemRedisTLSEnvVars()...)
@@ -369,6 +381,10 @@ func (system *System) BackendRedisEnvVars() []v1.EnvVar {
 		helper.EnvVarFromSecret("BACKEND_REDIS_URL", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageURLFieldName),
 		helper.EnvVarFromSecret("BACKEND_REDIS_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelHostsFieldName),
 		helper.EnvVarFromSecret("BACKEND_REDIS_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelRoleFieldName),
+		helper.EnvVarFromSecretOptional("BACKEND_REDIS_USERNAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageUsernameFieldName),
+		helper.EnvVarFromSecretOptional("BACKEND_REDIS_PASSWORD", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStoragePasswordFieldName),
+		helper.EnvVarFromSecretOptional("BACKEND_REDIS_SENTINEL_USERNAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelUsernameFieldName),
+		helper.EnvVarFromSecretOptional("BACKEND_REDIS_SENTINEL_PASSWORD", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelPasswordFieldName),
 	)
 	if system.Options.RedisTLSEnabled {
 		result = append(result, system.BackendRedisTLSEnvVars()...)

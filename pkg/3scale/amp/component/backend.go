@@ -24,13 +24,22 @@ const (
 )
 
 const (
-	BackendSecretBackendRedisSecretName                    = "backend-redis"
-	BackendSecretBackendRedisStorageURLFieldName           = "REDIS_STORAGE_URL"
-	BackendSecretBackendRedisQueuesURLFieldName            = "REDIS_QUEUES_URL"
-	BackendSecretBackendRedisStorageSentinelHostsFieldName = "REDIS_STORAGE_SENTINEL_HOSTS"
-	BackendSecretBackendRedisStorageSentinelRoleFieldName  = "REDIS_STORAGE_SENTINEL_ROLE"
-	BackendSecretBackendRedisQueuesSentinelHostsFieldName  = "REDIS_QUEUES_SENTINEL_HOSTS"
-	BackendSecretBackendRedisQueuesSentinelRoleFieldName   = "REDIS_QUEUES_SENTINEL_ROLE"
+	BackendSecretBackendRedisSecretName                      = "backend-redis"
+	BackendSecretBackendRedisQueuesURLFieldName              = "REDIS_QUEUES_URL"
+	BackendSecretBackendRedisQueuesUsernameFieldName         = "REDIS_QUEUES_USERNAME"
+	BackendSecretBackendRedisQueuesPasswordFieldName         = "REDIS_QUEUES_PASSWORD"
+	BackendSecretBackendRedisQueuesSentinelHostsFieldName    = "REDIS_QUEUES_SENTINEL_HOSTS"
+	BackendSecretBackendRedisQueuesSentinelRoleFieldName     = "REDIS_QUEUES_SENTINEL_ROLE"
+	BackendSecretBackendRedisQueuesSentinelUsernameFieldName = "REDIS_QUEUES_SENTINEL_USERNAME"
+	BackendSecretBackendRedisQueuesSentinelPasswordFieldName = "REDIS_QUEUES_SENTINEL_PASSWORD"
+
+	BackendSecretBackendRedisStorageURLFieldName              = "REDIS_STORAGE_URL"
+	BackendSecretBackendRedisStorageUsernameFieldName         = "REDIS_STORAGE_USERNAME"
+	BackendSecretBackendRedisStoragePasswordFieldName         = "REDIS_STORAGE_PASSWORD"
+	BackendSecretBackendRedisStorageSentinelHostsFieldName    = "REDIS_STORAGE_SENTINEL_HOSTS"
+	BackendSecretBackendRedisStorageSentinelRoleFieldName     = "REDIS_STORAGE_SENTINEL_ROLE"
+	BackendSecretBackendRedisStorageSentinelUsernameFieldName = "REDIS_STORAGE_SENTINEL_USERNAME"
+	BackendSecretBackendRedisStorageSentinelPasswordFieldName = "REDIS_STORAGE_SENTINEL_PASSWORD"
 )
 
 const (
@@ -419,6 +428,15 @@ func (backend *Backend) buildBackendCommonEnv() []v1.EnvVar {
 		helper.EnvVarFromSecret("CONFIG_QUEUES_MASTER_NAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesURLFieldName),
 		helper.EnvVarFromSecret("CONFIG_QUEUES_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesSentinelHostsFieldName),
 		helper.EnvVarFromSecret("CONFIG_QUEUES_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesSentinelRoleFieldName),
+		// ACL
+		helper.EnvVarFromSecretOptional("CONFIG_REDIS_USERNAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageUsernameFieldName),
+		helper.EnvVarFromSecretOptional("CONFIG_REDIS_PASSWORD", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStoragePasswordFieldName),
+		helper.EnvVarFromSecretOptional("CONFIG_REDIS_SENTINEL_USERNAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelUsernameFieldName),
+		helper.EnvVarFromSecretOptional("CONFIG_REDIS_SENTINEL_PASSWORD", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelPasswordFieldName),
+		helper.EnvVarFromSecretOptional("CONFIG_QUEUES_USERNAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesUsernameFieldName),
+		helper.EnvVarFromSecretOptional("CONFIG_QUEUES_PASSWORD", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesPasswordFieldName),
+		helper.EnvVarFromSecretOptional("CONFIG_QUEUES_SENTINEL_USERNAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesSentinelUsernameFieldName),
+		helper.EnvVarFromSecretOptional("CONFIG_QUEUES_SENTINEL_PASSWORD", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesSentinelPasswordFieldName),
 		helper.EnvVarFromConfigMap("RACK_ENV", "backend-environment", "RACK_ENV"),
 	)
 	if backend.Options.BackendRedisTLSEnabled {
