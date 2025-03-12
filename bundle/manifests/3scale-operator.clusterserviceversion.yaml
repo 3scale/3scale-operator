@@ -242,6 +242,7 @@ metadata:
     containerImage: quay.io/3scale/3scale-operator:master
     createdAt: "2019-05-30T22:40:00Z"
     description: 3scale Operator to provision 3scale and publish/manage API
+    olm.properties: '[{"type": "olm.maxOpenShiftVersion", "value": "4.18"}]'
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     operators.openshift.io/valid-subscription: '["Red Hat Integration", "Red Hat 3scale API Management"]'
     operators.operatorframework.io/builder: operator-sdk-v1.2.0
