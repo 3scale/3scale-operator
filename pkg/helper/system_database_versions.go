@@ -27,6 +27,10 @@ func VerifySystemDatabase(k8sclient client.Client, reqConfigMap *v1.ConfigMap, a
 	}
 
 	dbConfig := reconcileSystemDBSecret(*connSecret)
+	if apimInstance.IsSystemDatabaseTLSEnabled() {
+		dbConfig.TLS.Enabled = true
+	}
+
 	var databaseRequirement string
 
 	if strings.HasPrefix(dbConfig.URL, "postgres://") || strings.HasPrefix(dbConfig.URL, "postgresql://") {
