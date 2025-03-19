@@ -61,7 +61,7 @@ const (
 func (r *ApplicationAuthReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	//_ = r.Log.WithValues("applicationauth", req.NamespacedName)
-	reqLogger := r.Logger().WithValues("applcationauth", req.NamespacedName)
+	reqLogger := r.Logger().WithValues("applicationauth", req.NamespacedName)
 	reqLogger.Info("Reconcile Application Authentication", "Operator version", version.Version)
 
 	applicationAuth := &capabilitiesv1beta1.ApplicationAuth{}
