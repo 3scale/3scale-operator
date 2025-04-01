@@ -135,12 +135,9 @@ cluster/create/system-postgres:
 .PHONY: cluster/create/system-mysql
 cluster/create/system-mysql:
 	sed "s/\$$(NAMESPACE)/$(NAMESPACE)/g" ./config/dev-databases/system-mysql/secret.yaml > ./config/dev-databases/system-mysql/secret-processed.yaml
-	sed "s/\$$(NAMESPACE)/$(NAMESPACE)/g" ./config/dev-databases/system-mysql/mysql-main-conf.yaml > ./config/dev-databases/system-mysql/mysql-main-conf-processed.yaml
-	sed "s/\$$(NAMESPACE)/$(NAMESPACE)/g" ./config/dev-databases/system-mysql/mysql-extra-conf.yaml > ./config/dev-databases/system-mysql/mysql-extra-conf-processed.yaml
 	kustomize build ./config/dev-databases/system-mysql | kubectl apply -f -
 	rm ./config/dev-databases/system-mysql/secret-processed.yaml
-	rm ./config/dev-databases/system-mysql/mysql-main-conf-processed.yaml
-	rm ./config/dev-databases/system-mysql/mysql-extra-conf-processed.yaml
+
 
 .PHONY: cluster/create/provision-database
 cluster/create/provision-database:
