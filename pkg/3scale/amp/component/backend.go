@@ -309,7 +309,7 @@ func (backend *Backend) ListenerDeployment(ctx context.Context, k8sclient client
 						{
 							Name:         BackendListenerName,
 							Image:        containerImage,
-							Args:         []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"},
+							Args:         backend.backendListenerRunArgs(),
 							Ports:        backend.listenerPorts(),
 							Env:          backend.buildBackendListenerEnv(),
 							Resources:    backend.Options.ListenerResourceRequirements,
@@ -686,6 +686,16 @@ func (backend *Backend) backendVolumes() []v1.Volume {
 		res = append(res, backendRedisTlsVolume)
 	}
 	return res
+}
+
+func (backend *Backend) backendListenerRunArgs() []string {
+	var args []string
+	if backend.Options.RedisAsyncEnabled {
+		args = []string{"bin/3scale_backend", "-s", "falcon", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"}
+	} else {
+		args = []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"}
+	}
+	return args
 }
 
 func (backend *Backend) backendContainerVolumeMounts() []v1.VolumeMount {

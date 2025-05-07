@@ -209,6 +209,7 @@ func defaultBackendOptions(opts *component.BackendOptions) *component.BackendOpt
 		WorkerMetrics:                true,
 		ListenerMetrics:              true,
 		Namespace:                    opts.Namespace,
+		RedisAsyncEnabled:            true,
 	}
 }
 
@@ -222,12 +223,14 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 		apimanagerFactory      func() *appsv1alpha1.APIManager
 		expectedOptionsFactory func(*component.BackendOptions) *component.BackendOptions
 	}{
-		{"Default", nil, nil, basicApimanagerTestBackendOptions,
+		{
+			"Default", nil, nil, basicApimanagerTestBackendOptions,
 			func(opts *component.BackendOptions) *component.BackendOptions {
 				return defaultBackendOptions(opts)
 			},
 		},
-		{"WithoutResourceRequirements", nil, nil,
+		{
+			"WithoutResourceRequirements", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestBackendOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
@@ -241,7 +244,8 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"InternalSecret", getInternalSecret(), nil, basicApimanagerTestBackendOptions,
+		{
+			"InternalSecret", getInternalSecret(), nil, basicApimanagerTestBackendOptions,
 			func(in *component.BackendOptions) *component.BackendOptions {
 				opts := defaultBackendOptions(in)
 				opts.SystemBackendUsername = "someUserName"
@@ -249,7 +253,8 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"ListenerSecret", nil, getListenerSecret(), basicApimanagerTestBackendOptions,
+		{
+			"ListenerSecret", nil, getListenerSecret(), basicApimanagerTestBackendOptions,
 			func(in *component.BackendOptions) *component.BackendOptions {
 				opts := defaultBackendOptions(in)
 				opts.ServiceEndpoint = "serviceValue"
@@ -257,7 +262,8 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithAffinity", nil, nil,
+		{
+			"WithAffinity", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestBackendOptions()
 				apimanager.Spec.Backend.ListenerSpec.Affinity = testBackendListenerAffinity()
@@ -273,7 +279,8 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithTolerations", nil, nil,
+		{
+			"WithTolerations", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestBackendOptions()
 				apimanager.Spec.Backend.ListenerSpec.Tolerations = testBackendListenerTolerations()
@@ -290,7 +297,8 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithBackendCustomResourceRequirements", nil, nil,
+		{
+			"WithBackendCustomResourceRequirements", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestBackendOptions()
 				apimanager.Spec.Backend.ListenerSpec.Resources = testBackendListenerCustomResourceRequirements()
@@ -307,7 +315,8 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithBackendCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil, nil,
+		{
+			"WithBackendCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestBackendOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue

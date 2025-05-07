@@ -2,8 +2,9 @@ package reconcilers
 
 import (
 	"fmt"
-	corev1 "k8s.io/api/core/v1"
 	"reflect"
+
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -345,27 +346,6 @@ func DeploymentPodInitContainerImageMutator(desired, existing *k8sappsv1.Deploym
 	return updated, nil
 }
 
-func DeploymentListenerArgsMutator(_, existing *k8sappsv1.Deployment) (bool, error) {
-	update := true
-	falconArgs := []string{"bin/3scale_backend", "-s", "falcon", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"}
-	if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Args, falconArgs) {
-		existing.Spec.Template.Spec.Containers[0].Args = falconArgs
-		return update, nil
-	}
-	update = false
-	return update, nil
-}
-func DeploymentListenerAsyncDisableArgsMutator(_, existing *k8sappsv1.Deployment) (bool, error) {
-	update := true
-	falconArgs := []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"}
-	if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Args, falconArgs) {
-		existing.Spec.Template.Spec.Containers[0].Args = falconArgs
-		return update, nil
-	}
-	update = false
-	return update, nil
-}
-
 func DeploymentListenerAsyncDisableEnvMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	update := false
 	updateListenerWorkers := true
@@ -542,7 +522,7 @@ func DeploymentSyncVolumesAndMountsMutator(desired, existing *k8sappsv1.Deployme
 		existing.Spec.Template.Spec.Volumes = []corev1.Volume{}
 	}
 
-	//Add missing Volumes
+	// Add missing Volumes
 	for _, desiredVolume := range desired.Spec.Template.Spec.Volumes {
 		if !volumeExists(existing.Spec.Template.Spec.Volumes, desiredVolume.Name) {
 			existing.Spec.Template.Spec.Volumes = append(existing.Spec.Template.Spec.Volumes, desiredVolume)
