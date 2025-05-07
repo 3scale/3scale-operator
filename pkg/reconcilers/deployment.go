@@ -346,50 +346,6 @@ func DeploymentPodInitContainerImageMutator(desired, existing *k8sappsv1.Deploym
 	return updated, nil
 }
 
-func DeploymentWorkerEnvMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
-	update := true
-	// Always set env var CONFIG_REDIS_ASYNC to 1 this logic is only hit when you don't have logical redis db
-	for envId, envVar := range existing.Spec.Template.Spec.Containers[0].Env {
-		if envVar.Name == "CONFIG_REDIS_ASYNC" {
-			if envVar.Value == "0" {
-				existing.Spec.Template.Spec.Containers[0].Env[envId].Value = "1"
-				update = true
-				return update, nil
-			}
-			update = false
-
-		}
-	}
-	// Adds the env CONFIG_REDIS_ASYNC if not present
-	if update {
-		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
-			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "1"))
-	}
-	return update, nil
-}
-
-func DeploymentWorkerDisableAsyncEnvMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
-	update := true
-	// Always set env var CONFIG_REDIS_ASYNC to 1 this logic is only hit when you don't have logical redis db
-	for envId, envVar := range existing.Spec.Template.Spec.Containers[0].Env {
-		if envVar.Name == "CONFIG_REDIS_ASYNC" {
-			if envVar.Value == "1" {
-				existing.Spec.Template.Spec.Containers[0].Env[envId].Value = "0"
-				update = true
-				return update, nil
-			}
-			update = false
-
-		}
-	}
-	// Adds the env CONFIG_REDIS_ASYNC if not present
-	if update {
-		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
-			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "0"))
-	}
-	return update, nil
-}
-
 func removeEnvVar(envVars []corev1.EnvVar, name string) []corev1.EnvVar {
 	var newEnvVars []corev1.EnvVar
 	for _, envVar := range envVars {
