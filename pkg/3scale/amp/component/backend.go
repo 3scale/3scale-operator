@@ -471,6 +471,16 @@ func (backend *Backend) buildBackendWorkerEnv() []v1.EnvVar {
 		)
 	}
 
+	if backend.Options.RedisAsyncEnabled {
+		result = append(result,
+			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "1"),
+		)
+	} else {
+		result = append(result,
+			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "0"),
+		)
+	}
+
 	return result
 }
 

@@ -132,11 +132,8 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Worker Deployment
 	workerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
-	if r.apiManager.IsAsyncDisableAnnotationPresent() {
-		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentWorkerDisableAsyncEnvMutator)
-	} else {
-		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentWorkerEnvMutator)
-	}
+	workerDeploymentMutator = append(workerDeploymentMutator, r.backendRedisAsyncReconciler)
+
 	if r.apiManager.Spec.Backend.WorkerSpec.Replicas != nil {
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
@@ -314,6 +311,19 @@ func (r *BackendReconciler) backendRedisAsyncReconciler(desired, existing *k8sap
 	for _, envVar := range []string{
 		"CONFIG_REDIS_ASYNC",
 		"LISTENER_WORKERS",
+	} {
+		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
+		changed = changed || tmpChanged
+	}
+
+	return changed, nil
+}
+
+func (r *BackendReconciler) workerRedisAsyncReconciler(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	var changed bool
+
+	for _, envVar := range []string{
+		"CONFIG_REDIS_ASYNC",
 	} {
 		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
 		changed = changed || tmpChanged
