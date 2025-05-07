@@ -72,11 +72,8 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	listenerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
-	if r.apiManager.IsAsyncDisableAnnotationPresent() {
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerAsyncDisableEnvMutator)
-	} else {
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerEnvMutator)
-	}
+	listenerDeploymentMutator = append(listenerDeploymentMutator, r.backendRedisAsyncReconciler)
+
 	if r.apiManager.Spec.Backend.ListenerSpec.Replicas != nil {
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
@@ -88,6 +85,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveEnvMutator)
 	}
+
 	if r.apiManager.IsQueuesRedisTLSEnabled() {
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSSyncVolumesAndMountsMutator)
 		listenerDeploymentMutator = append(listenerDeploymentMutator, r.backendQueuesRedisTLSEnvVarMutator)
@@ -100,6 +98,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+
 	err = r.ReconcileDeployment(listenerDeployment, reconcilers.DeploymentMutator(listenerDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
@@ -301,6 +300,20 @@ func (r *BackendReconciler) backendQueuesRedisTLSEnvVarMutator(desired, existing
 		"CONFIG_QUEUES_CERT",
 		"CONFIG_QUEUES_PRIVATE_KEY",
 		"CONFIG_QUEUES_SSL",
+	} {
+		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
+		changed = changed || tmpChanged
+	}
+
+	return changed, nil
+}
+
+func (r *BackendReconciler) backendRedisAsyncReconciler(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	var changed bool
+
+	for _, envVar := range []string{
+		"CONFIG_REDIS_ASYNC",
+		"LISTENER_WORKERS",
 	} {
 		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
 		changed = changed || tmpChanged
