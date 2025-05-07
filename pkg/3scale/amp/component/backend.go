@@ -2,8 +2,9 @@ package component
 
 import (
 	"context"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -314,10 +315,13 @@ func (backend *Backend) ListenerDeployment(ctx context.Context, k8sclient client
 							Resources:    backend.Options.ListenerResourceRequirements,
 							VolumeMounts: backend.backendContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{TCPSocket: &v1.TCPSocketAction{
-									Port: intstr.IntOrString{
-										Type:   intstr.Int,
-										IntVal: 3000}},
+								ProbeHandler: v1.ProbeHandler{
+									TCPSocket: &v1.TCPSocketAction{
+										Port: intstr.IntOrString{
+											Type:   intstr.Int,
+											IntVal: 3000,
+										},
+									},
 								},
 								InitialDelaySeconds: 30,
 								TimeoutSeconds:      0,
@@ -326,11 +330,14 @@ func (backend *Backend) ListenerDeployment(ctx context.Context, k8sclient client
 								FailureThreshold:    0,
 							},
 							ReadinessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
-									Path: "/status",
-									Port: intstr.IntOrString{
-										Type:   intstr.Int,
-										IntVal: 3000}},
+								ProbeHandler: v1.ProbeHandler{
+									HTTPGet: &v1.HTTPGetAction{
+										Path: "/status",
+										Port: intstr.IntOrString{
+											Type:   intstr.Int,
+											IntVal: 3000,
+										},
+									},
 								},
 								InitialDelaySeconds: 30,
 								TimeoutSeconds:      5,
@@ -398,7 +405,8 @@ func (backend *Backend) ListenerRoute() *routev1.Route {
 			},
 			TLS: &routev1.TLSConfig{
 				Termination:                   routev1.TLSTerminationEdge,
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
+				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow,
+			},
 		},
 	}
 }
@@ -614,6 +622,7 @@ func (backend *Backend) BackendRedisTLSEnvVars() []v1.EnvVar {
 		helper.EnvVarFromValue("CONFIG_REDIS_SSL", "1"),
 	}
 }
+
 func (backend *Backend) QueuesRedisTLSEnvVars() []v1.EnvVar {
 	return []v1.EnvVar{
 		helper.EnvVarFromValue("CONFIG_QUEUES_CA_FILE", ConfigQueuesCaFilePath),
