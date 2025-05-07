@@ -3,10 +3,11 @@ package operator
 import (
 	"context"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"log"
 	"regexp"
 	"time"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -222,7 +223,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
 		} else {
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveVolumesAndMountsMutator)
-			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveEnvMutator)
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
 		}
 
@@ -300,7 +300,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
 	} else {
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveVolumesAndMountsMutator)
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveEnvMutator)
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
 	}
 
