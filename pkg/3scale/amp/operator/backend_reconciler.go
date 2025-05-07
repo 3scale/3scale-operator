@@ -73,11 +73,9 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	listenerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
 	if r.apiManager.IsAsyncDisableAnnotationPresent() {
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerAsyncDisableArgsMutator)
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerAsyncDisableEnvMutator)
 	} else {
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerEnvMutator)
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerArgsMutator)
 	}
 	if r.apiManager.Spec.Backend.ListenerSpec.Replicas != nil {
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
