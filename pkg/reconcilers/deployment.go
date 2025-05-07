@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"reflect"
 
-	corev1 "k8s.io/api/core/v1"
-
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	k8sappsv1 "k8s.io/api/apps/v1"
@@ -346,8 +344,8 @@ func DeploymentPodInitContainerImageMutator(desired, existing *k8sappsv1.Deploym
 	return updated, nil
 }
 
-func removeEnvVar(envVars []corev1.EnvVar, name string) []corev1.EnvVar {
-	var newEnvVars []corev1.EnvVar
+func removeEnvVar(envVars []v1.EnvVar, name string) []v1.EnvVar {
+	var newEnvVars []v1.EnvVar
 	for _, envVar := range envVars {
 		if envVar.Name != name {
 			newEnvVars = append(newEnvVars, envVar)
@@ -387,7 +385,7 @@ func DeploymentSyncVolumesAndMountsMutator(desired, existing *k8sappsv1.Deployme
 
 	// Ensure Volumes slice is initialized
 	if existing.Spec.Template.Spec.Volumes == nil {
-		existing.Spec.Template.Spec.Volumes = []corev1.Volume{}
+		existing.Spec.Template.Spec.Volumes = []v1.Volume{}
 	}
 
 	// Add missing Volumes
@@ -420,7 +418,7 @@ func DeploymentSyncVolumesAndMountsMutator(desired, existing *k8sappsv1.Deployme
 }
 
 // Helper function: Check if a volume exists
-func volumeExists(volumes []corev1.Volume, name string) bool {
+func volumeExists(volumes []v1.Volume, name string) bool {
 	for _, v := range volumes {
 		if v.Name == name {
 			return true
@@ -430,7 +428,7 @@ func volumeExists(volumes []corev1.Volume, name string) bool {
 }
 
 // Helper function: Sync Volume Mounts (Add missing)
-func syncVolumeMounts(existingMounts, desiredMounts []corev1.VolumeMount) (bool, []corev1.VolumeMount) {
+func syncVolumeMounts(existingMounts, desiredMounts []v1.VolumeMount) (bool, []v1.VolumeMount) {
 	changed := false
 	newVolumeMounts := existingMounts
 
@@ -446,7 +444,7 @@ func syncVolumeMounts(existingMounts, desiredMounts []corev1.VolumeMount) (bool,
 }
 
 // Helper function: Check if a volume mount exists
-func volumeMountExists(volumeMounts []corev1.VolumeMount, name string) bool {
+func volumeMountExists(volumeMounts []v1.VolumeMount, name string) bool {
 	for _, vm := range volumeMounts {
 		if vm.Name == name {
 			return true
