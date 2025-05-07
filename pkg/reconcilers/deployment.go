@@ -510,61 +510,6 @@ func DeploymentRemoveTLSVolumesAndMountsMutator(desired, existing *k8sappsv1.Dep
 	return true, nil
 }
 
-func DeploymentBackendRedisTLSRemoveEnvMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
-	tlsEnvVars := []string{
-		"CONFIG_REDIS_CA_FILE",
-		"CONFIG_REDIS_CERT",
-		"CONFIG_REDIS_PRIVATE_KEY",
-		"CONFIG_REDIS_SSL",
-	}
-	for _, varName := range tlsEnvVars {
-		existing.Spec.Template.Spec.Containers[0].Env = removeEnvVar(existing.Spec.Template.Spec.Containers[0].Env, varName)
-	}
-	// Remove environment variables from InitContainer(s)
-	for i := range existing.Spec.Template.Spec.InitContainers {
-		for _, varName := range tlsEnvVars {
-			existing.Spec.Template.Spec.InitContainers[i].Env = removeEnvVar(existing.Spec.Template.Spec.InitContainers[i].Env, varName)
-		}
-	}
-	return true, nil
-}
-
-func DeploymentQueuesRedisTLSRemoveEnvMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
-	tlsEnvVars := []string{
-		"CONFIG_QUEUES_CA_FILE",
-		"CONFIG_QUEUES_CERT",
-		"CONFIG_QUEUES_PRIVATE_KEY",
-		"CONFIG_QUEUES_SSL",
-	}
-	for _, varName := range tlsEnvVars {
-		existing.Spec.Template.Spec.Containers[0].Env = removeEnvVar(existing.Spec.Template.Spec.Containers[0].Env, varName)
-	}
-	// Remove environment variables from InitContainer(s)
-	for i := range existing.Spec.Template.Spec.InitContainers {
-		for _, varName := range tlsEnvVars {
-			existing.Spec.Template.Spec.InitContainers[i].Env = removeEnvVar(existing.Spec.Template.Spec.InitContainers[i].Env, varName)
-		}
-	}
-	return true, nil
-}
-
-func DeploymentSystemRedisTLSRemoveEnvMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
-	tlsEnvVars := []string{
-		"REDIS_CA_FILE",
-		"REDIS_CLIENT_CERT",
-		"REDIS_PRIVATE_KEY",
-		"REDIS_SSL",
-		"BACKEND_REDIS_CA_FILE",
-		"BACKEND_REDIS_CLIENT_CERT",
-		"BACKEND_REDIS_PRIVATE_KEY",
-		"BACKEND_REDIS_SSL",
-	}
-	for _, varName := range tlsEnvVars {
-		existing.Spec.Template.Spec.Containers[0].Env = removeEnvVar(existing.Spec.Template.Spec.Containers[0].Env, varName)
-	}
-	return true, nil
-}
-
 func DeploymentSystemRedisTLSRemoveVolumesAndMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	volumeNamesToRemove := []string{"system-redis-tls", "backend-redis-tls"}
 	return removeRedisTLSVolumesAndMounts(existing, volumeNamesToRemove)
