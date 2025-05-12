@@ -39,7 +39,8 @@ func TestDeploymentReplicasMutator(t *testing.T) {
 		expectedResult bool
 	}{
 		{"NothingToReconcile", func() *k8sappsv1.Deployment { return dFactory() }, false},
-		{"ReplicasReconcile",
+		{
+			"ReplicasReconcile",
 			func() *k8sappsv1.Deployment {
 				desired := dFactory()
 				newNumReplicas := *desired.Spec.Replicas + int32(1000)
@@ -62,7 +63,6 @@ func TestDeploymentReplicasMutator(t *testing.T) {
 			if *existing.Spec.Replicas != *tc.desired().Spec.Replicas {
 				subT.Fatalf("replica reconciliation failed, existing: %d, desired: %d", existing.Spec.Replicas, tc.desired().Spec.Replicas)
 			}
-
 		})
 	}
 }
@@ -297,7 +297,6 @@ func TestDeploymentTolerationsMutator(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestDeploymentEnvVarReconciler(t *testing.T) {
@@ -467,7 +466,6 @@ func TestDeploymentEnvVarReconciler(t *testing.T) {
 				subT.Fatal(cmp.Diff(existing.Spec.Template.Spec.Containers[i].Env, desired.Spec.Template.Spec.Containers[i].Env))
 			}
 		}
-
 	})
 
 	t.Run("InitContainersEnvVarReconciled", func(subT *testing.T) {
@@ -731,7 +729,6 @@ func TestDeploymentTopologySpreadConstraintsMutator(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestDeploymentPodTemplateAnnotationsMutator(t *testing.T) {
@@ -869,7 +866,8 @@ func TestDeploymentArgsMutator(t *testing.T) {
 			},
 			want:    true,
 			wantErr: false,
-		}}
+		},
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := DeploymentArgsMutator(tt.args.desired, tt.args.existing)
@@ -995,11 +993,14 @@ func TestDeploymentProbesMutator(t *testing.T) {
 								Containers: []corev1.Container{
 									{
 										ReadinessProbe: &corev1.Probe{
-											ProbeHandler: corev1.ProbeHandler{HTTPGet: &corev1.HTTPGetAction{
-												Path: "/status",
-												Port: intstr.IntOrString{
-													Type:   intstr.Type(intstr.Int),
-													IntVal: 3000}},
+											ProbeHandler: corev1.ProbeHandler{
+												HTTPGet: &corev1.HTTPGetAction{
+													Path: "/status",
+													Port: intstr.IntOrString{
+														Type:   intstr.Type(intstr.Int),
+														IntVal: 3000,
+													},
+												},
 											},
 											InitialDelaySeconds: 30,
 											TimeoutSeconds:      5,
@@ -1037,11 +1038,14 @@ func TestDeploymentProbesMutator(t *testing.T) {
 								Containers: []corev1.Container{
 									{
 										ReadinessProbe: &corev1.Probe{
-											ProbeHandler: corev1.ProbeHandler{HTTPGet: &corev1.HTTPGetAction{
-												Path: "/status",
-												Port: intstr.IntOrString{
-													Type:   intstr.Type(intstr.Int),
-													IntVal: 3000}},
+											ProbeHandler: corev1.ProbeHandler{
+												HTTPGet: &corev1.HTTPGetAction{
+													Path: "/status",
+													Port: intstr.IntOrString{
+														Type:   intstr.Type(intstr.Int),
+														IntVal: 3000,
+													},
+												},
 											},
 											InitialDelaySeconds: 30,
 											TimeoutSeconds:      5,
@@ -1059,11 +1063,14 @@ func TestDeploymentProbesMutator(t *testing.T) {
 								Containers: []corev1.Container{
 									{
 										ReadinessProbe: &corev1.Probe{
-											ProbeHandler: corev1.ProbeHandler{HTTPGet: &corev1.HTTPGetAction{
-												Path: "/status",
-												Port: intstr.IntOrString{
-													Type:   intstr.Type(intstr.Int),
-													IntVal: 3000}},
+											ProbeHandler: corev1.ProbeHandler{
+												HTTPGet: &corev1.HTTPGetAction{
+													Path: "/status",
+													Port: intstr.IntOrString{
+														Type:   intstr.Type(intstr.Int),
+														IntVal: 3000,
+													},
+												},
 											},
 											InitialDelaySeconds: 30,
 											TimeoutSeconds:      5,
@@ -1222,7 +1229,8 @@ func TestDeploymentPodContainerImageMutator(t *testing.T) {
 			},
 			want:    true,
 			wantErr: false,
-		}}
+		},
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := DeploymentPodContainerImageMutator(tt.args.desired, tt.args.existing)
@@ -1305,7 +1313,8 @@ func TestDeploymentPodInitContainerImageMutator(t *testing.T) {
 			},
 			want:    true,
 			wantErr: false,
-		}}
+		},
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := DeploymentPodInitContainerImageMutator(tt.args.desired, tt.args.existing)
@@ -1315,6 +1324,745 @@ func TestDeploymentPodInitContainerImageMutator(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("DeploymentPodInitContainerImageMutator() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDeploymentVolumeMuator(t *testing.T) {
+	type args struct {
+		desired  *k8sappsv1.Deployment
+		existing *k8sappsv1.Deployment
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "VolumesMutator - no change",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Volumes: []corev1.Volume{
+									{Name: "vol1"},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Volumes: []corev1.Volume{
+									{Name: "vol1"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "VolumesMutator - change - single volume",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Volumes: []corev1.Volume{
+									{Name: "vol1"},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Volumes: []corev1.Volume{
+									{Name: "vol2"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "VolumesMutator - additonal new volume",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Volumes: []corev1.Volume{
+									{Name: "vol1"},
+									{Name: "vol2"},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Volumes: []corev1.Volume{
+									{Name: "vol1"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "VolumesMutator - multiple volumes change",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Volumes: []corev1.Volume{
+									{Name: "vol1"},
+									{Name: "vol2"},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Volumes: []corev1.Volume{
+									{Name: "vol1"},
+									{Name: "vol3"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "VolumesMutator - remove volumes",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Volumes: []corev1.Volume{
+									{Name: "vol1"},
+									{Name: "vol2"},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Volumes: []corev1.Volume{
+									{Name: "vol1"},
+									{Name: "vol2"},
+									{Name: "vol3"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := DeploymentVolumesMutator(tt.args.desired, tt.args.existing)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeploymentVolumesMutator() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("DeploymentVolumesMutator() = %v, want %v", got, tt.want)
+			}
+
+			if !reflect.DeepEqual(tt.args.existing, tt.args.desired) {
+				t.Errorf("DeploymentVolumesMutator() = %v\n, want %v", tt.args.existing, tt.args.desired)
+			}
+		})
+	}
+}
+
+func TestInitContainerDeploymentVolumeMountsMuator(t *testing.T) {
+	type args struct {
+		desired  *k8sappsv1.Deployment
+		existing *k8sappsv1.Deployment
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "InitContainerVolumesMountsMutator - no change",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								InitContainers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								InitContainers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "InitContainerVolumesMountMutator - single container single volume mounts change",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								InitContainers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								InitContainers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol2", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "InitContainerVolumeMountMutator - no change single container multiple volume mounts",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								InitContainers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+											{Name: "vol2", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								InitContainers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+											{Name: "vol2", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "InitContainerVolumeMountsMutator - single container multiple volume mounts change",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								InitContainers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+											{Name: "vol3", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								InitContainers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+											{Name: "vol2", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "InitContainerVolumeMountsMutator - no change multiple containers single volume mounts",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								InitContainers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								InitContainers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "InitContainerVolumeMountsMutator - multiple containers single volume mounts change",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								InitContainers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol2", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								InitContainers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol3", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := DeploymentInitContainerVolumeMountsMutator(tt.args.desired, tt.args.existing)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeploymentInitContainerVolumeMountsMutator() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("DeploymentInitContainerVolumeMountsMutator() = %v, want %v", got, tt.want)
+			}
+
+			if !reflect.DeepEqual(tt.args.existing, tt.args.desired) {
+				t.Error("DeploymentInitContainterVolumeMountsMutator: ", cmp.Diff(tt.args.existing, tt.args.desired))
+			}
+		})
+	}
+}
+
+func TestContainerDeploymentVolumeMountsMuator(t *testing.T) {
+	type args struct {
+		desired  *k8sappsv1.Deployment
+		existing *k8sappsv1.Deployment
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "VolumeMountsMutator - no change",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "VolumeMountsMutator - single container single volume mounts change",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol2", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "VolumesMutator - no change single container multiple volume mounts",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+											{Name: "vol2", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+											{Name: "vol2", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "VolumesMutator - single container multiple volume mounts change",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+											{Name: "vol3", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+											{Name: "vol2", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "VolumesMutator - no change multiple containers single volume mounts",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "VolumesMutator - multiple containers single volume mounts change",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol2", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol1", MountPath: "/newpath"},
+										},
+									},
+									{
+										VolumeMounts: []corev1.VolumeMount{
+											{Name: "vol3", MountPath: "/newpath"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := DeploymentContainerVolumeMountsMutator(tt.args.desired, tt.args.existing)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeploymentContainerVolumeMountsMutator() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("DeploymentContainerVolumeMountsMutator() = %v, want %v", got, tt.want)
+			}
+
+			if !reflect.DeepEqual(tt.args.existing, tt.args.desired) {
+				t.Error("DeploymentContainerVolumeMountsMutator: ", cmp.Diff(tt.args.existing, tt.args.desired))
 			}
 		})
 	}
