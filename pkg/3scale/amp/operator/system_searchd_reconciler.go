@@ -61,45 +61,26 @@ func (r *SystemSearchdReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	searchdDeploymentMutator := reconcilers.DeploymentMutator()
 	// Deployment
-	if !r.apiManager.IsSystemDatabaseTLSEnabled() {
-		searchdDeploymentMutator = reconcilers.DeploymentMutator(
-			reconcilers.DeploymentContainerResourcesMutator,
-			reconcilers.DeploymentAffinityMutator,
-			reconcilers.DeploymentTolerationsMutator,
-			reconcilers.DeploymentPodTemplateLabelsMutator,
-			reconcilers.DeploymentPriorityClassMutator,
-			reconcilers.DeploymentStrategyMutator,
-			reconcilers.DeploymentTopologySpreadConstraintsMutator,
-			reconcilers.DeploymentPodTemplateAnnotationsMutator,
-			reconcilers.DeploymentProbesMutator,
-			reconcilers.DeploymentArgsMutator,
-			reconcilers.DeploymentPodContainerImageMutator,
-			reconcilers.DeploymentPodInitContainerMutator,
-			systemDatabaseTLSEnvVarMutator,
-			reconcilers.DeploymentRemoveTLSVolumesAndMountsMutator,
-		)
-	}
+	searchdDeploymentMutator := reconcilers.DeploymentMutator(
+		reconcilers.DeploymentContainerResourcesMutator,
+		reconcilers.DeploymentAffinityMutator,
+		reconcilers.DeploymentTolerationsMutator,
+		reconcilers.DeploymentPodTemplateLabelsMutator,
+		reconcilers.DeploymentPriorityClassMutator,
+		reconcilers.DeploymentStrategyMutator,
+		reconcilers.DeploymentTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentPodTemplateAnnotationsMutator,
+		reconcilers.DeploymentProbesMutator,
+		reconcilers.DeploymentArgsMutator,
+		reconcilers.DeploymentPodContainerImageMutator,
+		reconcilers.DeploymentPodInitContainerMutator,
+		systemDatabaseTLSEnvVarMutator,
+		reconcilers.DeploymentVolumesMutator,
+		reconcilers.DeploymentInitContainerVolumeMountsMutator,
+		reconcilers.DeploymentContainerVolumeMountsMutator,
+	)
 
-	if r.apiManager.IsSystemDatabaseTLSEnabled() {
-		searchdDeploymentMutator = reconcilers.DeploymentMutator(
-			reconcilers.DeploymentContainerResourcesMutator,
-			reconcilers.DeploymentAffinityMutator,
-			reconcilers.DeploymentTolerationsMutator,
-			reconcilers.DeploymentPodTemplateLabelsMutator,
-			reconcilers.DeploymentPriorityClassMutator,
-			reconcilers.DeploymentStrategyMutator,
-			reconcilers.DeploymentTopologySpreadConstraintsMutator,
-			reconcilers.DeploymentPodTemplateAnnotationsMutator,
-			reconcilers.DeploymentProbesMutator,
-			reconcilers.DeploymentArgsMutator,
-			reconcilers.DeploymentPodContainerImageMutator,
-			reconcilers.DeploymentPodInitContainerMutator,
-			systemDatabaseTLSEnvVarMutator,
-			reconcilers.DeploymentSyncVolumesAndMountsMutator,
-		)
-	}
 	searchdDep, err := searchd.Deployment(r.Context(), r.Client(), r.apiManager.Namespace, ampImages.Options.SystemSearchdImage)
 	if err != nil {
 		return reconcile.Result{}, err

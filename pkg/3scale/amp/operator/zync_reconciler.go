@@ -73,16 +73,15 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPodInitContainerImageMutator,
 		reconcilers.DeploymentPodInitContainerMutator,
 		zyncDatabaseTLSEnvVarMutator,
+		reconcilers.DeploymentVolumesMutator,
+		reconcilers.DeploymentInitContainerVolumeMountsMutator,
+		reconcilers.DeploymentContainerVolumeMountsMutator,
 	}
+
 	if r.apiManager.Spec.Zync.AppSpec.Replicas != nil {
 		zyncMutators = append(zyncMutators, reconcilers.DeploymentReplicasMutator)
 	}
-	if !r.apiManager.IsZyncDatabaseTLSEnabled() {
-		zyncMutators = append(zyncMutators, reconcilers.DeploymentRemoveTLSVolumesAndMountsMutator)
-	}
-	if r.apiManager.IsZyncDatabaseTLSEnabled() {
-		zyncMutators = append(zyncMutators, reconcilers.DeploymentSyncVolumesAndMountsMutator)
-	}
+
 	zyncDep, err := zync.Deployment(r.Context(), r.Client(), ampImages.Options.ZyncImage)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -113,16 +112,14 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPodContainerImageMutator,
 		reconcilers.DeploymentPodInitContainerMutator,
 		zyncDatabaseTLSEnvVarMutator,
+		reconcilers.DeploymentVolumesMutator,
+		reconcilers.DeploymentInitContainerVolumeMountsMutator,
+		reconcilers.DeploymentContainerVolumeMountsMutator,
 	}
 	if r.apiManager.Spec.Zync.QueSpec.Replicas != nil {
 		zyncQueMutators = append(zyncQueMutators, reconcilers.DeploymentReplicasMutator)
 	}
-	if !r.apiManager.IsZyncDatabaseTLSEnabled() {
-		zyncQueMutators = append(zyncQueMutators, reconcilers.DeploymentRemoveTLSVolumesAndMountsMutator)
-	}
-	if r.apiManager.IsZyncDatabaseTLSEnabled() {
-		zyncQueMutators = append(zyncQueMutators, reconcilers.DeploymentSyncVolumesAndMountsMutator)
-	}
+
 	zyncQueDep, err := zync.QueDeployment(r.Context(), r.Client(), ampImages.Options.ZyncImage)
 	if err != nil {
 		return reconcile.Result{}, err
