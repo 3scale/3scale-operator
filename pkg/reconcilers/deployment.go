@@ -142,7 +142,7 @@ func DeploymentContainerResourcesMutator(desired, existing *k8sappsv1.Deployment
 	}
 
 	if len(existing.Spec.Template.Spec.Containers) != 1 {
-		log.Info(fmt.Sprintf("%s spec.template.spec.containers length changed to '%d', recreating dc", desiredName, len(existing.Spec.Template.Spec.Containers)))
+		log.Info(fmt.Sprintf("%s spec.template.spec.containers length changed to '%d', recreating deployment", desiredName, len(existing.Spec.Template.Spec.Containers)))
 		existing.Spec.Template.Spec.Containers = desired.Spec.Template.Spec.Containers
 		update = true
 	}
