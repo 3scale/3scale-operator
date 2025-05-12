@@ -384,7 +384,7 @@ func (r *SystemReconciler) systemAppDeploymentResourceMutator(desired, existing 
 	}
 
 	if len(existing.Spec.Template.Spec.Containers) != 3 {
-		r.Logger().Info(fmt.Sprintf("%s spec.template.spec.containers length changed to '%d', recreating dc", desiredName, len(existing.Spec.Template.Spec.Containers)))
+		r.Logger().Info(fmt.Sprintf("%s spec.template.spec.containers length changed to '%d', recreating deployment", desiredName, len(existing.Spec.Template.Spec.Containers)))
 		existing.Spec.Template.Spec.Containers = desired.Spec.Template.Spec.Containers
 		update = true
 	}
