@@ -1,0 +1,80 @@
+version: "2"
+run:
+  modules-download-mode: readonly
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: disable
+
+linters:
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - copyloopvar
+    - decorder
+    - dogsled
+    - durationcheck
+    - errchkjson
+    - exptostd
+    - fatcontext
+    - ginkgolinter
+    - gocheckcompilerdirectives
+    - gochecksumtype
+    - gocritic
+    - goprintffuncname
+    - grouper
+    - iface
+    - inamedparam
+    - interfacebloat
+    - makezero
+    - mirror
+    - misspell
+    - nilerr
+    - nilnesserr
+    - nolintlint
+    - nosprintfhostport
+    - prealloc
+    - protogetter
+    - reassign
+    - recvcheck
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - testableexamples
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - usetesting
+    - wastedassign
+    - whitespace
+  settings:
+    staticcheck:
+      checks:
+        - all
+        - -ST1003 # https://staticcheck.dev/docs/checks/#ST1003 Poorly chosen identifier.
+        - -QF1008 # https://staticcheck.dev/docs/checks/#QF1008 Omit embedded fields from selector expression.
+    nolintlint:
+      require-specific: true
+    revive:
+      rules:
+        - name: unused-parameter
+          disabled: true
+  exclusions:
+    generated: strict
+    presets:
+      - comments
+      - std-error-handling
+    rules:
+      - linters:
+          - recvcheck
+        path: pkg/k8s.io/
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
