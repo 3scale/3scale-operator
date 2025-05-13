@@ -487,6 +487,10 @@ func (zync *Zync) DatabaseDeployment(containerImage string) *k8sappsv1.Deploymen
 									Name:  "POSTGRESQL_DATABASE",
 									Value: "zync_production",
 								},
+								{
+									Name:  "POSTGRESQL_LOG_DESTINATION",
+									Value: "/dev/stderr",
+								},
 							},
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
