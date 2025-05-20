@@ -179,6 +179,8 @@ func sentinelOptions(cfg *RedisConfig) (*goredis.FailoverOptions, error) {
 		return nil, fmt.Errorf("invalid sentinel URLs")
 	}
 
+	var sentinelUsername string
+	var sentinelPassword string
 	sentinels := make([]string, len(urls))
 
 	for i := range urls {
@@ -192,7 +194,32 @@ func sentinelOptions(cfg *RedisConfig) (*goredis.FailoverOptions, error) {
 			return nil, err
 		}
 
+		// * Sentinel can use different authentication with master
+		// * Sentinel accepts credentials in the URI
+		// * All sentinels must share the same password
+		// * Values in URI has precedence over value provided in config
+		// * If there are multiple sentinels, the first username/password will be used
+		if opt.Password != "" && len(sentinelPassword) == 0 {
+			// sets password using the first non-empty password
+			sentinelPassword = opt.Password
+
+			// If a password is specified, a username is optional. Ensure that we use the
+			// username associated with the password.
+			if opt.Username != "" && sentinelUsername == "" {
+				sentinelUsername = opt.Username
+			}
+		}
+
 		sentinels[i] = opt.Addr
+	}
+
+	// If sentinel username and password is still empty
+	// use values from the config
+	if sentinelPassword == "" {
+		sentinelPassword = cfg.SentinelPassword
+	}
+	if sentinelUsername == "" {
+		sentinelUsername = cfg.SentinelUsername
 	}
 
 	opts := &goredis.FailoverOptions{
@@ -200,8 +227,8 @@ func sentinelOptions(cfg *RedisConfig) (*goredis.FailoverOptions, error) {
 		SentinelAddrs:    sentinels,
 		Username:         username,
 		Password:         password,
-		SentinelUsername: cfg.SentinelUsername,
-		SentinelPassword: cfg.SentinelPassword,
+		SentinelUsername: sentinelUsername,
+		SentinelPassword: sentinelPassword,
 		ConnMaxIdleTime:  defaultIdleTimeout,
 		ReadTimeout:      defaultReadTimeout,
 		WriteTimeout:     defaultWriteTimeout,

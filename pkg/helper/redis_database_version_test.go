@@ -301,6 +301,67 @@ func TestSentinelOptions(t *testing.T) {
 				SentinelAddrs: []string{"sentinel1:5000", "sentinel2:5000", "sentinel3:5000"},
 			},
 		},
+		{
+			"sentinels with credentials",
+			&RedisConfig{
+				URL:         "redis://:pass@master:3000/1",
+				SentinelURL: ":sentinelpass@sentinel1:5000, sentinel2:5000, sentinel3:5000",
+			},
+			&redis.FailoverOptions{
+				MasterName:       "master",
+				Password:         "pass",
+				SentinelAddrs:    []string{"sentinel1:5000", "sentinel2:5000", "sentinel3:5000"},
+				SentinelPassword: "sentinelpass",
+			},
+		},
+		{
+			"sentinels use values from ENV var",
+			&RedisConfig{
+				URL:              "redis://:pass@master:3000/1",
+				SentinelURL:      "sentinel1:5000, sentinel2:5000, sentinel3:5000",
+				SentinelUsername: "sentinel",
+				SentinelPassword: "sentinelpass",
+			},
+			&redis.FailoverOptions{
+				MasterName:       "master",
+				Password:         "pass",
+				SentinelAddrs:    []string{"sentinel1:5000", "sentinel2:5000", "sentinel3:5000"},
+				SentinelUsername: "sentinel",
+				SentinelPassword: "sentinelpass",
+			},
+		},
+		{
+			"sentinels credentials in URI has precedence over values from ENV var",
+			&RedisConfig{
+				URL:              "redis://:pass@master:3000/1",
+				SentinelURL:      "foo:bar@sentinel1:5000, sentinel2:5000, sentinel3:5000",
+				SentinelUsername: "sentinel",
+				SentinelPassword: "sentinelpass",
+			},
+			&redis.FailoverOptions{
+				MasterName:       "master",
+				Password:         "pass",
+				SentinelAddrs:    []string{"sentinel1:5000", "sentinel2:5000", "sentinel3:5000"},
+				SentinelUsername: "foo",
+				SentinelPassword: "bar",
+			},
+		},
+		{
+			"sentinels use the first credentials regardless of the order",
+			&RedisConfig{
+				URL:              "redis://:pass@master:3000/1",
+				SentinelURL:      "sentinel1:5000, foo:bar@sentinel2:5000, sentinel3:5000",
+				SentinelUsername: "sentinel",
+				SentinelPassword: "sentinelpass",
+			},
+			&redis.FailoverOptions{
+				MasterName:       "master",
+				Password:         "pass",
+				SentinelAddrs:    []string{"sentinel1:5000", "sentinel2:5000", "sentinel3:5000"},
+				SentinelUsername: "foo",
+				SentinelPassword: "bar",
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -312,6 +373,8 @@ func TestSentinelOptions(t *testing.T) {
 			require.Equal(t, tc.expected.MasterName, opt.MasterName)
 			require.Equal(t, tc.expected.Username, opt.Username)
 			require.Equal(t, tc.expected.Password, opt.Password)
+			require.Equal(t, tc.expected.SentinelUsername, opt.SentinelUsername)
+			require.Equal(t, tc.expected.SentinelPassword, opt.SentinelPassword)
 		})
 	}
 }
