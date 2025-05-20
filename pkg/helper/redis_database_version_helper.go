@@ -162,7 +162,6 @@ func configureRedisSentinel(cfg *RedisConfig) (*goredis.Client, error) {
 	}
 
 	client := goredis.NewFailoverClient(opts)
-
 	return client, nil
 }
 
@@ -182,9 +181,12 @@ func sentinelOptions(cfg *RedisConfig) (*goredis.FailoverOptions, error) {
 
 	sentinels := make([]string, len(urls))
 
-	// 3scale system does not support username/password in the sentinel URL.
 	for i := range urls {
 		url := strings.TrimSpace(urls[i])
+		// Backward compatible, assmuming the scheme to be redis if missing
+		if !strings.Contains(url, "://") {
+			url = "redis://" + url
+		}
 		opt, err := goredis.ParseURL(url)
 		if err != nil {
 			return nil, err
