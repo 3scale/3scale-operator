@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"net/url"
+	"net"
 	"regexp"
 	"strings"
 	"time"
@@ -134,11 +134,11 @@ func configureRedis(cfg *RedisConfig) (*goredis.Client, error) {
 	opts.WriteTimeout = defaultWriteTimeout
 	opts.ConnMaxIdleTime = defaultIdleTimeout
 
-	if cfg.Username != "" {
+	if opts.Username == "" && cfg.Username != "" {
 		opts.Username = cfg.Username
 	}
 
-	if cfg.Password != "" {
+	if opts.Password == "" && cfg.Password != "" {
 		opts.Password = cfg.Password
 	}
 
@@ -166,13 +166,28 @@ func configureRedisSentinel(cfg *RedisConfig) (*goredis.Client, error) {
 }
 
 func sentinelOptions(cfg *RedisConfig) (*goredis.FailoverOptions, error) {
-	master_url, err := url.Parse(cfg.URL)
+
+	if cfg.URL == "" {
+		return nil, fmt.Errorf("URL cannot be nil")
+	}
+
+	master_opts, err := goredis.ParseURL(cfg.URL)
 	if err != nil {
 		return nil, err
 	}
 
-	username := master_url.User.Username()
-	password, _ := master_url.User.Password()
+	sentinelMaster, _, err := net.SplitHostPort(master_opts.Addr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get sentinel master, err: %v", err)
+	}
+
+	if master_opts.Username == "" && cfg.Username != "" {
+		master_opts.Username = cfg.Username
+	}
+
+	if master_opts.Password == "" && cfg.Password != "" {
+		master_opts.Password = cfg.Password
+	}
 
 	urls := strings.Split(cfg.SentinelURL, ",")
 	if len(urls) == 0 {
@@ -223,12 +238,13 @@ func sentinelOptions(cfg *RedisConfig) (*goredis.FailoverOptions, error) {
 	}
 
 	opts := &goredis.FailoverOptions{
-		MasterName:       master_url.Hostname(),
+		MasterName:       sentinelMaster,
 		SentinelAddrs:    sentinels,
-		Username:         username,
-		Password:         password,
+		Username:         master_opts.Username,
+		Password:         master_opts.Password,
 		SentinelUsername: sentinelUsername,
 		SentinelPassword: sentinelPassword,
+		DB:               master_opts.DB,
 		ConnMaxIdleTime:  defaultIdleTimeout,
 		ReadTimeout:      defaultReadTimeout,
 		WriteTimeout:     defaultWriteTimeout,
