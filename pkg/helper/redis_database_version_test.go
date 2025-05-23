@@ -244,18 +244,18 @@ func TestSentinelOptions(t *testing.T) {
 		testName    string
 		redisConfig *RedisConfig
 		expected    *redis.FailoverOptions
+		err         string
 	}{
 		{
-			"no sentiel master",
+			"no sentinel master",
 			&RedisConfig{
 				SentinelURL: "redis://sentinel1:5000",
 			},
-			&redis.FailoverOptions{
-				SentinelAddrs: []string{"sentinel1:5000"},
-			},
+			nil,
+			"URL cannot be nil",
 		},
 		{
-			"with sentiel master",
+			"with sentinel master",
 			&RedisConfig{
 				URL:         "redis://master:3000/1",
 				SentinelURL: "redis://sentinel1:5000",
@@ -264,12 +264,13 @@ func TestSentinelOptions(t *testing.T) {
 				MasterName:    "master",
 				SentinelAddrs: []string{"sentinel1:5000"},
 			},
+			"",
 		},
 		{
 			"with username/password in master url",
 			&RedisConfig{
 				URL:         "redis://username:password@master:3000/1",
-				SentinelURL: "redis://sentinel:sentinelpass@sentinel1:5000",
+				SentinelURL: "redis://sentinel1:5000",
 			},
 			&redis.FailoverOptions{
 				MasterName:    "master",
@@ -277,29 +278,131 @@ func TestSentinelOptions(t *testing.T) {
 				Username:      "username",
 				Password:      "password",
 			},
+			"",
+		},
+		{
+			"with username/password for master in the config",
+			&RedisConfig{
+				URL:         "redis://master:3000/1",
+				SentinelURL: "redis://sentinel1:5000",
+				Username:    "username",
+				Password:    "password",
+			},
+			&redis.FailoverOptions{
+				MasterName:    "master",
+				SentinelAddrs: []string{"sentinel1:5000"},
+				Username:      "username",
+				Password:      "password",
+			},
+			"",
 		},
 		{
 			"with multiple sentiels",
 			&RedisConfig{
 				URL:         "redis://master:3000/1",
-				SentinelURL: "redis://sentinel:sentinelpass@sentinel1:5000, redis://sentinel2:5000, redis://sentinel3:5000",
+				SentinelURL: "redis://sentinel1:5000, redis://sentinel2:5000, redis://sentinel3:5000",
 			},
 			&redis.FailoverOptions{
 				MasterName:    "master",
 				SentinelAddrs: []string{"sentinel1:5000", "sentinel2:5000", "sentinel3:5000"},
 			},
+			"",
+		},
+		{
+			"sentinels without scheme",
+			&RedisConfig{
+				URL:         "redis://:pass@master:3000/1",
+				SentinelURL: "sentinel1:5000, sentinel2:5000, sentinel3:5000",
+			},
+			&redis.FailoverOptions{
+				MasterName:    "master",
+				Password:      "pass",
+				SentinelAddrs: []string{"sentinel1:5000", "sentinel2:5000", "sentinel3:5000"},
+			},
+			"",
+		},
+		{
+			"sentinels with credentials",
+			&RedisConfig{
+				URL:         "redis://:pass@master:3000/1",
+				SentinelURL: ":sentinelpass@sentinel1:5000, sentinel2:5000, sentinel3:5000",
+			},
+			&redis.FailoverOptions{
+				MasterName:       "master",
+				Password:         "pass",
+				SentinelAddrs:    []string{"sentinel1:5000", "sentinel2:5000", "sentinel3:5000"},
+				SentinelPassword: "sentinelpass",
+			},
+			"",
+		},
+		{
+			"sentinels use values from ENV var",
+			&RedisConfig{
+				URL:              "redis://:pass@master:3000/1",
+				SentinelURL:      "sentinel1:5000, sentinel2:5000, sentinel3:5000",
+				SentinelUsername: "sentinel",
+				SentinelPassword: "sentinelpass",
+			},
+			&redis.FailoverOptions{
+				MasterName:       "master",
+				Password:         "pass",
+				SentinelAddrs:    []string{"sentinel1:5000", "sentinel2:5000", "sentinel3:5000"},
+				SentinelUsername: "sentinel",
+				SentinelPassword: "sentinelpass",
+			},
+			"",
+		},
+		{
+			"sentinels credentials in URI has precedence over values from ENV var",
+			&RedisConfig{
+				URL:              "redis://:pass@master:3000/1",
+				SentinelURL:      "foo:bar@sentinel1:5000, sentinel2:5000, sentinel3:5000",
+				SentinelUsername: "sentinel",
+				SentinelPassword: "sentinelpass",
+			},
+			&redis.FailoverOptions{
+				MasterName:       "master",
+				Password:         "pass",
+				SentinelAddrs:    []string{"sentinel1:5000", "sentinel2:5000", "sentinel3:5000"},
+				SentinelUsername: "foo",
+				SentinelPassword: "bar",
+			},
+			"",
+		},
+		{
+			"sentinels use the first credentials regardless of the order",
+			&RedisConfig{
+				URL:              "redis://:pass@master:3000/1",
+				SentinelURL:      "sentinel1:5000, foo:bar@sentinel2:5000, sentinel3:5000",
+				SentinelUsername: "sentinel",
+				SentinelPassword: "sentinelpass",
+			},
+			&redis.FailoverOptions{
+				MasterName:       "master",
+				Password:         "pass",
+				SentinelAddrs:    []string{"sentinel1:5000", "sentinel2:5000", "sentinel3:5000"},
+				SentinelUsername: "foo",
+				SentinelPassword: "bar",
+			},
+			"",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.testName, func(subT *testing.T) {
 			opt, err := sentinelOptions(tc.redisConfig)
-			require.NoError(t, err)
 
-			require.Equal(t, tc.expected.SentinelAddrs, opt.SentinelAddrs)
-			require.Equal(t, tc.expected.MasterName, opt.MasterName)
-			require.Equal(t, tc.expected.Username, opt.Username)
-			require.Equal(t, tc.expected.Password, opt.Password)
+			if tc.err != "" {
+				require.EqualError(t, err, tc.err)
+			}
+			if tc.expected != nil {
+				require.Equal(t, tc.expected.SentinelAddrs, opt.SentinelAddrs)
+				require.Equal(t, tc.expected.MasterName, opt.MasterName)
+				require.Equal(t, tc.expected.Username, opt.Username)
+				require.Equal(t, tc.expected.Password, opt.Password)
+				require.Equal(t, tc.expected.SentinelUsername, opt.SentinelUsername)
+				require.Equal(t, tc.expected.SentinelPassword, opt.SentinelPassword)
+			}
 		})
 	}
 }

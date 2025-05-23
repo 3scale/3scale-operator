@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"net/url"
+	"net"
 	"regexp"
 	"strings"
 	"time"
@@ -134,11 +134,11 @@ func configureRedis(cfg *RedisConfig) (*goredis.Client, error) {
 	opts.WriteTimeout = defaultWriteTimeout
 	opts.ConnMaxIdleTime = defaultIdleTimeout
 
-	if cfg.Username != "" {
+	if opts.Username == "" && cfg.Username != "" {
 		opts.Username = cfg.Username
 	}
 
-	if cfg.Password != "" {
+	if opts.Password == "" && cfg.Password != "" {
 		opts.Password = cfg.Password
 	}
 
@@ -162,44 +162,89 @@ func configureRedisSentinel(cfg *RedisConfig) (*goredis.Client, error) {
 	}
 
 	client := goredis.NewFailoverClient(opts)
-
 	return client, nil
 }
 
 func sentinelOptions(cfg *RedisConfig) (*goredis.FailoverOptions, error) {
-	master_url, err := url.Parse(cfg.URL)
+
+	if cfg.URL == "" {
+		return nil, fmt.Errorf("URL cannot be nil")
+	}
+
+	master_opts, err := goredis.ParseURL(cfg.URL)
 	if err != nil {
 		return nil, err
 	}
 
-	username := master_url.User.Username()
-	password, _ := master_url.User.Password()
+	sentinelMaster, _, err := net.SplitHostPort(master_opts.Addr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get sentinel master, err: %v", err)
+	}
+
+	if master_opts.Username == "" && cfg.Username != "" {
+		master_opts.Username = cfg.Username
+	}
+
+	if master_opts.Password == "" && cfg.Password != "" {
+		master_opts.Password = cfg.Password
+	}
 
 	urls := strings.Split(cfg.SentinelURL, ",")
 	if len(urls) == 0 {
 		return nil, fmt.Errorf("invalid sentinel URLs")
 	}
 
+	var sentinelUsername string
+	var sentinelPassword string
 	sentinels := make([]string, len(urls))
 
-	// 3scale system does not support username/password in the sentinel URL.
 	for i := range urls {
 		url := strings.TrimSpace(urls[i])
+		// Backward compatible, assmuming the scheme to be redis if missing
+		if !strings.Contains(url, "://") {
+			url = "redis://" + url
+		}
 		opt, err := goredis.ParseURL(url)
 		if err != nil {
 			return nil, err
 		}
 
+		// * Sentinel can use different authentication with master
+		// * Sentinel accepts credentials in the URI
+		// * All sentinels must share the same password
+		// * Values in URI has precedence over value provided in config
+		// * If there are multiple sentinels, the first username/password will be used
+		if opt.Password != "" && len(sentinelPassword) == 0 {
+			// sets password using the first non-empty password
+			sentinelPassword = opt.Password
+
+			// If a password is specified, a username is optional. Ensure that we use the
+			// username associated with the password.
+			if opt.Username != "" && sentinelUsername == "" {
+				sentinelUsername = opt.Username
+			}
+		}
+
 		sentinels[i] = opt.Addr
 	}
 
+	// If sentinel username and password is still empty
+	// use values from the config
+	if sentinelPassword == "" {
+		sentinelPassword = cfg.SentinelPassword
+	}
+	if sentinelUsername == "" {
+		sentinelUsername = cfg.SentinelUsername
+	}
+
 	opts := &goredis.FailoverOptions{
-		MasterName:       master_url.Hostname(),
+		MasterName:       sentinelMaster,
 		SentinelAddrs:    sentinels,
-		Username:         username,
-		Password:         password,
-		SentinelUsername: cfg.SentinelUsername,
-		SentinelPassword: cfg.SentinelPassword,
+		Username:         master_opts.Username,
+		Password:         master_opts.Password,
+		SentinelUsername: sentinelUsername,
+		SentinelPassword: sentinelPassword,
+		DB:               master_opts.DB,
 		ConnMaxIdleTime:  defaultIdleTimeout,
 		ReadTimeout:      defaultReadTimeout,
 		WriteTimeout:     defaultWriteTimeout,
