@@ -47,15 +47,15 @@ func VerifySystemRedis(k8sclient client.Client, reqConfigMap *v1.ConfigMap, syst
 	systemRedisVerified := false
 	connSecret, err := fetchSecret(k8sclient, "system-redis", apimInstance.Namespace)
 	if err != nil {
-		logger.Info("System redis secret not found")
+		logger.Error(err, "System redis secret not found")
 		return false, err
 	}
 
 	enabledTLS := apimInstance.IsSystemRedisTLSEnabled()
 
-	systemRedisVerified, err = verifySystemRedisVersion(*connSecret, apimInstance.Namespace, systemRedisRequirement, enabledTLS, logger)
+	systemRedisVerified, err = verifySystemRedisVersion(*connSecret, systemRedisRequirement, enabledTLS)
 	if err != nil {
-		logger.Info("Encountered error during version verification of system Redis")
+		logger.Error(err, "Encountered error during version verification of system Redis")
 		return false, err
 	}
 	if systemRedisVerified {
@@ -72,16 +72,16 @@ func VerifyBackendRedis(k8sclient client.Client, reqConfigMap *v1.ConfigMap, bac
 	backendRedisVerified := false
 	connSecret, err := fetchSecret(k8sclient, "backend-redis", apimInstance.Namespace)
 	if err != nil {
-		logger.Info("Backend redis secret not found")
+		logger.Error(err, "Backend redis secret not found")
 		return false, err
 	}
 
 	redisStorageEnabledTLS := apimInstance.IsBackendRedisTLSEnabled()
 	redisQueueEnabledTLS := apimInstance.IsQueuesRedisTLSEnabled()
 
-	backendRedisVerified, err = verifyBackendRedisVersion(*connSecret, apimInstance.Namespace, backendRedisRequirement, redisStorageEnabledTLS, redisQueueEnabledTLS, logger)
+	backendRedisVerified, err = verifyBackendRedisVersion(*connSecret, backendRedisRequirement, redisStorageEnabledTLS, redisQueueEnabledTLS)
 	if err != nil {
-		logger.Info("Encountered error during version verification of backend Redis")
+		logger.Error(err, "Encountered error during version verification of backend Redis")
 		return false, err
 	}
 	if backendRedisVerified {
@@ -93,7 +93,7 @@ func VerifyBackendRedis(k8sclient client.Client, reqConfigMap *v1.ConfigMap, bac
 	return backendRedisVerified, nil
 }
 
-func verifySystemRedisVersion(connSecret v1.Secret, namespace string, requiredVersion string, enabledTLS bool, logger logr.Logger) (bool, error) {
+func verifySystemRedisVersion(connSecret v1.Secret, requiredVersion string, enabledTLS bool) (bool, error) {
 	redisOpts := reconcileSystemRedisSecret(connSecret)
 
 	if enabledTLS {
@@ -102,14 +102,13 @@ func verifySystemRedisVersion(connSecret v1.Secret, namespace string, requiredVe
 
 	rdb, err := Configure(redisOpts)
 	if err != nil {
-		logger.Info("Failed to setup Redis connection")
 		return false, err
 	}
 
 	return verifyRedisVersion(rdb, requiredVersion)
 }
 
-func verifyBackendRedisVersion(connSecret v1.Secret, namespace string, requiredVersion string, enabledRedisStorageTLS bool, enabledRedisQueueTLS bool, logger logr.Logger) (bool, error) {
+func verifyBackendRedisVersion(connSecret v1.Secret, requiredVersion string, enabledRedisStorageTLS bool, enabledRedisQueueTLS bool) (bool, error) {
 	redisQueueOpts := reconcileQueuesRedisSecret(connSecret)
 
 	if enabledRedisQueueTLS {
@@ -118,13 +117,11 @@ func verifyBackendRedisVersion(connSecret v1.Secret, namespace string, requiredV
 
 	qrdb, err := Configure(redisQueueOpts)
 	if err != nil {
-		logger.Info("Failed to setup Redis connection")
 		return false, err
 	}
 
 	redisQueuesVersionConfirmed, err := verifyRedisVersion(qrdb, requiredVersion)
 	if err != nil {
-		logger.Info("Failed to verify Redis version")
 		return false, err
 	}
 
@@ -136,13 +133,11 @@ func verifyBackendRedisVersion(connSecret v1.Secret, namespace string, requiredV
 
 	srdb, err := Configure(redisStorageOpts)
 	if err != nil {
-		logger.Info("Failed to setup Redis connection")
 		return false, err
 	}
 
 	redisStorageVersionConfirmed, err := verifyRedisVersion(srdb, requiredVersion)
 	if err != nil {
-		logger.Info("Failed to verify Redis version")
 		return false, err
 	}
 
