@@ -49,6 +49,7 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.setPodTemplateAnnotations()
 	o.setBackendRedisTLSEnabled()
 	o.setQueuesRedisTLSEnabled()
+	o.setRedisAsyncEnabled()
 
 	o.backendOptions.CommonLabels = o.commonLabels()
 	o.backendOptions.CommonListenerLabels = o.commonListenerLabels()
@@ -282,6 +283,11 @@ func (o *OperatorBackendOptionsProvider) setTopologySpreadConstraints() {
 func (o *OperatorBackendOptionsProvider) setBackendRedisTLSEnabled() {
 	o.backendOptions.BackendRedisTLSEnabled = o.apimanager.IsBackendRedisTLSEnabled()
 }
+
 func (o *OperatorBackendOptionsProvider) setQueuesRedisTLSEnabled() {
 	o.backendOptions.QueuesRedisTLSEnabled = o.apimanager.IsQueuesRedisTLSEnabled()
+}
+
+func (o *OperatorBackendOptionsProvider) setRedisAsyncEnabled() {
+	o.backendOptions.RedisAsyncEnabled = !o.apimanager.IsAsyncDisableAnnotationPresent()
 }
