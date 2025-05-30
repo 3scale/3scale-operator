@@ -3,11 +3,13 @@ package reconcilers
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"sort"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	k8sappsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -370,6 +372,8 @@ func DeploymentPodInitContainerMutator(desired, existing *k8sappsv1.Deployment) 
 	return updated, nil
 }
 
+// DeploymentVolumesMutator implements strict Volumes reconcilliation
+// Does not allow manually added volumes
 func DeploymentVolumesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	updated := false
 
@@ -402,6 +406,8 @@ func DeploymentVolumesMutator(desired, existing *k8sappsv1.Deployment) (bool, er
 	return updated, nil
 }
 
+// DeploymentInitContainerVolumeMountsMutator implements strict VolumeMounts reconcilliation
+// Does not allow manually added volumes
 func DeploymentInitContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	updated := false
 
@@ -424,6 +430,8 @@ func DeploymentInitContainerVolumeMountsMutator(desired, existing *k8sappsv1.Dep
 	return updated, nil
 }
 
+// DeploymentContainerVolumeMountsMutator implements strict VolumeMounts reconcilliation
+// Does not allow manually added volumes
 func DeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	updated := false
 
@@ -444,4 +452,118 @@ func DeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deploym
 	}
 
 	return updated, nil
+}
+
+// WeakDeploymentVolumesMutator implements basic Volume reconciliation deployments.
+// Added when in desired and not in existing
+// Updated when in desired and in existing but not equal
+// Removed when not in desired and exists in existing Deployment
+func WeakDeploymentVolumesMutator(desired, existing *k8sappsv1.Deployment, volumesName []string) (bool, error) {
+	updated := false
+
+	// Copy so can can perform sort
+	existingSpec := &existing.Spec.Template.Spec
+	desiredSpec := &desired.Spec.Template.Spec
+
+	for _, volumeName := range volumesName {
+		desiredIdx := helper.FindVolumeByName(desiredSpec.Volumes, volumeName)
+		existingIdx := helper.FindVolumeByName(existingSpec.Volumes, volumeName)
+
+		if desiredIdx < 0 && existingIdx >= 0 {
+			// env var exists in existing and does not exist in desired => Remove from the list
+			// shift all of the elements at the right of the deleting index by one to the left
+			existingSpec.Volumes = slices.Delete(existingSpec.Volumes, existingIdx, existingIdx+1)
+			updated = true
+		} else if desiredIdx < 0 && existingIdx < 0 {
+			// env var does not exist in existing and does not exist in desired => NOOP
+		} else if desiredIdx >= 0 && existingIdx < 0 {
+			// env var does not exist in existing and exists in desired => ADD it
+			existingSpec.Volumes = append(existingSpec.Volumes, desiredSpec.Volumes[desiredIdx])
+			updated = true
+		} else {
+			// env var exists in existing and exists in desired
+			if !reflect.DeepEqual(existingSpec.Volumes[existingIdx], desiredSpec.Volumes[desiredIdx]) {
+				existingSpec.Volumes[existingIdx] = desiredSpec.Volumes[desiredIdx]
+				updated = true
+			}
+		}
+	}
+
+	return updated, nil
+}
+
+// WeakDeploymentInitContainerVolumeMountsMutator implements basic VolumeMounts reconciliation deployments.
+// Existing and desired Deployment must have same number of containers
+// Added when in desired and not in existing
+// Updated when in desired and in existing but not equal
+// Removed when not in desired and exists in existing Deployment
+func WeakDeploymentInitContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment, volumeMountsName []string) (bool, error) {
+	if len(desired.Spec.Template.Spec.InitContainers) != len(existing.Spec.Template.Spec.InitContainers) {
+		log.Info("[WARNING] not reconciling deployment",
+			"name", client.ObjectKeyFromObject(desired),
+			"reason", "existing and desired do not have same number of containers")
+		return false, nil
+	}
+
+	updated := false
+	for idx, desiredContainer := range desired.Spec.Template.Spec.InitContainers {
+		existingContainer := &existing.Spec.Template.Spec.InitContainers[idx]
+		tmpChanged := weakVolumeMountMutator(&desiredContainer, existingContainer, volumeMountsName)
+		updated = updated || tmpChanged
+	}
+
+	return updated, nil
+}
+
+// WeakDeploymentContainerVolumeMountsMutator implements basic volumes reconciliation deployments.
+// Existing and desired Deployment must have same number of containers
+// Added when in desired and not in existing
+// Updated when in desired and in existing but not equal
+// Removed when not in desired and exists in existing Deployment
+func WeakDeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment, volumeMountsName []string) (bool, error) {
+	if len(desired.Spec.Template.Spec.InitContainers) != len(existing.Spec.Template.Spec.InitContainers) {
+		log.Info("[WARNING] not reconciling deployment",
+			"name", client.ObjectKeyFromObject(desired),
+			"reason", "existing and desired do not have same number of containers")
+		return false, nil
+	}
+
+	updated := false
+	for idx, desiredContainer := range desired.Spec.Template.Spec.Containers {
+		existingContainer := &existing.Spec.Template.Spec.Containers[idx]
+		tmpChanged := weakVolumeMountMutator(&desiredContainer, existingContainer, volumeMountsName)
+		updated = updated || tmpChanged
+	}
+
+	return updated, nil
+}
+
+func weakVolumeMountMutator(desiredContainer, existingContainer *corev1.Container, volumeMountsName []string) bool {
+	updated := false
+
+	for _, volumeMountName := range volumeMountsName {
+		desiredIdx := helper.FindVolumeMountByName(desiredContainer.VolumeMounts, volumeMountName)
+		existingIdx := helper.FindVolumeMountByName(existingContainer.VolumeMounts, volumeMountName)
+
+		if desiredIdx < 0 && existingIdx >= 0 {
+			// env var exists in existing and does not exist in desired => Remove from the list
+			// shift all of the elements at the right of the deleting index by one to the left
+			existingContainer.VolumeMounts = slices.Delete(existingContainer.VolumeMounts, existingIdx, existingIdx+1)
+			updated = true
+		} else if desiredIdx < 0 && existingIdx < 0 {
+			// env var does not exist in existing and does not exist in desired => NOOP
+		} else if desiredIdx >= 0 && existingIdx < 0 {
+			// env var does not exist in existing and exists in desired => ADD it
+			existingContainer.VolumeMounts = append(existingContainer.VolumeMounts, desiredContainer.VolumeMounts[desiredIdx])
+			updated = true
+		} else {
+			// env var exists in existing and exists in desired
+			if !reflect.DeepEqual(existingContainer.VolumeMounts[existingIdx], desiredContainer.VolumeMounts[desiredIdx]) {
+				existingContainer.VolumeMounts[existingIdx] = desiredContainer.VolumeMounts[desiredIdx]
+				updated = true
+			}
+		}
+	}
+
+	return updated
 }
