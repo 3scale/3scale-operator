@@ -120,9 +120,9 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		r.workerRedisAsyncReconciler,
 		r.backendRedisTLSEnvVarMutator,
 		r.backendQueuesRedisTLSEnvVarMutator,
-		reconcilers.DeploymentVolumesMutator,
-		reconcilers.DeploymentInitContainerVolumeMountsMutator,
-		reconcilers.DeploymentContainerVolumeMountsMutator,
+		backendDeploymentVolumesMutator,
+		backendDeploymentInitContainerVolumeMountsMutator,
+		backendDeploymentContainerVolumeMountsMutator,
 	)
 
 	if r.apiManager.Spec.Backend.WorkerSpec.Replicas != nil {
@@ -306,4 +306,28 @@ func (r *BackendReconciler) workerRedisAsyncReconciler(desired, existing *k8sapp
 	}
 
 	return changed, nil
+}
+
+func backendDeploymentVolumesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeNames := []string{
+		"backend-redis-tls",
+		"queues-redis-tls",
+	}
+	return reconcilers.WeakDeploymentVolumesMutator(desired, existing, volumeNames)
+}
+
+func backendDeploymentInitContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeMountNames := []string{
+		"backend-redis-tls",
+		"queues-redis-tls",
+	}
+	return reconcilers.WeakDeploymentVolumesMutator(desired, existing, volumeMountNames)
+}
+
+func backendDeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeMountNames := []string{
+		"backend-redis-tls",
+		"queues-redis-tls",
+	}
+	return reconcilers.WeakDeploymentVolumesMutator(desired, existing, volumeMountNames)
 }
