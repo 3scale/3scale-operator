@@ -3,10 +3,11 @@ package operator
 import (
 	"context"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"log"
 	"regexp"
 	"time"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -206,24 +207,12 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 			r.systemZyncEnvVarMutator,
 			r.systemDatabaseTLSEnvVarMutator,
 			r.systemRedisTLSEnvVarMutator,
+			systemDeploymentVolumesMutator,
+			systemDeploymentInitContainerVolumeMountsMutator,
+			systemDeploymentContainerVolumeMountsMutator,
 		}
 		if r.apiManager.Spec.System.AppSpec.Replicas != nil {
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentReplicasMutator)
-		}
-		if r.apiManager.IsSystemDatabaseTLSEnabled() {
-			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSyncVolumesAndMountsMutator)
-		}
-		if !r.apiManager.IsSystemDatabaseTLSEnabled() {
-			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentRemoveTLSVolumesAndMountsMutator)
-		}
-
-		if r.apiManager.IsSystemRedisTLSEnabled() {
-			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSSyncVolumesAndMountsMutator)
-			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
-		} else {
-			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveVolumesAndMountsMutator)
-			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveEnvMutator)
-			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
 		}
 
 		appDeployment, err := system.AppDeployment(r.Context(), r.Client(), ampImages.Options.SystemImage)
@@ -284,24 +273,13 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		r.systemZyncEnvVarMutator,
 		r.systemDatabaseTLSEnvVarMutator,
 		r.systemRedisTLSEnvVarMutator,
-	}
-	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentReplicasMutator)
-	}
-	if r.apiManager.IsSystemDatabaseTLSEnabled() {
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSyncVolumesAndMountsMutator)
-	}
-	if !r.apiManager.IsSystemDatabaseTLSEnabled() {
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentRemoveTLSVolumesAndMountsMutator)
+		sidekiqDeploymentVolumesMutator,
+		sidekiqDeploymentInitContainerVolumeMountsMutator,
+		sidekiqDeploymentContainerVolumeMountsMutator,
 	}
 
-	if r.apiManager.IsSystemRedisTLSEnabled() {
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSSyncVolumesAndMountsMutator)
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
-	} else {
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveVolumesAndMountsMutator)
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveEnvMutator)
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
+	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {
+		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentReplicasMutator)
 	}
 
 	sidekiqDeployment, err := system.SidekiqDeployment(r.Context(), r.Client(), ampImages.Options.SystemImage)
@@ -406,7 +384,7 @@ func (r *SystemReconciler) systemAppDeploymentResourceMutator(desired, existing 
 	}
 
 	if len(existing.Spec.Template.Spec.Containers) != 3 {
-		r.Logger().Info(fmt.Sprintf("%s spec.template.spec.containers length changed to '%d', recreating dc", desiredName, len(existing.Spec.Template.Spec.Containers)))
+		r.Logger().Info(fmt.Sprintf("%s spec.template.spec.containers length changed to '%d', recreating deployment", desiredName, len(existing.Spec.Template.Spec.Containers)))
 		existing.Spec.Template.Spec.Containers = desired.Spec.Template.Spec.Containers
 		update = true
 	}
@@ -570,4 +548,77 @@ func (r *SystemReconciler) systemRedisTLSEnvVarMutator(desired, existing *k8sapp
 	}
 
 	return changed, nil
+}
+
+func systemDeploymentVolumesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeNames := []string{
+		"system-storage",
+		"system-config",
+		"tls-secret",
+		"writable-tls",
+		"system-redis-tls",
+		"backend-redis-tls",
+		"s3-credentials",
+	}
+
+	return reconcilers.WeakDeploymentVolumesMutator(desired, existing, volumeNames)
+}
+
+func systemDeploymentInitContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeMountNames := []string{
+		"tls-secret",
+		"writable-tls",
+	}
+
+	return reconcilers.WeakDeploymentInitContainerVolumeMountsMutator(desired, existing, volumeMountNames)
+}
+
+func systemDeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeMountNames := []string{
+		"system-storage",
+		"s3-credentials",
+		"system-redis-tls",
+		"backend-redis-tls",
+		"writable-tls",
+	}
+	return reconcilers.WeakDeploymentInitContainerVolumeMountsMutator(desired, existing, volumeMountNames)
+}
+
+func sidekiqDeploymentVolumesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeNames := []string{
+		"system-tmp",
+		"system-storage",
+		"system-config",
+		"s3-credentials",
+		"tls-secret",
+		"writable-tls",
+		"system-redis-tls",
+		"backend-redis-tls",
+	}
+
+	return reconcilers.WeakDeploymentVolumesMutator(desired, existing, volumeNames)
+}
+
+func sidekiqDeploymentInitContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeMountNames := []string{
+		"tls-secret",
+		"writable-tls",
+		"system-redis-tls",
+		"backend-redis-tls",
+	}
+
+	return reconcilers.WeakDeploymentInitContainerVolumeMountsMutator(desired, existing, volumeMountNames)
+}
+
+func sidekiqDeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeMountNames := []string{
+		"system-tmp",
+		"system-storage",
+		"system-config",
+		"s3-credentials",
+		"system-redis-tls",
+		"backend-redis-tls",
+		"writable-tls",
+	}
+	return reconcilers.WeakDeploymentInitContainerVolumeMountsMutator(desired, existing, volumeMountNames)
 }

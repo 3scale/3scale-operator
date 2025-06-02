@@ -57,6 +57,7 @@ type BackendOptions struct {
 
 	BackendRedisTLSEnabled bool
 	QueuesRedisTLSEnabled  bool
+	RedisAsyncEnabled      bool
 }
 
 func NewBackendOptions() *BackendOptions {

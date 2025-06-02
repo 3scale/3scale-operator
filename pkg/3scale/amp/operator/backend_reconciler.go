@@ -34,23 +34,16 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Cron Deployment
 	cronDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
+	cronDeploymentMutator = append(cronDeploymentMutator,
+		r.backendRedisTLSEnvVarMutator,
+		r.backendQueuesRedisTLSEnvVarMutator,
+		reconcilers.DeploymentVolumesMutator,
+		reconcilers.DeploymentInitContainerVolumeMountsMutator,
+		reconcilers.DeploymentContainerVolumeMountsMutator,
+	)
+
 	if r.apiManager.Spec.Backend.CronSpec.Replicas != nil {
 		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentReplicasMutator)
-	}
-
-	if r.apiManager.IsBackendRedisTLSEnabled() {
-		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
-		cronDeploymentMutator = append(cronDeploymentMutator, r.backendRedisTLSEnvVarMutator)
-	} else {
-		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
-		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveEnvMutator)
-	}
-	if r.apiManager.IsQueuesRedisTLSEnabled() {
-		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSSyncVolumesAndMountsMutator)
-		cronDeploymentMutator = append(cronDeploymentMutator, r.backendQueuesRedisTLSEnvVarMutator)
-	} else {
-		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveVolumesAndMountsMutator)
-		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveEnvMutator)
 	}
 
 	cronDeployment, err := backend.CronDeployment(r.Context(), r.Client(), ampImages.Options.BackendImage)
@@ -72,36 +65,24 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	listenerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
-	if r.apiManager.IsAsyncDisableAnnotationPresent() {
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerAsyncDisableArgsMutator)
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerAsyncDisableEnvMutator)
-	} else {
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerEnvMutator)
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerArgsMutator)
-	}
+	listenerDeploymentMutator = append(listenerDeploymentMutator,
+		r.backendRedisAsyncReconciler,
+		r.backendRedisTLSEnvVarMutator,
+		r.backendQueuesRedisTLSEnvVarMutator,
+		reconcilers.DeploymentVolumesMutator,
+		reconcilers.DeploymentInitContainerVolumeMountsMutator,
+		reconcilers.DeploymentContainerVolumeMountsMutator,
+	)
+
 	if r.apiManager.Spec.Backend.ListenerSpec.Replicas != nil {
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
-	}
-
-	if r.apiManager.IsBackendRedisTLSEnabled() {
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
-		listenerDeploymentMutator = append(listenerDeploymentMutator, r.backendRedisTLSEnvVarMutator)
-	} else {
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveEnvMutator)
-	}
-	if r.apiManager.IsQueuesRedisTLSEnabled() {
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSSyncVolumesAndMountsMutator)
-		listenerDeploymentMutator = append(listenerDeploymentMutator, r.backendQueuesRedisTLSEnvVarMutator)
-	} else {
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveVolumesAndMountsMutator)
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveEnvMutator)
 	}
 
 	listenerDeployment, err := backend.ListenerDeployment(r.Context(), r.Client(), ampImages.Options.BackendImage)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+
 	err = r.ReconcileDeployment(listenerDeployment, reconcilers.DeploymentMutator(listenerDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
@@ -135,28 +116,17 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Worker Deployment
 	workerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
-	if r.apiManager.IsAsyncDisableAnnotationPresent() {
-		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentWorkerDisableAsyncEnvMutator)
-	} else {
-		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentWorkerEnvMutator)
-	}
+	workerDeploymentMutator = append(workerDeploymentMutator,
+		r.workerRedisAsyncReconciler,
+		r.backendRedisTLSEnvVarMutator,
+		r.backendQueuesRedisTLSEnvVarMutator,
+		backendDeploymentVolumesMutator,
+		backendDeploymentInitContainerVolumeMountsMutator,
+		backendDeploymentContainerVolumeMountsMutator,
+	)
+
 	if r.apiManager.Spec.Backend.WorkerSpec.Replicas != nil {
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
-	}
-
-	if r.apiManager.IsBackendRedisTLSEnabled() {
-		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
-		workerDeploymentMutator = append(workerDeploymentMutator, r.backendRedisTLSEnvVarMutator)
-	} else {
-		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
-		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveEnvMutator)
-	}
-	if r.apiManager.IsQueuesRedisTLSEnabled() {
-		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSSyncVolumesAndMountsMutator)
-		workerDeploymentMutator = append(workerDeploymentMutator, r.backendQueuesRedisTLSEnvVarMutator)
-	} else {
-		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveVolumesAndMountsMutator)
-		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveEnvMutator)
 	}
 
 	workerDeployment, err := backend.WorkerDeployment(r.Context(), r.Client(), ampImages.Options.BackendImage)
@@ -309,4 +279,55 @@ func (r *BackendReconciler) backendQueuesRedisTLSEnvVarMutator(desired, existing
 	}
 
 	return changed, nil
+}
+
+func (r *BackendReconciler) backendRedisAsyncReconciler(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	var changed bool
+
+	for _, envVar := range []string{
+		"CONFIG_REDIS_ASYNC",
+		"LISTENER_WORKERS",
+	} {
+		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
+		changed = changed || tmpChanged
+	}
+
+	return changed, nil
+}
+
+func (r *BackendReconciler) workerRedisAsyncReconciler(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	var changed bool
+
+	for _, envVar := range []string{
+		"CONFIG_REDIS_ASYNC",
+	} {
+		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
+		changed = changed || tmpChanged
+	}
+
+	return changed, nil
+}
+
+func backendDeploymentVolumesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeNames := []string{
+		"backend-redis-tls",
+		"queues-redis-tls",
+	}
+	return reconcilers.WeakDeploymentVolumesMutator(desired, existing, volumeNames)
+}
+
+func backendDeploymentInitContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeMountNames := []string{
+		"backend-redis-tls",
+		"queues-redis-tls",
+	}
+	return reconcilers.WeakDeploymentVolumesMutator(desired, existing, volumeMountNames)
+}
+
+func backendDeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeMountNames := []string{
+		"backend-redis-tls",
+		"queues-redis-tls",
+	}
+	return reconcilers.WeakDeploymentVolumesMutator(desired, existing, volumeMountNames)
 }
