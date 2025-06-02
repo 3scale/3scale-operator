@@ -73,9 +73,9 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPodInitContainerImageMutator,
 		reconcilers.DeploymentPodInitContainerMutator,
 		zyncDatabaseTLSEnvVarMutator,
-		reconcilers.DeploymentVolumesMutator,
-		reconcilers.DeploymentInitContainerVolumeMountsMutator,
-		reconcilers.DeploymentContainerVolumeMountsMutator,
+		zyncDeploymentVolumesMutator,
+		zyncDeploymentInitContainerVolumeMountsMutator,
+		zyncDeploymentContainerVolumeMountsMutator,
 	}
 
 	if r.apiManager.Spec.Zync.AppSpec.Replicas != nil {
@@ -112,9 +112,9 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPodContainerImageMutator,
 		reconcilers.DeploymentPodInitContainerMutator,
 		zyncDatabaseTLSEnvVarMutator,
-		reconcilers.DeploymentVolumesMutator,
-		reconcilers.DeploymentInitContainerVolumeMountsMutator,
-		reconcilers.DeploymentContainerVolumeMountsMutator,
+		zyncDeploymentVolumesMutator,
+		zyncDeploymentInitContainerVolumeMountsMutator,
+		zyncDeploymentContainerVolumeMountsMutator,
 	}
 	if r.apiManager.Spec.Zync.QueSpec.Replicas != nil {
 		zyncQueMutators = append(zyncQueMutators, reconcilers.DeploymentReplicasMutator)
@@ -418,4 +418,29 @@ func zyncDatabaseTLSEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool
 	}
 
 	return changed, nil
+}
+
+func zyncDeploymentVolumesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeNames := []string{
+		"tls-secret",
+		"writable-tls",
+	}
+
+	return reconcilers.WeakDeploymentVolumesMutator(desired, existing, volumeNames)
+}
+
+func zyncDeploymentInitContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeNames := []string{
+		"tls-secret",
+		"writable-tls",
+	}
+
+	return reconcilers.WeakDeploymentInitContainerVolumeMountsMutator(desired, existing, volumeNames)
+}
+
+func zyncDeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeNames := []string{
+		"writable-tls",
+	}
+	return reconcilers.WeakDeploymentInitContainerVolumeMountsMutator(desired, existing, volumeNames)
 }

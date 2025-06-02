@@ -207,9 +207,9 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 			r.systemZyncEnvVarMutator,
 			r.systemDatabaseTLSEnvVarMutator,
 			r.systemRedisTLSEnvVarMutator,
-			reconcilers.DeploymentVolumesMutator,
-			reconcilers.DeploymentInitContainerVolumeMountsMutator,
-			reconcilers.DeploymentContainerVolumeMountsMutator,
+			systemDeploymentVolumesMutator,
+			systemDeploymentInitContainerVolumeMountsMutator,
+			systemDeploymentContainerVolumeMountsMutator,
 		}
 		if r.apiManager.Spec.System.AppSpec.Replicas != nil {
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentReplicasMutator)
@@ -273,9 +273,9 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		r.systemZyncEnvVarMutator,
 		r.systemDatabaseTLSEnvVarMutator,
 		r.systemRedisTLSEnvVarMutator,
-		reconcilers.DeploymentVolumesMutator,
-		reconcilers.DeploymentInitContainerVolumeMountsMutator,
-		reconcilers.DeploymentContainerVolumeMountsMutator,
+		sidekiqDeploymentVolumesMutator,
+		sidekiqDeploymentInitContainerVolumeMountsMutator,
+		sidekiqDeploymentContainerVolumeMountsMutator,
 	}
 
 	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {
@@ -548,4 +548,77 @@ func (r *SystemReconciler) systemRedisTLSEnvVarMutator(desired, existing *k8sapp
 	}
 
 	return changed, nil
+}
+
+func systemDeploymentVolumesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeNames := []string{
+		"system-storage",
+		"system-config",
+		"tls-secret",
+		"writable-tls",
+		"system-redis-tls",
+		"backend-redis-tls",
+		"s3-credentials",
+	}
+
+	return reconcilers.WeakDeploymentVolumesMutator(desired, existing, volumeNames)
+}
+
+func systemDeploymentInitContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeMountNames := []string{
+		"tls-secret",
+		"writable-tls",
+	}
+
+	return reconcilers.WeakDeploymentInitContainerVolumeMountsMutator(desired, existing, volumeMountNames)
+}
+
+func systemDeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeMountNames := []string{
+		"system-storage",
+		"s3-credentials",
+		"system-redis-tls",
+		"backend-redis-tls",
+		"writable-tls",
+	}
+	return reconcilers.WeakDeploymentInitContainerVolumeMountsMutator(desired, existing, volumeMountNames)
+}
+
+func sidekiqDeploymentVolumesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeNames := []string{
+		"system-tmp",
+		"system-storage",
+		"system-config",
+		"s3-credentials",
+		"tls-secret",
+		"writable-tls",
+		"system-redis-tls",
+		"backend-redis-tls",
+	}
+
+	return reconcilers.WeakDeploymentVolumesMutator(desired, existing, volumeNames)
+}
+
+func sidekiqDeploymentInitContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeMountNames := []string{
+		"tls-secret",
+		"writable-tls",
+		"system-redis-tls",
+		"backend-redis-tls",
+	}
+
+	return reconcilers.WeakDeploymentInitContainerVolumeMountsMutator(desired, existing, volumeMountNames)
+}
+
+func sidekiqDeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeMountNames := []string{
+		"system-tmp",
+		"system-storage",
+		"system-config",
+		"s3-credentials",
+		"system-redis-tls",
+		"backend-redis-tls",
+		"writable-tls",
+	}
+	return reconcilers.WeakDeploymentInitContainerVolumeMountsMutator(desired, existing, volumeMountNames)
 }
