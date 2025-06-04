@@ -174,9 +174,6 @@ jobs:
     resource_class: large
     steps:
       - unit-tests
-      - run:
-          command: cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes
-          when: always
 
   test-crds:
     docker:
