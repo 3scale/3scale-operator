@@ -556,14 +556,6 @@ spec:
                   value: quay.io/3scale/zync:latest
                 - name: RELATED_IMAGE_SYSTEM_MEMCACHED
                   value: mirror.gcr.io/library/memcached:1.5
-                - name: RELATED_IMAGE_BACKEND_REDIS
-                  value: quay.io/fedora/redis-7
-                - name: RELATED_IMAGE_SYSTEM_REDIS
-                  value: quay.io/fedora/redis-7
-                - name: RELATED_IMAGE_SYSTEM_MYSQL
-                  value: quay.io/sclorg/mysql-80-c8s
-                - name: RELATED_IMAGE_SYSTEM_POSTGRESQL
-                  value: quay.io/sclorg/postgresql-13-c8s
                 - name: RELATED_IMAGE_ZYNC_POSTGRESQL
                   value: quay.io/sclorg/postgresql-13-c8s
                 - name: RELATED_IMAGE_OC_CLI
