@@ -3,15 +3,10 @@ package helper
 import (
 	"bytes"
 	"context"
-	"time"
-
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
-	apimachinerymetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 	kube "k8s.io/client-go/kubernetes"
 
 	"k8s.io/client-go/kubernetes/scheme"
@@ -19,12 +14,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/remotecommand"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-const (
-	redisDefaultImage      = "quay.io/fedora/redis-7"
-	mySqlDefaultImage      = "quay.io/sclorg/mysql-80-c8s"
-	postgreSqlDefaultImage = "quay.io/sclorg/postgresql-13-c8s"
 )
 
 //go:generate moq -out pod_executor_moq.go . PodExecutorInterface
@@ -47,7 +36,6 @@ func NewPodExecutor(log logr.Logger) *PodExecutor {
 
 // ExecuteRemoteCommand exec command on specific pod and wait the command's output.
 func (p PodExecutor) ExecuteRemoteCommand(ns string, podName string, command []string) (string, string, error) {
-
 	kubeClient, restConfig, err := getClient()
 	if err != nil {
 		return "", "", errors.Errorf("Failed to get client :%s", err)
@@ -87,7 +75,6 @@ func (p PodExecutor) ExecuteRemoteCommand(ns string, podName string, command []s
 
 // ExecuteRemoteContainerCommand exec command on specific pod and wait the command's output.
 func (p PodExecutor) ExecuteRemoteContainerCommand(ns string, podName string, container string, command []string) (string, string, error) {
-
 	kubeClient, restConfig, err := getClient()
 	if err != nil {
 		return "", "", errors.Errorf("Failed to get client during throwaway pod execuction command: %s", err)
@@ -127,7 +114,6 @@ func (p PodExecutor) ExecuteRemoteContainerCommand(ns string, podName string, co
 }
 
 func getClient() (*kube.Clientset, *restclient.Config, error) {
-
 	kubeCfg := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
 		&clientcmd.ConfigOverrides{},
@@ -144,46 +130,6 @@ func getClient() (*kube.Clientset, *restclient.Config, error) {
 	return kubeClient, restCfg, nil
 }
 
-func CreateRedisThrowAwayPod(k8sclient client.Client, namespace string) (*v1.Pod, error) {
-	// Create throwaway redis deployment
-	systemRedisPod := throwAwayRedis(namespace)
-
-	err := k8sclient.Create(context.TODO(), systemRedisPod)
-	if err != nil {
-		if !k8serrors.IsAlreadyExists(err) {
-			// if it's other error than "AlreadyExists"
-			return systemRedisPod, err
-		}
-	}
-
-	// Wait for deployment to become ready
-	err = wait.Poll(time.Second*5, time.Minute*3, func() (done bool, err error) {
-		err = k8sclient.Get(context.TODO(), client.ObjectKey{Name: systemRedisPod.Name, Namespace: systemRedisPod.Namespace}, systemRedisPod)
-		if err != nil {
-			// Failed getting the deployment, trying again
-			return false, nil
-		}
-
-		for _, condition := range systemRedisPod.Status.Conditions {
-			if condition.Type == v1.PodReady {
-				if condition.Status == v1.ConditionTrue {
-					return true, nil
-				} else {
-					return false, nil
-				}
-			}
-		}
-
-		return true, nil
-	})
-	if err != nil {
-		// Failed to boot up Redis throwaway pod
-		return systemRedisPod, err
-	}
-
-	return systemRedisPod, nil
-}
-
 func DeletePod(k8sclient client.Client, pod *v1.Pod) error {
 	err := k8sclient.Delete(context.TODO(), pod)
 	if err != nil {
@@ -191,113 +137,4 @@ func DeletePod(k8sclient client.Client, pod *v1.Pod) error {
 	}
 
 	return nil
-}
-
-func CreateDatabaseThrowAwayPod(k8sclient client.Client, namespace, dbType string) (*v1.Pod, error) {
-	// Create throwaway redis deployment
-	dbPod := &v1.Pod{}
-	if dbType == "mysql" {
-		dbPod = throwAwayMysql(namespace)
-	}
-	if dbType == "postgres" {
-		dbPod = throwAwayPostgres(namespace)
-	}
-
-	err := k8sclient.Create(context.TODO(), dbPod)
-	if err != nil {
-		if !k8serrors.IsAlreadyExists(err) {
-			// if it's other error than "AlreadyExists"
-			return dbPod, err
-		}
-	}
-
-	// Wait for deployment to become ready
-	err = wait.Poll(time.Second*5, time.Minute*3, func() (done bool, err error) {
-		err = k8sclient.Get(context.TODO(), client.ObjectKey{Name: dbPod.Name, Namespace: dbPod.Namespace}, dbPod)
-		if err != nil {
-			// Failed getting the deployment, trying again
-			return false, nil
-		}
-
-		for _, condition := range dbPod.Status.Conditions {
-			if condition.Type == v1.PodReady {
-				if condition.Status == v1.ConditionTrue {
-					return true, nil
-				} else {
-					return false, nil
-				}
-			}
-		}
-
-		return true, nil
-	})
-	if err != nil {
-		return dbPod, err
-	}
-
-	return dbPod, nil
-}
-
-func throwAwayPostgres(namespace string) *v1.Pod {
-	systemPostgresImage := GetEnvVar("RELATED_IMAGE_ZYNC_POSTGRESQL", postgreSqlDefaultImage)
-	return &v1.Pod{
-		ObjectMeta: apimachinerymetav1.ObjectMeta{
-			Name:      "throwaway-postgres",
-			Namespace: namespace,
-		},
-		Spec: v1.PodSpec{
-			Containers: []v1.Container{
-				{
-					Name:  "throwaway-postgres",
-					Image: systemPostgresImage,
-					Env: []v1.EnvVar{
-						{Name: "POSTGRESQL_USER", Value: "throwaway"},
-						{Name: "POSTGRESQL_PASSWORD", Value: "throwaway"},
-						{Name: "POSTGRESQL_DATABASE", Value: "throwaway"},
-					},
-				},
-			},
-		},
-	}
-}
-
-func throwAwayMysql(namespace string) *v1.Pod {
-	systemMysqlImage := GetEnvVar("RELATED_IMAGE_SYSTEM_MYSQL", mySqlDefaultImage)
-	return &v1.Pod{
-		ObjectMeta: apimachinerymetav1.ObjectMeta{
-			Name:      "throwaway-mysql",
-			Namespace: namespace,
-		},
-		Spec: v1.PodSpec{
-			Containers: []v1.Container{
-				{
-					Name:  "throwaway-mysql",
-					Image: systemMysqlImage,
-					Env: []v1.EnvVar{
-						{Name: "MYSQL_USER", Value: "throwaway"},
-						{Name: "MYSQL_PASSWORD", Value: "throwaway"},
-						{Name: "MYSQL_DATABASE", Value: "throwaway"},
-					},
-				},
-			},
-		},
-	}
-}
-
-func throwAwayRedis(namespace string) *v1.Pod {
-	systemRedisImage := GetEnvVar("RELATED_IMAGE_SYSTEM_REDIS", redisDefaultImage)
-	return &v1.Pod{
-		ObjectMeta: apimachinerymetav1.ObjectMeta{
-			Name:      "throwaway-redis",
-			Namespace: namespace,
-		},
-		Spec: v1.PodSpec{
-			Containers: []v1.Container{
-				{
-					Name:  "throwaway-redis",
-					Image: systemRedisImage,
-				},
-			},
-		},
-	}
 }
