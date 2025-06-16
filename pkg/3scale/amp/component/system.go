@@ -884,7 +884,7 @@ func (system *System) AppDeployment(ctx context.Context, k8sclient client.Client
 	}, nil
 }
 
-func (system *System) AppPreHookJob(containerImage string, currentSystemAppGeneration int64) *batchv1.Job {
+func (system *System) AppPreHookJob(containerImage string, namespace string, currentSystemAppGeneration int64) *batchv1.Job {
 	var completions int32 = 1
 
 	return &batchv1.Job{
@@ -893,8 +893,9 @@ func (system *System) AppPreHookJob(containerImage string, currentSystemAppGener
 			Kind:       "Job",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   SystemAppPreHookJobName,
-			Labels: system.Options.CommonAppLabels,
+			Name:      SystemAppPreHookJobName,
+			Namespace: namespace,
+			Labels:    system.Options.CommonAppLabels,
 			Annotations: map[string]string{
 				helper.SystemAppGenerationAnnotation: strconv.FormatInt(currentSystemAppGeneration, 10),
 			},
@@ -925,7 +926,7 @@ func (system *System) AppPreHookJob(containerImage string, currentSystemAppGener
 	}
 }
 
-func (system *System) AppPostHookJob(containerImage string, currentSystemAppGeneration int64) *batchv1.Job {
+func (system *System) AppPostHookJob(containerImage string, namespace string, currentSystemAppGeneration int64) *batchv1.Job {
 	var completions int32 = 1
 
 	return &batchv1.Job{
@@ -934,8 +935,9 @@ func (system *System) AppPostHookJob(containerImage string, currentSystemAppGene
 			Kind:       "Job",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   SystemAppPostHookJobName,
-			Labels: system.Options.CommonAppLabels,
+			Name:      SystemAppPostHookJobName,
+			Namespace: namespace,
+			Labels:    system.Options.CommonAppLabels,
 			Annotations: map[string]string{
 				helper.SystemAppGenerationAnnotation: strconv.FormatInt(currentSystemAppGeneration, 10),
 			},
