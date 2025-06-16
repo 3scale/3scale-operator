@@ -380,7 +380,7 @@ func (r *SystemReconciler) systemAppDeploymentResourceMutator(desired, existing 
 
 	// Check containers
 	if len(desired.Spec.Template.Spec.Containers) != 3 {
-		return false, fmt.Errorf(fmt.Sprintf("%s desired spec.template.spec.containers length changed to '%d', should be 3", desiredName, len(desired.Spec.Template.Spec.Containers)))
+		return false, fmt.Errorf("%s desired spec.template.spec.containers length changed to '%d', should be 3", desiredName, len(desired.Spec.Template.Spec.Containers))
 	}
 
 	if len(existing.Spec.Template.Spec.Containers) != 3 {

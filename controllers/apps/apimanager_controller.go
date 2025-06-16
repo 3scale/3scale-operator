@@ -19,10 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"time"
-
-	"github.com/3scale/3scale-operator/pkg/upgrade"
 
 	"github.com/go-logr/logr"
 	routev1 "github.com/openshift/api/route/v1"
@@ -41,10 +38,12 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	subController "github.com/3scale/3scale-operator/controllers/subscription"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	"github.com/3scale/3scale-operator/pkg/handlers"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 	"github.com/3scale/3scale-operator/version"
 )
 
@@ -206,7 +205,7 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 	}
 
 	// Fail preflights early if system Redis, backend Redis or system database are not external. Since 2.16, there is no internal databases support.
-	externalDatabasesCheckError := r.externalDatabasesPreflightsChecks(apimInstance, *reqConfigMap, logger)
+	externalDatabasesCheckError := r.externalDatabasesPreflightsChecks(apimInstance, logger)
 	if externalDatabasesCheckError != nil {
 		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, externalDatabasesCheckError
 	}
@@ -229,19 +228,19 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 	if !systemRedisVerified {
 		systemRedisVerified, err = helper.VerifySystemRedis(r.Client(), reqConfigMap, systemRedisRequirement, apimInstance, logger)
 		if err != nil {
-			return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("Failed to verify system redis version. Ensure that the system-redis secret is correctly configured. Error: %s", err)
+			return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("failed to verify system redis version. Ensure that the system-redis secret is correctly configured. Error: %s", err)
 		}
 	}
 	if !backendRedisVerified {
 		backendRedisVerified, err = helper.VerifyBackendRedis(r.Client(), reqConfigMap, backendRedisRequirement, apimInstance, logger)
 		if err != nil {
-			return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("Failed to verify backend redis version. Ensure that the backend-redis secret is correctly configured. Error: %s", err)
+			return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("failed to verify backend redis version. Ensure that the backend-redis secret is correctly configured. Error: %s", err)
 		}
 	}
 	if !systemDatabaseVerified {
 		systemDatabaseVerified, err = helper.VerifySystemDatabase(r.Client(), reqConfigMap, apimInstance, logger)
 		if err != nil {
-			return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("Failed to verify system database version. Ensure that the system-database secret is correctly configured. Error: %s", err)
+			return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("failed to verify system database version. Ensure that the system-database secret is correctly configured. Error: %s", err)
 		}
 	}
 
@@ -294,8 +293,7 @@ func retrieveRequiredVersion(reqConfigMap v1.ConfigMap) (string, string, string,
 		reqConfigMap.Data[helper.RHTThreescaleMysqlRequirements], reqConfigMap.Data[helper.RHTThreescalePostgresRequirements]
 }
 
-func (r *APIManagerReconciler) externalDatabasesPreflightsChecks(apimInstance *appsv1alpha1.APIManager, reqConfigMap v1.ConfigMap, logger logr.Logger) error {
-
+func (r *APIManagerReconciler) externalDatabasesPreflightsChecks(apimInstance *appsv1alpha1.APIManager, logger logr.Logger) error {
 	systemDatabaseIsInternal := false
 	systemRedisIsInternal := true
 	backendRedisIsInternal := true
@@ -431,7 +429,7 @@ func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIMana
 		return result, err
 	}
 
-	dependencyReconciler := r.dependencyReconcilerForComponents(cr, baseAPIManagerLogicReconciler)
+	dependencyReconciler := r.dependencyReconcilerForComponents(baseAPIManagerLogicReconciler)
 	result, err = dependencyReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
@@ -498,7 +496,7 @@ func (r *APIManagerReconciler) reconcileAPIManagerStatus(cr *appsv1alpha1.APIMan
 	statusReconciler := NewAPIManagerStatusReconciler(r.BaseReconciler, cr, preflightsError)
 	res, err := statusReconciler.Reconcile()
 	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("Failed to update APIManager status: %w", err)
+		return ctrl.Result{}, fmt.Errorf("failed to update APIManager status: %w", err)
 	}
 
 	return res, nil
@@ -542,7 +540,7 @@ func (r *APIManagerReconciler) validateApicastTLSCertificates(cr *appsv1alpha1.A
 	return fieldErrors
 }
 
-func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha1.APIManager, baseAPIManagerLogicReconciler *operator.BaseAPIManagerLogicReconciler) operator.DependencyReconciler {
+func (r *APIManagerReconciler) dependencyReconcilerForComponents(baseAPIManagerLogicReconciler *operator.BaseAPIManagerLogicReconciler) operator.DependencyReconciler {
 	// Helper type that contains the constructors for a dependency reconciler
 	type constructors struct {
 		External operator.DependencyReconcilerConstructor
@@ -592,13 +590,13 @@ func (r *APIManagerReconciler) instanceRequiresPreflights(cr *appsv1alpha1.APIMa
 
 	if isMultiHopDetected {
 		// if it is multihop, do not requeue but process the error update on APIM Status
-		return ctrl.Result{}, false, fmt.Errorf("Attempted upgrade from %s to %s not allowed", cr.RetrieveRHTVersion(), requirementsConfigMap.Data[helper.RHTThreescaleVersion])
+		return ctrl.Result{}, false, fmt.Errorf("attempted upgrade from %s to %s not allowed", cr.RetrieveRHTVersion(), requirementsConfigMap.Data[helper.RHTThreescaleVersion])
 	}
 
 	// Even if requirements are already confirmed, we need to run preflights again for all new preflights added in version N+1 (N=the version new preflights were introduced - 1):
 	// List of added preflights to 2.16:
 	// - external DB check
-	externalDatabasesCheckError := r.externalDatabasesPreflightsChecks(cr, *requirementsConfigMap, logger)
+	externalDatabasesCheckError := r.externalDatabasesPreflightsChecks(cr, logger)
 	if externalDatabasesCheckError != nil {
 		return ctrl.Result{}, true, nil
 	}
