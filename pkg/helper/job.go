@@ -46,7 +46,6 @@ func HasJobCompleted(jName string, jNamespace string, client k8sclient.Client) b
 		Namespace: jNamespace,
 		Name:      jName,
 	}, job)
-
 	// Return false on error
 	if err != nil {
 		return false
