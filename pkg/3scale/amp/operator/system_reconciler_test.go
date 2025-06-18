@@ -2,7 +2,6 @@ package operator
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -31,9 +30,7 @@ import (
 )
 
 func TestSystemReconcilerCreate(t *testing.T) {
-	var (
-		log = logf.Log.WithName("operator_test")
-	)
+	log := logf.Log.WithName("operator_test")
 
 	ctx := context.TODO()
 	apimanager := basicApimanagerSpecTestSystemOptions()
@@ -59,19 +56,12 @@ func TestSystemReconcilerCreate(t *testing.T) {
 			},
 		},
 	}
-	systemDatabaseSecret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "system-database",
-			Namespace: apimanager.Namespace,
-		},
-		Data: map[string][]byte{},
-	}
+	systemDatabaseSecret := createSystemDBSecret(apimanager.Namespace)
+	systemRedisSecret := createSystemRedisSecret(apimanager.Namespace)
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{appPreHookJob, apimanager, systemDatabaseSecret}
-	fmt.Printf("Tracked objects: %v\n", objs)
-	//objs := []runtime.Object{apimanager, appPreHookJob}
-	objs = append(objs, createSystemRedisSecret(apimanager.Namespace))
+	objs := []runtime.Object{appPreHookJob, apimanager, systemDatabaseSecret, systemRedisSecret}
+
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, &appsv1alpha1.APIManager{})
 	s.AddKnownTypes(v1.SchemeGroupVersion, &v1.Secret{}, &v1.SecretList{})
@@ -108,12 +98,10 @@ func TestSystemReconcilerCreate(t *testing.T) {
 	}
 
 	// Create a fake client to mock API calls.
-	//cl := fake.NewFakeClient(objs...)
 	cl := fake.NewClientBuilder().
 		WithScheme(s).
 		WithRuntimeObjects(objs...).
 		Build()
-	//clientAPIReader := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewClientBuilder().
 		WithScheme(s).
 		WithRuntimeObjects(objs...).
@@ -241,16 +229,10 @@ func TestReplicaSystemReconciler(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			systemDatabaseSecret := &v1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "system-database",
-					Namespace: tc.apimanager.Namespace,
-				},
-				Data: map[string][]byte{},
-			}
-			objs := []runtime.Object{tc.apimanager, appPreHookJob, systemDatabaseSecret}
-			//objs := []runtime.Object{tc.apimanager, appPreHookJob}
-			objs = append(objs, createSystemRedisSecret(tc.apimanager.Namespace))
+			systemDatabaseSecret := createSystemDBSecret(tc.apimanager.Namespace)
+			systemRedisSecret := createSystemRedisSecret(tc.apimanager.Namespace)
+			objs := []runtime.Object{tc.apimanager, appPreHookJob, systemDatabaseSecret, systemRedisSecret}
+
 			// Create a fake client to mock API calls.
 			cl := fake.NewFakeClient(objs...)
 			clientAPIReader := fake.NewFakeClient(objs...)
@@ -278,7 +260,7 @@ func TestReplicaSystemReconciler(t *testing.T) {
 
 			// bump the amount of replicas in the deployment
 			deployment.Spec.Replicas = &twoValue
-			deployment.Generation = oneValue64
+			deployment.SetAnnotations(map[string]string{"deployment.kubernetes.io/revision": "1"})
 			err = cl.Update(context.TODO(), deployment)
 			if err != nil {
 				subT.Errorf("error updating deployment of %s: %v", tc.objName, err)
@@ -348,5 +330,15 @@ func createSystemRedisSecret(namespace string) *v1.Secret {
 		Data: map[string][]byte{
 			"redis-password": []byte("fake-password"),
 		},
+	}
+}
+
+func createSystemDBSecret(namespace string) *v1.Secret {
+	return &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "system-database",
+			Namespace: namespace,
+		},
+		Data: map[string][]byte{},
 	}
 }
