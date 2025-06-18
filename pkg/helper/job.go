@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	SystemAppGenerationAnnotation = "system-app-deployment-generation"
+	SystemAppRevisionAnnotation = "system-app-deployment-generation"
 )
 
 // UIDBasedJobName returns a Job name that is compromised of the provided prefix,
@@ -72,8 +72,8 @@ func HasJobCompleted(ctx context.Context, job k8sclient.Object, client k8sclient
 	return false
 }
 
-// HasAppGenerationChanged returns true if the system-app Deployment's generation doesn't match the Job's annotation tracking it
-func HasAppGenerationChanged(jName string, generation int64, namespace string, client k8sclient.Client) (bool, error) {
+// HasAppRevisionChanged returns true if the system-app Deployment's revision doesn't match the Job's annotation tracking it
+func HasAppRevisionChanged(jName string, revision int64, namespace string, client k8sclient.Client) (bool, error) {
 	job := &batchv1.Job{}
 	err := client.Get(context.TODO(), k8sclient.ObjectKey{
 		Namespace: namespace,
@@ -88,21 +88,21 @@ func HasAppGenerationChanged(jName string, generation int64, namespace string, c
 		return false, nil
 	}
 
-	// Parse the Job's observed Deployment generation from its annotations
-	var trackedGeneration int64 = 1
+	// Parse the Job's observed Deployment revision from its annotations
+	var trackedRevision int64 = 1
 	if job.Annotations != nil {
 		for key, val := range job.Annotations {
-			if key == SystemAppGenerationAnnotation {
-				trackedGeneration, err = strconv.ParseInt(val, 10, 64)
+			if key == SystemAppRevisionAnnotation {
+				trackedRevision, err = strconv.ParseInt(val, 10, 64)
 				if err != nil {
-					return false, fmt.Errorf("failed to parse system-app Deployment's generation from job %s annotations: %w", job.Name, err)
+					return false, fmt.Errorf("failed to parse system-app Deployment's revision from job %s annotations: %w", job.Name, err)
 				}
 			}
 		}
 	}
 
 	// Return true if the Deployment's version doesn't match the version tracked in the Job's annotation
-	if trackedGeneration != generation {
+	if trackedRevision != revision {
 		return true, nil
 	}
 

@@ -884,7 +884,7 @@ func (system *System) AppDeployment(ctx context.Context, k8sclient client.Client
 	}, nil
 }
 
-func (system *System) AppPreHookJob(containerImage string, namespace string, currentSystemAppGeneration int64) *batchv1.Job {
+func (system *System) AppPreHookJob(containerImage string, namespace string, currentSystemAppRevision int64) *batchv1.Job {
 	var completions int32 = 1
 
 	return &batchv1.Job{
@@ -897,7 +897,7 @@ func (system *System) AppPreHookJob(containerImage string, namespace string, cur
 			Namespace: namespace,
 			Labels:    system.Options.CommonAppLabels,
 			Annotations: map[string]string{
-				helper.SystemAppGenerationAnnotation: strconv.FormatInt(currentSystemAppGeneration, 10),
+				helper.SystemAppRevisionAnnotation: strconv.FormatInt(currentSystemAppRevision, 10),
 			},
 		},
 		Spec: batchv1.JobSpec{
@@ -926,7 +926,7 @@ func (system *System) AppPreHookJob(containerImage string, namespace string, cur
 	}
 }
 
-func (system *System) AppPostHookJob(containerImage string, namespace string, currentSystemAppGeneration int64) *batchv1.Job {
+func (system *System) AppPostHookJob(containerImage string, namespace string, currentSystemAppRevision int64) *batchv1.Job {
 	var completions int32 = 1
 
 	return &batchv1.Job{
@@ -939,7 +939,7 @@ func (system *System) AppPostHookJob(containerImage string, namespace string, cu
 			Namespace: namespace,
 			Labels:    system.Options.CommonAppLabels,
 			Annotations: map[string]string{
-				helper.SystemAppGenerationAnnotation: strconv.FormatInt(currentSystemAppGeneration, 10),
+				helper.SystemAppRevisionAnnotation: strconv.FormatInt(currentSystemAppRevision, 10),
 			},
 		},
 		Spec: batchv1.JobSpec{
