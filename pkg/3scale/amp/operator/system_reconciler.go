@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -14,6 +15,7 @@ import (
 	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -150,44 +152,46 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Used to synchronize rollout of system Deployments
 	systemComponentsReady := true
-
-	// If the system-app Deployment generation has changed, delete the PreHook/PostHook Jobs so they can be recreated
-	generationChanged, err := helper.HasAppGenerationChanged(component.SystemAppPreHookJobName, component.SystemAppDeploymentName, r.apiManager.GetNamespace(), r.Client())
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if generationChanged {
-		err = helper.DeleteJob(component.SystemAppPreHookJobName, r.apiManager.GetNamespace(), r.Client())
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	}
-	generationChanged, err = helper.HasAppGenerationChanged(component.SystemAppPostHookJobName, component.SystemAppDeploymentName, r.apiManager.GetNamespace(), r.Client())
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if generationChanged {
-		err = helper.DeleteJob(component.SystemAppPostHookJobName, r.apiManager.GetNamespace(), r.Client())
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	}
+	currentNameSpace := r.apiManager.GetNamespace()
 
 	// Used to synchronize the system-app Deployment with the PreHook/PostHook Jobs
-	currentAppDeploymentGeneration, err := getSystemAppDeploymentGeneration(r.apiManager.GetNamespace(), r.Client())
+	currentAppDeploymentRevision, err := getSystemAppDeploymentRevision(currentNameSpace, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
+	}
+
+	// If the system-app Deployment revision has changed, delete the PreHook/PostHook Jobs so they can be recreated
+	revisionChanged, err := helper.HasAppRevisionChanged(component.SystemAppPreHookJobName, currentAppDeploymentRevision, currentNameSpace, r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if revisionChanged {
+		err = helper.DeleteJob(r.Context(), component.SystemAppPreHookJobName, currentNameSpace, r.Client())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+	revisionChanged, err = helper.HasAppRevisionChanged(component.SystemAppPostHookJobName, currentAppDeploymentRevision, currentNameSpace, r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if revisionChanged {
+		err = helper.DeleteJob(r.Context(), component.SystemAppPostHookJobName, currentNameSpace, r.Client())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
 	}
 
 	// SystemApp PreHook Job
-	preHookJob := system.AppPreHookJob(ampImages.Options.SystemImage, currentAppDeploymentGeneration)
+	preHookJob := system.AppPreHookJob(ampImages.Options.SystemImage, currentNameSpace, currentAppDeploymentRevision)
 	err = r.ReconcileJob(preHookJob, reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Block reconciling system-app Deployment until PreHook Job has completed
-	if !helper.HasJobCompleted(preHookJob.Name, preHookJob.Namespace, r.Client()) {
+	finished := helper.HasJobCompleted(r.Context(), preHookJob, r.Client())
+	if !finished {
 		systemComponentsReady = false
 	}
 
@@ -228,26 +232,26 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	// Block reconciling PostHook Job unless BOTH the PreHook Job has completed and the system-app Deployment is ready and not in the process of updating
 	deployment := &k8sappsv1.Deployment{}
 	err = r.Client().Get(context.TODO(), k8sclient.ObjectKey{
-		Namespace: r.apiManager.GetNamespace(),
+		Namespace: currentNameSpace,
 		Name:      component.SystemAppDeploymentName,
 	}, deployment)
 	if err != nil && !k8serr.IsNotFound(err) {
 		return reconcile.Result{}, err
 	}
-	if k8serr.IsNotFound(err) || !helper.IsDeploymentAvailable(deployment) || helper.IsDeploymentProgressing(deployment) || !helper.HasJobCompleted(preHookJob.Name, preHookJob.Namespace, r.Client()) {
+	if k8serr.IsNotFound(err) || !helper.IsDeploymentAvailable(deployment) || helper.IsDeploymentProgressing(deployment) || !finished {
 		systemComponentsReady = false
 	}
 
 	// SystemApp PostHook Job
 	if systemComponentsReady {
-		err = r.ReconcileJob(system.AppPostHookJob(ampImages.Options.SystemImage, currentAppDeploymentGeneration), reconcilers.CreateOnlyMutator)
+		err = r.ReconcileJob(system.AppPostHookJob(ampImages.Options.SystemImage, currentNameSpace, currentAppDeploymentRevision), reconcilers.CreateOnlyMutator)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 	}
 
 	// 3scale 2.14 -> 2.15
-	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemAppDeploymentName, r.apiManager.GetNamespace(), false, r.Client(), nil)
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemAppDeploymentName, currentNameSpace, false, r.Client(), nil)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -292,7 +296,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// 3scale 2.14 -> 2.15
-	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.SystemSidekiqName, r.apiManager.GetNamespace(), false, r.Client(), nil)
+	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.SystemSidekiqName, currentNameSpace, false, r.Client(), nil)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -354,7 +358,14 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func getSystemAppDeploymentGeneration(namespace string, client k8sclient.Client) (int64, error) {
+// Revision was copied from k8s.io/kubernetes/pkg/controller/deployment/util/deployment_util.go release-1.17
+
+const (
+	// RevisionAnnotation is the revision annotation of a deployment's replica sets which records its rollout sequence
+	RevisionAnnotation = "deployment.kubernetes.io/revision"
+)
+
+func getSystemAppDeploymentRevision(namespace string, client k8sclient.Client) (int64, error) {
 	deployment := &k8sappsv1.Deployment{}
 	err := client.Get(context.TODO(), k8sclient.ObjectKey{
 		Namespace: namespace,
@@ -371,7 +382,18 @@ func getSystemAppDeploymentGeneration(namespace string, client k8sclient.Client)
 		return 1, nil
 	}
 
-	return deployment.Generation, nil
+	acc, err := meta.Accessor(deployment)
+	if err != nil {
+		return 0, err
+	}
+
+	v, ok := acc.GetAnnotations()[RevisionAnnotation]
+
+	if !ok {
+		return 0, nil
+	}
+
+	return strconv.ParseInt(v, 10, 64)
 }
 
 func (r *SystemReconciler) systemAppDeploymentResourceMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
@@ -380,7 +402,7 @@ func (r *SystemReconciler) systemAppDeploymentResourceMutator(desired, existing 
 
 	// Check containers
 	if len(desired.Spec.Template.Spec.Containers) != 3 {
-		return false, fmt.Errorf(fmt.Sprintf("%s desired spec.template.spec.containers length changed to '%d', should be 3", desiredName, len(desired.Spec.Template.Spec.Containers)))
+		return false, fmt.Errorf("%s desired spec.template.spec.containers length changed to '%d', should be 3", desiredName, len(desired.Spec.Template.Spec.Containers))
 	}
 
 	if len(existing.Spec.Template.Spec.Containers) != 3 {
