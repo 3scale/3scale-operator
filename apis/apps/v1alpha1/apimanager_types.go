@@ -1143,7 +1143,7 @@ func (apimanager *APIManager) setSystemFileStorageSpecDefaults() (bool, error) {
 	if systemSpec.FileStorageSpec != nil &&
 		systemSpec.FileStorageSpec.PVC != nil &&
 		systemSpec.FileStorageSpec.S3 != nil {
-		return true, fmt.Errorf("Only one FileStorage can be chosen at the same time")
+		return true, fmt.Errorf("only one FileStorage can be chosen at the same time")
 	}
 
 	return false, nil
@@ -1165,7 +1165,7 @@ func (apimanager *APIManager) setSystemDatabaseSpecDefaults() (bool, error) {
 	if systemSpec.DatabaseSpec != nil &&
 		systemSpec.DatabaseSpec.MySQL != nil &&
 		systemSpec.DatabaseSpec.PostgreSQL != nil {
-		return changed, fmt.Errorf("Only one System Database can be chosen at the same time")
+		return changed, fmt.Errorf("only one System Database can be chosen at the same time")
 	}
 
 	return changed, nil

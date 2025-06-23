@@ -36,7 +36,7 @@ func (a *APIManagerRestoreOptionsProvider) Options() (*APIManagerRestoreOptions,
 
 	// TODO can this checks be omitted and just rely on the validator package in the APIManagerRestore struct?
 	if pvcOptions == nil {
-		return nil, fmt.Errorf("At least one restore source has to be specified")
+		return nil, fmt.Errorf("at least one restore source has to be specified")
 	}
 
 	res.APIManagerRestorePVCOptions = pvcOptions

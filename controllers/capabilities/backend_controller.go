@@ -154,7 +154,7 @@ func (r *BackendReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if backend.SetDefaults(reqLogger) {
 		err := r.Client().Update(r.Context(), backend)
 		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed setting backend defaults: %w", err)
+			return ctrl.Result{}, fmt.Errorf("failed setting backend defaults: %w", err)
 		}
 
 		reqLogger.Info("resource defaults updated. Requeueing.")
@@ -165,10 +165,10 @@ func (r *BackendReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	statusResult, statusUpdateErr := statusReconciler.Reconcile()
 	if statusUpdateErr != nil {
 		if reconcileErr != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed to sync backend: %v. Failed to update backend status: %w", reconcileErr, statusUpdateErr)
+			return ctrl.Result{}, fmt.Errorf("failed to sync backend: %v. Failed to update backend status: %w", reconcileErr, statusUpdateErr)
 		}
 
-		return ctrl.Result{}, fmt.Errorf("Failed to update backend status: %w", statusUpdateErr)
+		return ctrl.Result{}, fmt.Errorf("failed to update backend status: %w", statusUpdateErr)
 	}
 
 	if statusResult.Requeue {

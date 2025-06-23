@@ -150,10 +150,10 @@ func (r *DeveloperAccountReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	statusResult, statusUpdateErr := statusReconciler.Reconcile()
 	if statusUpdateErr != nil {
 		if reconcileErr != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed to reconcile developer account: %v. Failed to update status: %w", reconcileErr, statusUpdateErr)
+			return ctrl.Result{}, fmt.Errorf("failed to reconcile developer account: %v. Failed to update status: %w", reconcileErr, statusUpdateErr)
 		}
 
-		return ctrl.Result{}, fmt.Errorf("Failed to update developers account status: %w", statusUpdateErr)
+		return ctrl.Result{}, fmt.Errorf("failed to update developers account status: %w", statusUpdateErr)
 	}
 
 	if statusResult.Requeue {

@@ -97,7 +97,7 @@ func (r *DeveloperUserReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			// Update status with err
 			statusResult, statusUpdateErr := NewDeveloperUserStatusReconciler(r.BaseReconciler, developerUserCR, nil, "", nil, err).Reconcile()
 			if statusUpdateErr != nil {
-				return ctrl.Result{}, fmt.Errorf("Failed to update developers user status: %w", statusUpdateErr)
+				return ctrl.Result{}, fmt.Errorf("failed to update developers user status: %w", statusUpdateErr)
 			}
 
 			if statusResult.Requeue {
@@ -159,10 +159,10 @@ func (r *DeveloperUserReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	statusResult, statusUpdateErr := statusReconciler.Reconcile()
 	if statusUpdateErr != nil {
 		if reconcileErr != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed to reconcile developer user: %v. Failed to update status: %w", reconcileErr, statusUpdateErr)
+			return ctrl.Result{}, fmt.Errorf("failed to reconcile developer user: %v. Failed to update status: %w", reconcileErr, statusUpdateErr)
 		}
 
-		return ctrl.Result{}, fmt.Errorf("Failed to update developers user status: %w", statusUpdateErr)
+		return ctrl.Result{}, fmt.Errorf("failed to update developers user status: %w", statusUpdateErr)
 	}
 
 	if statusResult.Requeue {

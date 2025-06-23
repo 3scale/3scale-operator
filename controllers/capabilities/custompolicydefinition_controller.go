@@ -82,10 +82,10 @@ func (r *CustomPolicyDefinitionReconciler) Reconcile(ctx context.Context, req ct
 	statusResult, statusUpdateErr := statusReconciler.Reconcile()
 	if statusUpdateErr != nil {
 		if reconcileErr != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed to reconcile custompolicydefinition: %v. Failed to update custompolicydefinition status: %w", reconcileErr, statusUpdateErr)
+			return ctrl.Result{}, fmt.Errorf("failed to reconcile custompolicydefinition: %v. Failed to update custompolicydefinition status: %w", reconcileErr, statusUpdateErr)
 		}
 
-		return ctrl.Result{}, fmt.Errorf("Failed to update custompolicydefinition status: %w", statusUpdateErr)
+		return ctrl.Result{}, fmt.Errorf("failed to update custompolicydefinition status: %w", statusUpdateErr)
 	}
 
 	if statusResult.Requeue {

@@ -235,7 +235,7 @@ func (r *TenantThreescaleReconciler) createTenant() (*porta_client_pkg.Tenant, e
 
 	tenantEntity, err := r.portaClient.CreateTenant(params)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating tenant [%s]: %w", r.tenantR.Spec.Username, err)
+		return nil, fmt.Errorf("error creating tenant [%s]: %w", r.tenantR.Spec.Username, err)
 	}
 
 	return tenantEntity, nil

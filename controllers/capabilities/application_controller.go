@@ -104,10 +104,10 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			statusResult, statusUpdateErr := statusReconciler.Reconcile()
 			if statusUpdateErr != nil {
 				if err != nil {
-					return ctrl.Result{}, fmt.Errorf("Failed to reconcile application: %v. Failed to update application status: %w", err, statusUpdateErr)
+					return ctrl.Result{}, fmt.Errorf("failed to reconcile application: %v. Failed to update application status: %w", err, statusUpdateErr)
 				}
 
-				return ctrl.Result{}, fmt.Errorf("Failed to update application status: %w", statusUpdateErr)
+				return ctrl.Result{}, fmt.Errorf("failed to update application status: %w", statusUpdateErr)
 			}
 			if statusResult.Requeue {
 				return statusResult, nil
@@ -168,10 +168,10 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	statusResult, statusUpdateErr := statusReconciler.Reconcile()
 	if statusUpdateErr != nil {
 		if reconcileErr != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed to sync application: %v. Failed to update application status: %w", reconcileErr, statusUpdateErr)
+			return ctrl.Result{}, fmt.Errorf("failed to sync application: %v. Failed to update application status: %w", reconcileErr, statusUpdateErr)
 		}
 
-		return ctrl.Result{}, fmt.Errorf("Failed to update application status: %w", statusUpdateErr)
+		return ctrl.Result{}, fmt.Errorf("failed to update application status: %w", statusUpdateErr)
 	}
 
 	if statusResult.Requeue {

@@ -152,7 +152,7 @@ func (h *HighAvailabilityOptionsProvider) setBackendRedisOptions() error {
 			component.BackendSecretBackendRedisSecretName, component.BackendSecretBackendRedisQueuesURLFieldName, redisUrl, err))
 	}
 	if len(redisUrlsErrors) > 0 {
-		return fmt.Errorf(strings.Join(redisUrlsErrors, "\n"))
+		return fmt.Errorf("%s", strings.Join(redisUrlsErrors, "\n"))
 	}
 
 	// Redis TLS fields
@@ -245,7 +245,7 @@ func (h *HighAvailabilityOptionsProvider) setSystemRedisOptions() error {
 	}
 	err = helper.ValidateRedisURLPrefix(redisUrl, h.apimanager.IsSystemRedisTLSEnabled(), isSystemSentinel)
 	if err != nil {
-		return fmt.Errorf("ERROR: Failed to validate Redis URL prefix for secret '%s' and field '%s': %s : %v\n",
+		return fmt.Errorf("failed to validate Redis URL prefix for secret '%s' and field '%s': %s : %v",
 			component.SystemSecretSystemRedisSecretName, component.SystemSecretSystemRedisURLFieldName, redisUrl, err)
 	}
 

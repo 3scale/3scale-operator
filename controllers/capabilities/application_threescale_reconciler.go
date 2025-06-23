@@ -130,5 +130,5 @@ func (t *ApplicationThreescaleReconciler) findPlan() (*threescaleapi.Application
 		planObj = &planList.Plans[planID]
 		return planObj, nil
 	}
-	return nil, fmt.Errorf("Plan [%s] doesnt exist in product [%s] ", t.applicationResource.Spec.ApplicationPlanName, t.productResource.Spec.Name)
+	return nil, fmt.Errorf("plan [%s] doesnt exist in product [%s] ", t.applicationResource.Spec.ApplicationPlanName, t.productResource.Spec.Name)
 }

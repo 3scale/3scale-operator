@@ -62,7 +62,7 @@ func runPrometheusRulesCommand(cmd *cobra.Command, args []string) error {
 	prName := args[0]
 	factory, ok := factoryMap[prName]
 	if !ok {
-		return fmt.Errorf("Factory %s not found", prName)
+		return fmt.Errorf("factory %s not found", prName)
 	}
 
 	prometheusRulesObj := factory.PrometheusRule(compatPre49, prometheusRulesNamespace)

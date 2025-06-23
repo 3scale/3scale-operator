@@ -45,13 +45,13 @@ func (t *taskRunnerImpl) Run() error {
 				reqerr = true
 				continue
 			}
-			return fmt.Errorf("Task failed %s: %w", task.Name, err)
+			return fmt.Errorf("task failed %s: %w", task.Name, err)
 		}
 		elapsed := time.Since(start)
 		t.logger.V(1).Info("Measure", task.Name, elapsed)
 	}
 	if reqerr {
-		return fmt.Errorf("Method is used by the latest gateway configuration, it will be removed from 3scale only once the promotion without the mapping rule that uses the deleted method is done.")
+		return fmt.Errorf("method is used by the latest gateway configuration, it will be removed from 3scale only once the promotion without the mapping rule that uses the deleted method is done")
 	}
 	return nil
 }

@@ -351,7 +351,7 @@ func (r *APIManagerRestoreLogicReconciler) sharedBackupSecret() (*v1.Secret, err
 
 	_, ok := secret.Data[backup.APIManagerSerializedBackupFileName]
 	if !ok {
-		return nil, fmt.Errorf("Expected key '%s' in secret '%s' not found", r.apiManagerRestore.SecretToShareName(), backup.APIManagerSerializedBackupFileName)
+		return nil, fmt.Errorf("expected key '%s' in secret '%s' not found", r.apiManagerRestore.SecretToShareName(), backup.APIManagerSerializedBackupFileName)
 	}
 
 	return secret, nil
@@ -363,7 +363,7 @@ func (r *APIManagerRestoreLogicReconciler) apiManagerFromSharedBackupSecret() (*
 		return nil, err
 	}
 	if secret == nil {
-		return nil, fmt.Errorf("Secret '%s' not found", r.apiManagerRestore.SecretToShareName())
+		return nil, fmt.Errorf("secret '%s' not found", r.apiManagerRestore.SecretToShareName())
 	}
 
 	// Deserialize APIManager using K8s apimachinery decoder in order to

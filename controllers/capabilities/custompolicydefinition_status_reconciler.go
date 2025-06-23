@@ -69,7 +69,7 @@ func (s *CustomPolicyDefinitionStatusReconciler) Reconcile() (reconcile.Result, 
 			return reconcile.Result{Requeue: true}, nil
 		}
 
-		return reconcile.Result{}, fmt.Errorf("Failed to update status: %w", updateErr)
+		return reconcile.Result{}, fmt.Errorf("failed to update status: %w", updateErr)
 	}
 	return reconcile.Result{}, nil
 }

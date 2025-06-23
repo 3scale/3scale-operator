@@ -99,7 +99,7 @@ func (s *DeveloperAccountThreescaleReconciler) retrieveAccountID() (int64, error
 			// If the accountID annotation is found, convert it to int64
 			accountIdConvertedFromString, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
-				return 0, errors.New(fmt.Sprintf("failed to convert accountID annotation value %s to int64", value))
+				return 0, fmt.Errorf("failed to convert accountID annotation value %s to int64", value)
 			}
 
 			accountId = accountIdConvertedFromString
@@ -157,7 +157,7 @@ func (s *DeveloperAccountThreescaleReconciler) createDevAccount() (*threescaleap
 	if devAdminUserCR == nil {
 		// There should be one, wait for it
 		return nil, &helper.WaitError{
-			Err: errors.New("Valid admin developer user CR not found"),
+			Err: errors.New("valid admin developer user CR not found"),
 		}, nil
 	}
 
@@ -313,7 +313,7 @@ func (s *DeveloperAccountThreescaleReconciler) getAdminUserPassword(adminUserCR 
 
 	passwordByteArray, ok := secret.Data[capabilitiesv1beta1.DeveloperUserPasswordSecretField]
 	if !ok {
-		return "", fmt.Errorf("Not found password field in secret (ns: %s, name: %s) field: %s",
+		return "", fmt.Errorf("not found password field in secret (ns: %s, name: %s) field: %s",
 			namespace, adminUserCR.Spec.PasswordCredentialsRef.Name, capabilitiesv1beta1.DeveloperUserPasswordSecretField)
 	}
 

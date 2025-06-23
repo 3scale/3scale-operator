@@ -124,7 +124,7 @@ func (s *SecretSource) fieldReader(secretName, fieldName string, secretRequired,
 	// when secret is not found, it behaves like an empty secret
 	result := GetSecretDataValue(secret.Data, fieldName)
 	if fieldRequired && result == nil {
-		return "", fmt.Errorf("Secret field '%s' is required in secret '%s'", fieldName, secretName)
+		return "", fmt.Errorf("secret field '%s' is required in secret '%s'", fieldName, secretName)
 	}
 
 	if result == nil {
@@ -152,7 +152,7 @@ func (s *SecretSource) CachedSecret(secretName string) (*v1.Secret, error) {
 	} else {
 		secretElement, ok := secretElementI.(SecretCacheElement)
 		if !ok {
-			return nil, fmt.Errorf("Unexpected error. Secret cache returned non secret object")
+			return nil, fmt.Errorf("unexpected error. Secret cache returned non secret object")
 		}
 		secret = secretElement.Secret
 		err = secretElement.Err
@@ -222,7 +222,7 @@ func IsSecretWatchedBy3scaleBySecretName(client k8sclient.Client, secretName, na
 
 func ValidateRedisURLPrefix(redisUrl string, isTLS, isSentinel bool) error {
 	if redisUrl == "" {
-		return fmt.Errorf("Redis URL cannot be empty in secret")
+		return fmt.Errorf("invalid Redis URL, cannot be empty in secret")
 	}
 	// If TLS is enabled and we are not using Sentinel, the URL should start with "rediss://"
 	// If Sentinel is used, the Redis URL is irrelevant, as the client communicates with Redis Sentinel, not the Redis master.
@@ -235,7 +235,7 @@ func ValidateRedisURLPrefix(redisUrl string, isTLS, isSentinel bool) error {
 		// If TLS is not enabled, URL should start with "redis://"
 		if !strings.HasPrefix(redisUrl, "redis://") {
 			return fmt.Errorf("invalid URL, when TLS is not enabled, URL must start with 'redis://', " +
-				" also confirm your port matches the Non-TLS port set in your redis.conf.")
+				" also confirm your port matches the Non-TLS port set in your redis.conf")
 		}
 	}
 	return nil

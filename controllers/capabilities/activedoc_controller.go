@@ -82,7 +82,7 @@ func (r *ActiveDocReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	if activeDocCR.SetDefaults(reqLogger) {
 		err := r.Client().Update(r.Context(), activeDocCR)
 		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed setting activedoc defaults: %w", err)
+			return ctrl.Result{}, fmt.Errorf("failed setting activedoc defaults: %w", err)
 		}
 
 		reqLogger.Info("resource defaults updated. Requeueing.")
@@ -93,10 +93,10 @@ func (r *ActiveDocReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	statusResult, statusUpdateErr := statusReconciler.Reconcile()
 	if statusUpdateErr != nil {
 		if reconcileErr != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed to reconcile activedoc: %v. Failed to update activedoc status: %w", reconcileErr, statusUpdateErr)
+			return ctrl.Result{}, fmt.Errorf("failed to reconcile activedoc: %v. Failed to update activedoc status: %w", reconcileErr, statusUpdateErr)
 		}
 
-		return ctrl.Result{}, fmt.Errorf("Failed to update activedoc status: %w", statusUpdateErr)
+		return ctrl.Result{}, fmt.Errorf("failed to update activedoc status: %w", statusUpdateErr)
 	}
 
 	if statusResult.Requeue {

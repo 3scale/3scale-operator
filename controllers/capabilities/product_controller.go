@@ -140,7 +140,7 @@ func (r *ProductReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if product.SetDefaults(reqLogger) {
 		err := r.Client().Update(r.Context(), product)
 		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed setting product defaults: %w", err)
+			return ctrl.Result{}, fmt.Errorf("failed setting product defaults: %w", err)
 		}
 
 		reqLogger.Info("resource defaults updated. Requeueing.")
@@ -151,10 +151,10 @@ func (r *ProductReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	statusResult, statusUpdateErr := statusReconciler.Reconcile()
 	if statusUpdateErr != nil {
 		if reconcileErr != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed to sync product: %v. Failed to update product status: %w", reconcileErr, statusUpdateErr)
+			return ctrl.Result{}, fmt.Errorf("failed to sync product: %v. Failed to update product status: %w", reconcileErr, statusUpdateErr)
 		}
 
-		return ctrl.Result{}, fmt.Errorf("Failed to update product status: %w", statusUpdateErr)
+		return ctrl.Result{}, fmt.Errorf("failed to update product status: %w", statusUpdateErr)
 	}
 
 	if statusResult.Requeue {

@@ -96,7 +96,7 @@ func (r *OpenAPIReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if openapiCR.SetDefaults(reqLogger) {
 		err := r.Client().Update(r.Context(), openapiCR)
 		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed setting openapi defaults: %w", err)
+			return ctrl.Result{}, fmt.Errorf("failed setting openapi defaults: %w", err)
 		}
 
 		reqLogger.Info("resource defaults updated. Requeueing.")
@@ -107,10 +107,10 @@ func (r *OpenAPIReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	statusResult, statusUpdateErr := statusReconciler.Reconcile()
 	if statusUpdateErr != nil {
 		if reconcileErr != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed to reconcile openapi: %v. Failed to update openapi status: %w", reconcileErr, statusUpdateErr)
+			return ctrl.Result{}, fmt.Errorf("failed to reconcile openapi: %v. Failed to update openapi status: %w", reconcileErr, statusUpdateErr)
 		}
 
-		return ctrl.Result{}, fmt.Errorf("Failed to update openapi status: %w", statusUpdateErr)
+		return ctrl.Result{}, fmt.Errorf("failed to update openapi status: %w", statusUpdateErr)
 	}
 
 	if statusResult.Requeue {
