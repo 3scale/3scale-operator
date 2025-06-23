@@ -73,8 +73,15 @@ func getProxyConfigPromoteCR() (CR *capabilitiesv1beta1.ProxyConfigPromote) {
 func getBaseReconciler(objects ...runtime.Object) (baseReconciler *reconcilers.BaseReconciler) {
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	capabilitiesv1beta1.AddToScheme(s)
-	appsv1alpha1.AddToScheme(s)
+	err := capabilitiesv1beta1.AddToScheme(s)
+	if err != nil {
+		return nil
+	}
+
+	err = appsv1alpha1.AddToScheme(s)
+	if err != nil {
+		return nil
+	}
 
 	// controller-runtime version >= 0.15.0 requires fake clients to specify WithStatusSubresource() in order to protect objects' .status block
 	// WithStatusSubresource() takes client.Objects while this function takes runtime.Objects

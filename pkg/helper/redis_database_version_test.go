@@ -27,7 +27,8 @@ func (m *mockRedisServer) Listen(t *testing.T) string {
 		conn, err := ln.Accept()
 		assert.NoError(t, err)
 		m.clientConnected = true
-		conn.Write([]byte("OK\n"))
+		_, err = conn.Write([]byte("OK\n"))
+		assert.NoError(t, err)
 	}()
 
 	return ln.Addr().String()

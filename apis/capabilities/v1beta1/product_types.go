@@ -1362,7 +1362,10 @@ func (product *Product) Validate() field.ErrorList {
 		for idx, ruleSpec := range planSpec.PricingRules {
 			if ruleSpec.From > ruleSpec.To {
 				ruleFldPath := rulesFldPath.Index(idx)
-				bytes, _ := json.Marshal(ruleSpec)
+				bytes, err := json.Marshal(ruleSpec)
+				if err != nil {
+					errors = append(errors, field.InternalError(ruleFldPath, err))
+				}
 				errors = append(errors, field.Invalid(ruleFldPath, string(bytes), "'To' value cannot be less than your 'From' value."))
 			}
 		}
@@ -1375,7 +1378,10 @@ func (product *Product) Validate() field.ErrorList {
 		overlappedIndex := detectOverlappingPricingRuleRanges(planSpec.PricingRules)
 		if overlappedIndex >= 0 {
 			ruleFldPath := rulesFldPath.Index(overlappedIndex)
-			bytes, _ := json.Marshal(planSpec.PricingRules[overlappedIndex])
+			bytes, err := json.Marshal(planSpec.PricingRules[overlappedIndex])
+			if err != nil {
+				errors = append(errors, field.InternalError(ruleFldPath, err))
+			}
 			errors = append(errors, field.Invalid(ruleFldPath, string(bytes), "'From' value cannot be less than 'To' values of current rules for the same metric."))
 		}
 	}

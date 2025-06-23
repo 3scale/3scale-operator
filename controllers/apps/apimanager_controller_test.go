@@ -185,35 +185,29 @@ var _ = Describe("APIManager controller", func() {
 			}, 5*time.Minute, 5*time.Second).Should(BeTrue())
 
 			fmt.Fprintf(GinkgoWriter, "Waiting for all APIManager managed Deployments\n")
-			err = waitForAllAPIManagerStandardDeployments(testNamespace, 5*time.Second, 15*time.Minute, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			waitForAllAPIManagerStandardDeployments(testNamespace, 5*time.Second, 15*time.Minute, GinkgoWriter)
 			fmt.Fprintf(GinkgoWriter, "All APIManager managed Deployments are ready\n")
 
 			fmt.Fprintf(GinkgoWriter, "Waiting for all APIManager managed Routes\n")
-			err = waitForAllAPIManagerStandardRoutes(5*time.Second, 15*time.Minute, wildcardDomain, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			waitForAllAPIManagerStandardRoutes(5*time.Second, 15*time.Minute, wildcardDomain, GinkgoWriter)
 			fmt.Fprintf(GinkgoWriter, "All APIManager managed Routes are available\n")
 
 			fmt.Fprintf(GinkgoWriter, "Waiting until APIManager CR has the correct secret UIDs\n")
-			err = waitForAPIManagerLabels(testNamespace, 5*time.Second, 5*time.Minute, apimanager, customEnvSecret, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			waitForAPIManagerLabels(testNamespace, 5*time.Second, 5*time.Minute, apimanager, customEnvSecret, GinkgoWriter)
 			fmt.Fprintf(GinkgoWriter, "APIManager CR has the correct secret UIDs\n")
 
 			fmt.Fprintf(GinkgoWriter, "Waiting until hashed secret has been created and is accurate\n")
-			err = waitForHashedSecret(testNamespace, 5*time.Second, 5*time.Minute, customEnvSecret, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			waitForHashedSecret(testNamespace, 5*time.Second, 5*time.Minute, customEnvSecret, GinkgoWriter)
 			fmt.Fprintf(GinkgoWriter, "Hashed secret has been created and is accurate\n")
 
 			fmt.Fprintf(GinkgoWriter, "Waiting until apicast pod annotations have been verified\n")
-			err = waitForApicastPodAnnotations(testNamespace, 5*time.Second, 5*time.Minute, customEnvSecret, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			waitForApicastPodAnnotations(testNamespace, 5*time.Second, 5*time.Minute, customEnvSecret, GinkgoWriter)
 			fmt.Fprintf(GinkgoWriter, "Apicast pod annotations have been verified\n")
 
 			// TODO: Add code checking annotations on apicast pods
 
 			fmt.Fprintf(GinkgoWriter, "Waiting until APIManager's 'Available' condition is true\n")
-			err = waitForAPIManagerAvailableCondition(5*time.Second, 15*time.Minute, apimanager, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			waitForAPIManagerAvailableCondition(5*time.Second, 15*time.Minute, apimanager, GinkgoWriter)
 			fmt.Fprintf(GinkgoWriter, "APIManager 'Available' condition is true\n")
 
 			elapsed := time.Since(start)
@@ -871,7 +865,7 @@ func createPVC(name, namespace string, k8sclient client.Client) error {
 	return nil
 }
 
-func waitForAllAPIManagerStandardDeployments(namespace string, retryInterval, timeout time.Duration, w io.Writer) error {
+func waitForAllAPIManagerStandardDeployments(namespace string, retryInterval, timeout time.Duration, w io.Writer) {
 	deploymentNames := []string{ // TODO gather this from constants/somewhere centralized
 		"apicast-production",
 		"apicast-staging",
@@ -910,11 +904,9 @@ func waitForAllAPIManagerStandardDeployments(namespace string, retryInterval, ti
 			return false
 		}, timeout, retryInterval).Should(BeTrue())
 	}
-
-	return nil
 }
 
-func waitForAllAPIManagerStandardRoutes(retryInterval, timeout time.Duration, wildcardDomain string, w io.Writer) error {
+func waitForAllAPIManagerStandardRoutes(retryInterval, timeout time.Duration, wildcardDomain string, w io.Writer) {
 	routeHosts := []string{
 		"backend-3scale." + wildcardDomain,                // Backend Listener route
 		"api-3scale-apicast-production." + wildcardDomain, // Apicast Production '3scale' tenant Route
@@ -958,11 +950,9 @@ func waitForAllAPIManagerStandardRoutes(retryInterval, timeout time.Duration, wi
 			return true
 		}, timeout, retryInterval).Should(BeTrue())
 	}
-
-	return nil
 }
 
-func waitForAPIManagerAvailableCondition(retryInterval, timeout time.Duration, apimanager *appsv1alpha1.APIManager, w io.Writer) error {
+func waitForAPIManagerAvailableCondition(retryInterval, timeout time.Duration, apimanager *appsv1alpha1.APIManager, w io.Writer) {
 	Eventually(func() bool {
 		err := testK8sClient.Get(context.Background(), types.NamespacedName{Name: apimanager.Name, Namespace: apimanager.Namespace}, apimanager)
 		if err != nil {
@@ -972,11 +962,9 @@ func waitForAPIManagerAvailableCondition(retryInterval, timeout time.Duration, a
 
 		return apimanager.Status.Conditions.IsTrueFor(appsv1alpha1.APIManagerAvailableConditionType)
 	}, timeout, retryInterval).Should(BeTrue())
-
-	return nil
 }
 
-func waitForAPIManagerLabels(namespace string, retryInterval time.Duration, timeout time.Duration, apimanager *appsv1alpha1.APIManager, customEnvSecret *corev1.Secret, w io.Writer) error {
+func waitForAPIManagerLabels(namespace string, retryInterval time.Duration, timeout time.Duration, apimanager *appsv1alpha1.APIManager, customEnvSecret *corev1.Secret, w io.Writer) {
 	Eventually(func() bool {
 		reconciledApimanager := &appsv1alpha1.APIManager{}
 		reconciledApimanagerKey := types.NamespacedName{Name: apimanager.Name, Namespace: namespace}
@@ -993,11 +981,9 @@ func waitForAPIManagerLabels(namespace string, retryInterval time.Duration, time
 		// Then verify that the hash matches the hashed config secret
 		return reflect.DeepEqual(reconciledApimanager.Labels, expectedLabels)
 	}, timeout, retryInterval).Should(BeTrue())
-
-	return nil
 }
 
-func waitForHashedSecret(namespace string, retryInterval time.Duration, timeout time.Duration, customEnvSecret *corev1.Secret, w io.Writer) error {
+func waitForHashedSecret(namespace string, retryInterval time.Duration, timeout time.Duration, customEnvSecret *corev1.Secret, w io.Writer) {
 	Eventually(func() bool {
 		// First get the master hashed secret
 		hashedSecret := &corev1.Secret{}
@@ -1011,11 +997,9 @@ func waitForHashedSecret(namespace string, retryInterval time.Duration, timeout 
 		// Then verify that the hash matches the hashed custom environment secret
 		return helper.GetSecretStringDataFromData(hashedSecret.Data)[customEnvSecret.Name] == component.HashSecret(customEnvSecret.Data)
 	}, timeout, retryInterval).Should(BeTrue())
-
-	return nil
 }
 
-func waitForApicastPodAnnotations(namespace string, retryInterval time.Duration, timeout time.Duration, customEnvSecret *corev1.Secret, w io.Writer) error {
+func waitForApicastPodAnnotations(namespace string, retryInterval time.Duration, timeout time.Duration, customEnvSecret *corev1.Secret, w io.Writer) {
 	apicastDeploymentNames := []string{
 		"apicast-production",
 		"apicast-staging",
@@ -1044,8 +1028,6 @@ func waitForApicastPodAnnotations(namespace string, retryInterval time.Duration,
 			return false
 		}, timeout, retryInterval).Should(BeTrue())
 	}
-
-	return nil
 }
 
 func testCustomEnvironmentContent() string {

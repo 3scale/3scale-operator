@@ -83,7 +83,7 @@ func (h *APIManagerRoutesEventMapper) getAPIManagerOwnerReconcileRequest(object 
 				// If there's an error getting the object it might be due to
 				// it might have been deleted already or any other kind of error.
 				// In both cases we log it and ignore it and we continue the processing.
-				h.Logger.Error(err, "Could not get object",
+				h.Logger.Error(getErr, "Could not get object",
 					"Kind", ref.Kind, "APIVersion", ref.APIVersion, "Name", ref.Name, "Namespace", object.GetNamespace())
 			} else {
 				// Recursively try to find an APIManager OwnerReference

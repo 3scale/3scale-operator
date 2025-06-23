@@ -285,7 +285,12 @@ func (r *ApplicationAuthReconciler) applicationAuthReconciler(
 				return statusReconciler, err
 			}
 			authSecret.ApplicationID = foundApplication.ApplicationId
-			foundApplicationKeys, err := threescaleClient.ApplicationKeys(*developerAccount.Status.ID, *application.Status.ID)
+			var foundApplicationKeys []threescaleapi.ApplicationKey
+			foundApplicationKeys, err = threescaleClient.ApplicationKeys(*developerAccount.Status.ID, *application.Status.ID)
+			if err != nil {
+				statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, applicationAuth, err)
+				return statusReconciler, err
+			}
 			lastKey := len(foundApplicationKeys) - 1
 			authSecret.ApplicationKey = fmt.Sprint(foundApplicationKeys[lastKey].Value)
 		}

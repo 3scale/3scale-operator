@@ -332,7 +332,7 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	labelSelectorPredicate, err := predicate.LabelSelectorPredicate(r.SecretLabelSelector)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	resourceVersionChangePredicate := predicate.ResourceVersionChangedPredicate{}
@@ -344,7 +344,7 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 	redisConfigLabelPredicate, err := predicate.LabelSelectorPredicate(*redisConfigLabelSelector)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -592,7 +592,7 @@ func (r *APIManagerReconciler) instanceRequiresPreflights(cr *appsv1alpha1.APIMa
 	// - external DB check
 	externalDatabasesCheckError := r.externalDatabasesPreflightsChecks(cr, logger)
 	if externalDatabasesCheckError != nil {
-		return ctrl.Result{}, true, nil
+		return ctrl.Result{}, true, externalDatabasesCheckError
 	}
 
 	// Check if current requirements are already confirmed

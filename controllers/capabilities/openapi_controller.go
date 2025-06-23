@@ -146,7 +146,7 @@ func (r *OpenAPIReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	})
 	if err != nil {
-		return nil
+		return err
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).

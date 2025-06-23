@@ -135,7 +135,10 @@ func GetMethodsMetricsRoundTripFunc(req *http.Request) *http.Response {
 		respObject = methodList
 	}
 
-	responseBodyBytes, _ := json.Marshal(respObject)
+	responseBodyBytes, err := json.Marshal(respObject)
+	if err != nil {
+		return nil
+	}
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
