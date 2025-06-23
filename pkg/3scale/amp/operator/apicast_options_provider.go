@@ -524,7 +524,7 @@ func (a *ApicastOptionsProvider) getOpenTelemetryStagingConfig(ctx context.Conte
 
 	// Read secret and get first key in lexicographical order.
 	// Defining some order is required because maps do not provide order semantics and
-	// key consistency is required accross reconcile loops
+	// key consistency is required across reconcile loops
 	otelSecretKey := client.ObjectKey{
 		Name:      a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef.Name,
 		Namespace: a.apimanager.Namespace,
@@ -587,7 +587,7 @@ func (a *ApicastOptionsProvider) getOpenTelemetryProductionConfig(ctx context.Co
 
 	// Read secret and get first key in lexicographical order.
 	// Defining some order is required because maps do not provide order semantics and
-	// key consistency is required accross reconcile loops
+	// key consistency is required across reconcile loops
 	otelSecretKey := client.ObjectKey{
 		Name:      a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef.Name,
 		Namespace: a.apimanager.Namespace,

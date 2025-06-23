@@ -1400,7 +1400,7 @@ func TestDeploymentVolumeMuator(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "VolumesMutator - additonal new volume",
+			name: "VolumesMutator - additional new volume",
 			args: args{
 				desired: &k8sappsv1.Deployment{
 					Spec: k8sappsv1.DeploymentSpec{

@@ -45,7 +45,7 @@ func NewAPIManagerBackupLogicReconciler(b *reconcilers.BaseReconciler, cr *appsv
 	// The creation of the APIManagerBackup fills an option which is
 	// the APIManager which requires the APIManager to exist.
 	// The downside of this approach is that we must make sure at the beginning
-	// of the Reconcile funtion that we don't do anything else if the backup
+	// of the Reconcile function that we don't do anything else if the backup
 	// has completed. Otherwise we would potentially get a nil pointer
 	// exception
 	// TODO is there an alternative or better way to do this?

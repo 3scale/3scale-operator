@@ -1227,7 +1227,7 @@ func (product *Product) SetDefaults(logger logr.Logger) bool {
 		updated = true
 	}
 
-	// Configuration must have default value to maintain backwards compatability if overwritten with older CRD
+	// Configuration must have default value to maintain backwards compatibility if overwritten with older CRD
 	// where field is required
 	// Using required field and kubebuilder default was not possible due to not being able to have an empty object
 	// in CRD manifest
@@ -1283,23 +1283,23 @@ func (product *Product) Validate() field.ErrorList {
 		}
 	}
 
-	metricFirendlyNameMap := map[string]interface{}{}
+	metricFriendlyNameMap := map[string]interface{}{}
 	// Check metric names are unique for all metric and methods
 	for systemName, metricSpec := range product.Spec.Metrics {
-		if _, ok := metricFirendlyNameMap[metricSpec.Name]; ok {
+		if _, ok := metricFriendlyNameMap[metricSpec.Name]; ok {
 			metricIdxFldPath := metricsFldPath.Key(systemName)
 			errors = append(errors, field.Invalid(metricIdxFldPath, metricSpec, "metric name not unique."))
 		} else {
-			metricFirendlyNameMap[systemName] = nil
+			metricFriendlyNameMap[systemName] = nil
 		}
 	}
 	// Check method names are unique for all metric and methods
 	for systemName, methodSpec := range product.Spec.Methods {
-		if _, ok := metricFirendlyNameMap[methodSpec.Name]; ok {
+		if _, ok := metricFriendlyNameMap[methodSpec.Name]; ok {
 			methodIdxFldPath := methodsFldPath.Key(systemName)
 			errors = append(errors, field.Invalid(methodIdxFldPath, methodSpec, "method name not unique."))
 		} else {
-			metricFirendlyNameMap[systemName] = nil
+			metricFriendlyNameMap[systemName] = nil
 		}
 	}
 

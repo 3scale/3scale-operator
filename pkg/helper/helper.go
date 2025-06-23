@@ -16,7 +16,7 @@ import (
 // InvalidDNS1123Regexp not alphanumeric
 var InvalidDNS1123Regexp = regexp.MustCompile(`[^0-9A-Za-z-]`)
 
-// PortFromURL infers port number if it is not explict
+// PortFromURL infers port number if it is not explicit
 func PortFromURL(url *url.URL) int {
 	if url.Port() != "" {
 		if portNum, err := strconv.Atoi(url.Port()); err == nil {

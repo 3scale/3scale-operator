@@ -187,7 +187,7 @@ func (p *OpenAPIBackendReconciler) desiredSystemName() string {
 
 func (p *OpenAPIBackendReconciler) desiredObjName() string {
 	// DNS1123 Label compliant name. Due to UIDs are 36 characters of length this
-	// means that the maximum prefix lenght that can be provided is of 26
+	// means that the maximum prefix length that can be provided is of 26
 	// characters. If the generated name is not DNS1123 compliant an error is
 	// returned
 	// Maybe truncate?
