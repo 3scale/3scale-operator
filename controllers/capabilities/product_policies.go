@@ -68,7 +68,7 @@ func (t *ProductThreescaleReconciler) convertPolicyConfiguration(crdPolicy capab
 	if string(crdPolicy.Configuration.Raw) != capabilitiesv1beta1.ProductPolicyConfigurationDefault {
 		// CRD validation ensures no error happens
 		// "configuration` type is object
-		//properties:
+		// properties:
 		//  configuration:
 		//    description: Configuration defines the policy configuration
 		//    type: object

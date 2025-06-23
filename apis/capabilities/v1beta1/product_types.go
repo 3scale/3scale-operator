@@ -65,23 +65,18 @@ const (
 	ProductPolicyConfigurationDefault = `{}`
 )
 
-var (
-	// apicastPolicy refers to the main functionality of APIcast to work with the 3scale API manager
-	// Needs to exist in the policy chain
-	apicastPolicy = PolicyConfig{
-		Name:    "apicast",
-		Version: "builtin",
-		Configuration: runtime.RawExtension{
-			Raw: []byte(ProductPolicyConfigurationDefault),
-		},
-		Enabled: true,
-	}
-)
+// apicastPolicy refers to the main functionality of APIcast to work with the 3scale API manager
+// Needs to exist in the policy chain
+var apicastPolicy = PolicyConfig{
+	Name:    "apicast",
+	Version: "builtin",
+	Configuration: runtime.RawExtension{
+		Raw: []byte(ProductPolicyConfigurationDefault),
+	},
+	Enabled: true,
+}
 
-var (
-	//
-	productSystemNameRegexp = regexp.MustCompile("[^a-zA-Z0-9]+")
-)
+var productSystemNameRegexp = regexp.MustCompile("[^a-zA-Z0-9]+")
 
 // MetricMethodRefSpec defines method or metric reference
 // Metric or method can optionally belong to used backends

@@ -45,7 +45,6 @@ func (m *mockRedisServer) Connected() bool {
 
 // Secret reconcile test
 func TestReconcileRedisSecrets(t *testing.T) {
-
 	testCases := []struct {
 		testName            string
 		redisSecretFunction func(v1.Secret) *RedisConfig
@@ -130,7 +129,6 @@ func TestConfigureWithEmptyConfig(t *testing.T) {
 }
 
 func TestConfigureWithInvalidConfig(t *testing.T) {
-
 	testCases := []struct {
 		testName    string
 		redisConfig *RedisConfig

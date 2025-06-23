@@ -13,10 +13,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-var (
-	// InvalidDNS1123Regexp not alphanumeric
-	InvalidDNS1123Regexp = regexp.MustCompile(`[^0-9A-Za-z-]`)
-)
+// InvalidDNS1123Regexp not alphanumeric
+var InvalidDNS1123Regexp = regexp.MustCompile(`[^0-9A-Za-z-]`)
 
 // PortFromURL infers port number if it is not explict
 func PortFromURL(url *url.URL) int {
@@ -37,7 +35,6 @@ func PortFromURL(url *url.URL) int {
 
 // SetURLDefaultPort adds the default Port if not set
 func SetURLDefaultPort(rawurl string) string {
-
 	urlObj, _ := url.Parse(rawurl)
 
 	if urlObj.Port() != "" {

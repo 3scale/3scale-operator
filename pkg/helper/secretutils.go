@@ -3,11 +3,12 @@ package helper
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 func GetSecretDataValueOrDefault(secretData map[string][]byte, fieldName string, defaultValue string) string {

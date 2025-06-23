@@ -2,12 +2,11 @@ package controllers
 
 import (
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"strconv"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
-
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 func (t *ProductThreescaleReconciler) syncProxy(_ interface{}) error {

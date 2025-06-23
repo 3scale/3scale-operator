@@ -2,6 +2,9 @@ package controllers
 
 import (
 	"fmt"
+	"reflect"
+	"testing"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -9,10 +12,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
-	"reflect"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"testing"
 )
 
 func TestApplicationAuthStatusReconciler_Reconcile(t *testing.T) {
@@ -89,7 +90,6 @@ func getApplicationAuthStatus() (CR *capabilitiesv1beta1.ApplicationAuth) {
 		},
 	}
 	return CR
-
 }
 
 func TestApplicationAuthStatusReconciler_calculateStatus(t *testing.T) {

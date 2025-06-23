@@ -22,10 +22,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-var (
-	// LastSlashRegexp matches the last slash
-	LastSlashRegexp = regexp.MustCompile(`/$`)
-)
+// LastSlashRegexp matches the last slash
+var LastSlashRegexp = regexp.MustCompile(`/$`)
 
 type OpenAPIProductReconciler struct {
 	*reconcilers.BaseReconciler
@@ -166,7 +164,7 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 	// current implementation assumes same system name for backend and product
 	backendSystemName := p.desiredSystemName()
 	product.Spec.BackendUsages = map[string]capabilitiesv1beta1.BackendUsageSpec{
-		backendSystemName: capabilitiesv1beta1.BackendUsageSpec{
+		backendSystemName: {
 			Path: "/",
 		},
 	}
@@ -507,7 +505,6 @@ func (p *OpenAPIProductReconciler) desiredPrivateAPISecurity() *capabilitiesv1be
 }
 
 func (p *OpenAPIProductReconciler) desiredOIDCAuthentication(secReq *helper.ExtendedSecurityRequirement) *capabilitiesv1beta1.AuthenticationSpec {
-
 	if p.openapiCR.Spec.OIDC == nil {
 		return nil
 	}

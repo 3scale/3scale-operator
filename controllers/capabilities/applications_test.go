@@ -1,12 +1,13 @@
 package controllers
 
 import (
+	"testing"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
-	"testing"
 )
 
 func getApplicationEntity() *controllerhelper.ApplicationEntity {
@@ -34,6 +35,7 @@ func getApplicationEntity() *controllerhelper.ApplicationEntity {
 	}
 	return applicationEntity
 }
+
 func getApplicationEntitySuspended() *controllerhelper.ApplicationEntity {
 	applicationEntity := &controllerhelper.ApplicationEntity{
 		ApplicationObj: &threescaleapi.Application{
@@ -87,7 +89,7 @@ func getApplicationEntityPlanID() *controllerhelper.ApplicationEntity {
 }
 
 func TestApplicationThreescaleReconciler_syncApplication(t1 *testing.T) {
-	//admin portal
+	// admin portal
 	ap, _ := threescaleapi.NewAdminPortalFromStr("https://3scale-admin.test.3scale.net")
 	type fields struct {
 		BaseReconciler      *reconcilers.BaseReconciler
@@ -116,7 +118,7 @@ func TestApplicationThreescaleReconciler_syncApplication(t1 *testing.T) {
 				accountResource:     getApplicationDeveloperAccount(),
 				productResource:     getApplicationProductCR(),
 				threescaleAPIClient: threescaleapi.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson("live"))),
-				//logger:              nil,
+				// logger:              nil,
 			},
 			wantErr: false,
 		},
@@ -129,7 +131,7 @@ func TestApplicationThreescaleReconciler_syncApplication(t1 *testing.T) {
 				accountResource:     getApplicationDeveloperAccount(),
 				productResource:     getApplicationProductCR(),
 				threescaleAPIClient: threescaleapi.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson("suspended"))),
-				//logger:              nil,
+				// logger:              nil,
 			},
 			wantErr: false,
 		},
@@ -142,7 +144,7 @@ func TestApplicationThreescaleReconciler_syncApplication(t1 *testing.T) {
 				accountResource:     getApplicationDeveloperAccount(),
 				productResource:     getApplicationProductCR(),
 				threescaleAPIClient: threescaleapi.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson("live"))),
-				//logger:              nil,
+				// logger:              nil,
 			},
 			wantErr: false,
 		},
@@ -155,7 +157,7 @@ func TestApplicationThreescaleReconciler_syncApplication(t1 *testing.T) {
 				accountResource:     getApplicationDeveloperAccount(),
 				productResource:     getApplicationProductCR(),
 				threescaleAPIClient: threescaleapi.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson("live"))),
-				//logger:              nil,
+				// logger:              nil,
 			},
 			wantErr: false,
 		},

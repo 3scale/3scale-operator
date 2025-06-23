@@ -3,11 +3,12 @@ package operator
 import (
 	"errors"
 	"fmt"
+	"strings"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 type HighAvailabilityOptionsProvider struct {
@@ -127,8 +128,8 @@ func (h *HighAvailabilityOptionsProvider) setBackendRedisOptions() error {
 	}
 
 	// Check if Backend and Queues Sentinels are enabled (check if Sentinel hosts field is populated)
-	var isBackendSentinel = h.options.BackendRedisStorageSentinelHosts != ""
-	var isQueuesSentinel = h.options.BackendRedisQueuesSentinelHosts != ""
+	isBackendSentinel := h.options.BackendRedisStorageSentinelHosts != ""
+	isQueuesSentinel := h.options.BackendRedisQueuesSentinelHosts != ""
 
 	// Check Redis URL
 	var redisUrlsErrors []string
@@ -235,7 +236,7 @@ func (h *HighAvailabilityOptionsProvider) setSystemRedisOptions() error {
 	}
 
 	// Check if System Sentinel is enabled (check if Sentinel hosts field is populated)
-	var isSystemSentinel = h.options.SystemRedisSentinelsHosts != ""
+	isSystemSentinel := h.options.SystemRedisSentinelsHosts != ""
 
 	// Check Redis URL
 	redisUrl, err := h.secretSource.FieldValueFromRequiredSecret(component.SystemSecretSystemRedisSecretName, component.SystemSecretSystemRedisURLFieldName, "")
@@ -262,6 +263,7 @@ func (h *HighAvailabilityOptionsProvider) setSystemRedisOptions() error {
 	}
 	return nil
 }
+
 func (h *HighAvailabilityOptionsProvider) setZyncDatabaseOptions() error {
 	val, err := h.secretSource.RequiredFieldValueFromRequiredSecret(
 		component.ZyncSecretName, component.ZyncSecretDatabaseURLFieldName)
@@ -301,7 +303,6 @@ func (h *HighAvailabilityOptionsProvider) setZyncDatabaseOptions() error {
 		if len(errs) > 0 {
 			return fmt.Errorf("zync database'zyncDatabaseTLSEnabled: true' is set in apimanager: %v", errors.Join(errs...))
 		}
-
 	}
 
 	return nil

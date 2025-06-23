@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"net/url"
 	"regexp"
 	"strings"
 	"text/template"
 
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
@@ -76,7 +76,6 @@ func NewOasOperationExtension(oas *openapi3.Operation) (*OasOperationExtension, 
 	}
 
 	return x.Operation, nil
-
 }
 
 func SystemNameFromOpenAPITitle(obj *openapi3.T) string {

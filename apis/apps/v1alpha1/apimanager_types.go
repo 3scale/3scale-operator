@@ -1738,6 +1738,7 @@ func (apimanager *APIManager) IsSystemRedisTLSEnabled() bool {
 	}
 	return tlsEnabled
 }
+
 func (apimanager *APIManager) IsBackendRedisTLSEnabled() bool {
 	tlsEnabled := false
 	if apimanager.Spec.Backend != nil &&
@@ -1747,6 +1748,7 @@ func (apimanager *APIManager) IsBackendRedisTLSEnabled() bool {
 	}
 	return tlsEnabled
 }
+
 func (apimanager *APIManager) IsQueuesRedisTLSEnabled() bool {
 	tlsEnabled := false
 	if apimanager.Spec.Backend != nil &&

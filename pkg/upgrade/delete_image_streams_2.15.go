@@ -13,7 +13,7 @@ import (
 // DeleteImageStreams deletes the ImageStream objects managed by APIManager as they are no longer needed with Deployments
 // 3scale 2.14 -> 2.15
 func DeleteImageStreams(namespace string, client k8sclient.Client) error {
-	var imageStreams = []string{
+	imageStreams := []string{
 		"amp-apicast",
 		"amp-backend",
 		"amp-system",
@@ -54,7 +54,6 @@ func DeleteImageStreams(namespace string, client k8sclient.Client) error {
 				return fmt.Errorf("error deleting ImageStream %s: %v", imageStream.Name, err)
 			}
 		}
-
 	}
 
 	return nil

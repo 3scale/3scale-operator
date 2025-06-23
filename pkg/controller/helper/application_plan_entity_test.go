@@ -86,7 +86,7 @@ func TestApplicationPlanEntityUpdateError(t *testing.T) {
 		errObj := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(errObj)
@@ -159,7 +159,7 @@ func TestApplicationPlanEntityLimitsError(t *testing.T) {
 		errObj := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(errObj)
@@ -206,7 +206,7 @@ func TestApplicationPlanEntityDeleteLimitError(t *testing.T) {
 		errObj := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(errObj)
@@ -265,7 +265,7 @@ func TestApplicationPlanEntityCreateLimitError(t *testing.T) {
 		errObj := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(errObj)
@@ -340,7 +340,7 @@ func TestApplicationPlanEntityPricingRulesError(t *testing.T) {
 		errObj := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(errObj)
@@ -387,7 +387,7 @@ func TestApplicationPlanEntityDeletePricingRuleError(t *testing.T) {
 		errObj := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(errObj)
@@ -447,7 +447,7 @@ func TestApplicationPlanEntityCreatePricingRuleError(t *testing.T) {
 		errObj := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(errObj)

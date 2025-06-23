@@ -225,7 +225,6 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 	// P2 should be added to existing Deployment
 	// P1 should be deleted from existing Deployment
 	apicastOptions := &component.ApicastOptions{
-
 		ProductionCustomPolicies: []component.CustomPolicy{p1CustomPolicy},
 		StagingTracingConfig:     &component.APIcastTracingConfig{},
 		ProductionTracingConfig:  &component.APIcastTracingConfig{},

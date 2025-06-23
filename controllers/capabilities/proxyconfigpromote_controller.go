@@ -151,7 +151,6 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 
 		// If wanting to promote to Stage but not production.
 		if proxyConfigPromote.Spec.Production == nil || !*proxyConfigPromote.Spec.Production {
-
 			// Fetch current stage version before promotion
 			currentStageElement, err := threescaleAPIClient.GetLatestProxyConfig(productIDStr, "sandbox")
 			if err != nil {

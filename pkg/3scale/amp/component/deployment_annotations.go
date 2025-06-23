@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
-
 	"github.com/go-logr/logr"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -118,7 +117,6 @@ func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, d
 						annotationKey := fmt.Sprintf("%s%s", OpenTelemetrySecretResverAnnotationPrefix, telemetryConfigSecret.Name)
 						annotations[annotationKey] = telemetryConfigSecret.ResourceVersion
 					}
-
 				}
 			}
 

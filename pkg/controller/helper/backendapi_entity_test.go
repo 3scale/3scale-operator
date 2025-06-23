@@ -102,7 +102,7 @@ func TestBackendAPIEntityUpdateError(t *testing.T) {
 		respObject := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(respObject)
@@ -143,7 +143,7 @@ func TestBackendAPIEntityMethodsError(t *testing.T) {
 		errObj := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(errObj)

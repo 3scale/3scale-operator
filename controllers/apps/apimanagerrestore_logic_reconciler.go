@@ -111,7 +111,6 @@ func (r *APIManagerRestoreLogicReconciler) reconcileSetMainStepsCompleted() (rec
 			return reconcile.Result{}, err
 		}
 		return reconcile.Result{Requeue: true}, nil
-
 	}
 	return reconcile.Result{}, nil
 }
@@ -325,7 +324,6 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManagerInSharedSec
 			return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
 		}
 		apimanager, err := r.apiManagerFromSharedBackupSecret()
-
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -426,7 +424,6 @@ func (r *APIManagerRestoreLogicReconciler) reconcileAPIManagerBackupSharedInSecr
 		return reconcile.Result{}, err
 	}
 	if desiredSecret != nil {
-
 		common.TagObjectToDelete(desiredSecret)
 		err = r.ReconcileResource(&v1.Secret{}, desiredSecret, reconcilers.CreateOnlyMutator)
 		if err != nil {

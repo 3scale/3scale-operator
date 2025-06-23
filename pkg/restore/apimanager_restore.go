@@ -116,7 +116,7 @@ func (b *APIManagerRestore) RestoreSecretsAndConfigMapsFromPVCJob() *batchv1.Job
 						b.restoreSourcePVCPodVolume(),
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "restore-cfgmaps-secrets",
 							Image: b.options.OCCLIImageURL,
 							Command: []string{
@@ -127,7 +127,7 @@ func (b *APIManagerRestore) RestoreSecretsAndConfigMapsFromPVCJob() *batchv1.Job
 								"-e",
 								b.restoreSecretsAndConfigMapsContainerArgs(),
 							},
-							//Env: []v1.EnvVar{},
+							// Env: []v1.EnvVar{},
 							VolumeMounts: []v1.VolumeMount{
 								b.restoreSourcePVCContainerVolumeMount(),
 							},
@@ -171,7 +171,7 @@ func (b *APIManagerRestore) RestoreSystemFileStoragePVCFromPVCJob() *batchv1.Job
 						b.systemFileStoragePVCPodVolume(),
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "backup-system-filestorage-pvc",
 							Image: b.options.OCCLIImageURL,
 							Command: []string{
@@ -182,7 +182,7 @@ func (b *APIManagerRestore) RestoreSystemFileStoragePVCFromPVCJob() *batchv1.Job
 								"-e",
 								b.restoreSystemFilestoragePVCContainerArgs(),
 							},
-							//Env: []v1.EnvVar{},
+							// Env: []v1.EnvVar{},
 							VolumeMounts: []v1.VolumeMount{
 								b.restoreSourcePVCContainerVolumeMount(),
 								b.systemFileStoragePVCContainerVolumeMount(),
@@ -226,7 +226,7 @@ func (b *APIManagerRestore) CreateAPIManagerSharedSecretJob() *batchv1.Job {
 						b.restoreSourcePVCPodVolume(),
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "job",
 							Image: b.options.OCCLIImageURL,
 							Command: []string{
@@ -237,7 +237,7 @@ func (b *APIManagerRestore) CreateAPIManagerSharedSecretJob() *batchv1.Job {
 								"-e",
 								b.createAPIManagerSharedSecretContainerArgs(),
 							},
-							//Env: []v1.EnvVar{},
+							// Env: []v1.EnvVar{},
 							VolumeMounts: []v1.VolumeMount{
 								b.restoreSourcePVCContainerVolumeMount(),
 							},
@@ -277,7 +277,7 @@ func (b *APIManagerRestore) ZyncResyncDomainsJob() *batchv1.Job {
 			Template: v1.PodTemplateSpec{
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "job",
 							Image: b.options.OCCLIImageURL,
 							Command: []string{
@@ -333,7 +333,7 @@ func (b *APIManagerRestore) restoreSystemFilestoragePVCContainerArgs() string {
 	// We could use rsync -av but the problem is that
 	// rsync tries to change the attributes of the destination directory
 	// and cannot do it due to the volume permissions
-	//rsync: chgrp "/system-filestorage-pvc/." failed: Operation not permitted (1)
+	// rsync: chgrp "/system-filestorage-pvc/." failed: Operation not permitted (1)
 	// ./
 	// An alternative using the "-a" flag could be using * but then could be problems
 	// like reaching glob extension limit, or not taking into account dot files in the
@@ -432,7 +432,7 @@ func (b *APIManagerRestore) Role() *rbacv1.Role {
 			Namespace: b.options.Namespace,
 		},
 		Rules: []rbacv1.PolicyRule{
-			rbacv1.PolicyRule{
+			{
 				APIGroups: []string{""},
 				Resources: []string{
 					"configmaps",
@@ -449,7 +449,7 @@ func (b *APIManagerRestore) Role() *rbacv1.Role {
 					"watch",
 				},
 			},
-			rbacv1.PolicyRule{
+			{
 				APIGroups: []string{""},
 				Resources: []string{
 					"pods/exec",
@@ -473,7 +473,7 @@ func (b *APIManagerRestore) RoleBinding() *rbacv1.RoleBinding {
 			Namespace: b.options.Namespace,
 		},
 		Subjects: []rbacv1.Subject{
-			rbacv1.Subject{
+			{
 				Kind: "ServiceAccount",
 				Name: ServiceAccountName,
 			},

@@ -135,7 +135,6 @@ func (r *APIManagerBackupLogicReconciler) reconcileSetMainStepsCompleted() (reco
 			return reconcile.Result{}, err
 		}
 		return reconcile.Result{Requeue: true}, nil
-
 	}
 	return reconcile.Result{}, nil
 }

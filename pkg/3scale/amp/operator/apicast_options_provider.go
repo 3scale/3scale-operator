@@ -8,17 +8,16 @@ import (
 	"sort"
 	"strconv"
 
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/validation/field"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type ApicastOptionsProvider struct {
@@ -144,13 +143,11 @@ func (a *ApicastOptionsProvider) setResourceRequirementsOptions() {
 	// defined
 	if a.apimanager.Spec.Apicast.ProductionSpec.Resources != nil {
 		a.apicastOptions.ProductionResourceRequirements = *a.apimanager.Spec.Apicast.ProductionSpec.Resources
-
 	}
 
 	if a.apimanager.Spec.Apicast.StagingSpec.Resources != nil {
 		a.apicastOptions.StagingResourceRequirements = *a.apimanager.Spec.Apicast.StagingSpec.Resources
 	}
-
 }
 
 func (a *ApicastOptionsProvider) setNodeAffinityAndTolerationsOptions() {
@@ -285,7 +282,6 @@ func (a *ApicastOptionsProvider) setCustomPolicies() error {
 func (a *ApicastOptionsProvider) validateCustomPolicySecret(ctx context.Context, name string, nn types.NamespacedName) (*v1.Secret, error) {
 	secret := &v1.Secret{}
 	err := a.client.Get(ctx, nn, secret)
-
 	if err != nil {
 		// NotFoundError is also an error, it is required to exist
 		return nil, err
@@ -385,7 +381,6 @@ func (a *ApicastOptionsProvider) setStagingTracingConfiguration() error {
 func (a *ApicastOptionsProvider) validateTracingConfigSecret(nn types.NamespacedName) error {
 	secret := &v1.Secret{}
 	err := a.client.Get(context.TODO(), nn, secret)
-
 	if err != nil {
 		// NotFoundError is also an error, it is required to exist
 		return err
@@ -448,7 +443,6 @@ func (a *ApicastOptionsProvider) setCustomEnvironments() error {
 func (a *ApicastOptionsProvider) customEnvironmentSecret(nn types.NamespacedName) (*v1.Secret, error) {
 	secret := &v1.Secret{}
 	err := a.client.Get(context.TODO(), nn, secret)
-
 	if err != nil {
 		// NotFoundError is also an error, it is required to exist
 		return nil, err
@@ -471,7 +465,6 @@ func (a *ApicastOptionsProvider) setStagingProxyConfigurations() {
 	a.apicastOptions.StagingHTTPProxy = a.apimanager.Spec.Apicast.StagingSpec.HTTPProxy
 	a.apicastOptions.StagingHTTPSProxy = a.apimanager.Spec.Apicast.StagingSpec.HTTPSProxy
 	a.apicastOptions.StagingNoProxy = a.apimanager.Spec.Apicast.StagingSpec.NoProxy
-
 }
 
 func (a *ApicastOptionsProvider) setProductionProxyConfigurations() {

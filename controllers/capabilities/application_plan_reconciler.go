@@ -8,7 +8,6 @@ import (
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
 )
@@ -46,7 +45,6 @@ func newApplicationPlanReconciler(b *reconcilers.BaseReconciler,
 	planEntity *controllerhelper.ApplicationPlanEntity,
 	logger logr.Logger,
 ) *applicationPlanReconciler {
-
 	return &applicationPlanReconciler{
 		BaseReconciler:      b,
 		systemName:          systemName,
@@ -236,8 +234,8 @@ func (a *applicationPlanReconciler) syncPricingRules(_ interface{}) error {
 
 func (a *applicationPlanReconciler) computeUnDesiredLimits(
 	existingList []threescaleapi.ApplicationPlanLimit,
-	desiredList []capabilitiesv1beta1.LimitSpec) ([]threescaleapi.ApplicationPlanLimit, error) {
-
+	desiredList []capabilitiesv1beta1.LimitSpec,
+) ([]threescaleapi.ApplicationPlanLimit, error) {
 	target := map[limitKey]bool{}
 	for _, desired := range desiredList {
 		metricID, err := a.findID(desired.MetricMethodRef)
@@ -272,8 +270,8 @@ func (a *applicationPlanReconciler) computeUnDesiredLimits(
 
 func (a *applicationPlanReconciler) computeDesiredLimits(
 	desiredList []capabilitiesv1beta1.LimitSpec,
-	existingList []threescaleapi.ApplicationPlanLimit) ([]capabilitiesv1beta1.LimitSpec, error) {
-
+	existingList []threescaleapi.ApplicationPlanLimit,
+) ([]capabilitiesv1beta1.LimitSpec, error) {
 	target := map[limitKey]bool{}
 	for _, existing := range existingList {
 		existingKey := limitKey{
@@ -330,8 +328,8 @@ func (a *applicationPlanReconciler) findID(ref capabilitiesv1beta1.MetricMethodR
 
 func (a *applicationPlanReconciler) computeUnDesiredPricingRules(
 	existingList []threescaleapi.ApplicationPlanPricingRule,
-	desiredList []capabilitiesv1beta1.PricingRuleSpec) ([]threescaleapi.ApplicationPlanPricingRule, error) {
-
+	desiredList []capabilitiesv1beta1.PricingRuleSpec,
+) ([]threescaleapi.ApplicationPlanPricingRule, error) {
 	target := map[pricingRuleKey]bool{}
 	for _, desired := range desiredList {
 		metricID, err := a.findID(desired.MetricMethodRef)
@@ -368,8 +366,8 @@ func (a *applicationPlanReconciler) computeUnDesiredPricingRules(
 
 func (a *applicationPlanReconciler) computeDesiredPricingRules(
 	desiredList []capabilitiesv1beta1.PricingRuleSpec,
-	existingList []threescaleapi.ApplicationPlanPricingRule) ([]capabilitiesv1beta1.PricingRuleSpec, error) {
-
+	existingList []threescaleapi.ApplicationPlanPricingRule,
+) ([]capabilitiesv1beta1.PricingRuleSpec, error) {
 	target := map[pricingRuleKey]bool{}
 	for _, existing := range existingList {
 		existingKey := pricingRuleKey{

@@ -3,16 +3,8 @@ package operator
 import (
 	"context"
 	"fmt"
-	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/types"
 	"reflect"
 	"strings"
-
-	k8sappsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -20,6 +12,13 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/pkg/upgrade"
+	"github.com/go-logr/logr"
+	k8sappsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func ApicastEnvCMMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
@@ -666,7 +665,6 @@ func apicastPodTemplateEnvConfigMapAnnotationsMutator(desired, existing *k8sapps
 }
 
 func (r *ApicastReconciler) reconcileAPImanagerCR(ctx context.Context) (ctrl.Result, error) {
-
 	changed := false
 	changed, err := r.reconcileApimanagerSecretLabels(ctx)
 	if err != nil {

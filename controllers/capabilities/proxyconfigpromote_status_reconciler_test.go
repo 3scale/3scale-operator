@@ -3,6 +3,9 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"testing"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
@@ -14,12 +17,10 @@ import (
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"testing"
 )
 
 func getApiManger() (apimanager *appsv1alpha1.APIManager) {
@@ -55,6 +56,7 @@ func getApiManger() (apimanager *appsv1alpha1.APIManager) {
 	}
 	return apimanager
 }
+
 func getProxyConfigPromoteCR() (CR *capabilitiesv1beta1.ProxyConfigPromote) {
 	CR = &capabilitiesv1beta1.ProxyConfigPromote{
 		ObjectMeta: metav1.ObjectMeta{
@@ -209,7 +211,7 @@ func TestProxyConfigPromoteStatusReconciler_Reconcile(t *testing.T) {
 		reconcileError          error
 		logger                  logr.Logger
 	}
-	var tests = []struct {
+	tests := []struct {
 		name    string
 		fields  fields
 		want    reconcile.Result

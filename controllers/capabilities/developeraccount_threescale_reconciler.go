@@ -224,7 +224,6 @@ func (s *DeveloperAccountThreescaleReconciler) findDeveloperAdminUserCR() (*capa
 		controllerhelper.DeveloperUserProviderAccountFilter(s.Client(), s.resource.Namespace, s.providerAccountHost, s.logger),
 		orphanFilter,
 	)
-
 	if err != nil {
 		return nil, err
 	}

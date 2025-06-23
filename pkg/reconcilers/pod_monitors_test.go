@@ -1,9 +1,10 @@
 package reconcilers
 
 import (
+	"testing"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 )
 
 func podMonitoringTestFactory(port string) *monitoringv1.PodMonitor {
@@ -22,6 +23,7 @@ func podMonitoringTestFactory(port string) *monitoringv1.PodMonitor {
 		},
 	}
 }
+
 func TestGenericPodMonitorMutator(t *testing.T) {
 	var existingPort string = "8080"
 	var desiredPort string = "9090"

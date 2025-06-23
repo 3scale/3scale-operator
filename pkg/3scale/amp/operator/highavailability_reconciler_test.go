@@ -8,7 +8,6 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -81,7 +80,6 @@ func TestHighAvailabilityReconciler(t *testing.T) {
 			if err != nil {
 				subT.Errorf("error fetching object %s: %v", tc.secretName, err)
 			}
-
 		})
 	}
 }

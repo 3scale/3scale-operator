@@ -205,7 +205,6 @@ func (s *APIManagerStatusReconciler) apimanagerAvailableCondition(existingDeploy
 }
 
 func (s *APIManagerStatusReconciler) reconcileHpaWarningMessages(conditions *common.Conditions, cr *appsv1alpha1.APIManager) {
-
 	cond := common.Condition{
 		Type:    appsv1alpha1.APIManagerWarningConditionType,
 		Status:  v1.ConditionStatus(metav1.ConditionTrue),

@@ -216,7 +216,6 @@ func (r *TenantReconciler) fetchMasterCredentials(tenantR *capabilitiesv1alpha1.
 	masterCredentialsSecret := &corev1.Secret{}
 
 	err := r.Client().Get(context.TODO(), tenantR.MasterSecretKey(), masterCredentialsSecret)
-
 	if err != nil {
 		return "", err
 	}

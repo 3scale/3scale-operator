@@ -237,7 +237,6 @@ func (r *ApplicationReconciler) reconcileMetadata(application *capabilitiesv1bet
 }
 
 func (r *ApplicationReconciler) applicationReconciler(applicationResource *capabilitiesv1beta1.Application, req ctrl.Request, threescaleAPIClient *threescaleapi.ThreeScaleClient, providerAccountAdminURLStr string, accountResource *capabilitiesv1beta1.DeveloperAccount) (*ApplicationStatusReconciler, error) {
-
 	// get product
 	productResource := &capabilitiesv1beta1.Product{}
 	projectMeta := types.NamespacedName{

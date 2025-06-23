@@ -65,7 +65,6 @@ func verifyMySQLVersion(cfg *DatabaseConfig, requiredVersion string) (bool, erro
 
 	if cfg.TLS != nil && cfg.TLS.Enabled {
 		tlsConfig, err := LoadCerts(cfg.TLS)
-
 		if err != nil {
 			return false, err
 		}

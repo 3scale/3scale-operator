@@ -168,8 +168,8 @@ func testZyncDatabaseCustomResourceRequirements() *v1.ResourceRequirements {
 
 func testZyncQueSACustomImagePullSecrets() []v1.LocalObjectReference {
 	return []v1.LocalObjectReference{
-		v1.LocalObjectReference{Name: "mysecret9"},
-		v1.LocalObjectReference{Name: "mysecret14"},
+		{Name: "mysecret9"},
+		{Name: "mysecret14"},
 	}
 }
 
@@ -254,12 +254,14 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 		apimanagerFactory      func() *appsv1alpha1.APIManager
 		expectedOptionsFactory func(*component.ZyncOptions) *component.ZyncOptions
 	}{
-		{"Default", nil, basicApimanagerSpecTestZyncOptions,
+		{
+			"Default", nil, basicApimanagerSpecTestZyncOptions,
 			func(opts *component.ZyncOptions) *component.ZyncOptions {
 				return defaultZyncOptions(opts)
 			},
 		},
-		{"WithoutResourceRequirements", nil,
+		{
+			"WithoutResourceRequirements", nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestZyncOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
@@ -273,7 +275,8 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"ZyncSecret", getZyncSecret(), basicApimanagerSpecTestZyncOptions,
+		{
+			"ZyncSecret", getZyncSecret(), basicApimanagerSpecTestZyncOptions,
 			func(opts *component.ZyncOptions) *component.ZyncOptions {
 				expectedOpts := defaultZyncOptions(opts)
 				expectedOpts.SecretKeyBase = zyncSecretKeyBasename
@@ -283,7 +286,8 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"ZyncSecretWithExternalZync", getZyncSecretExternalDatabase(namespace), basicApimanagerWithExternalZyncDatabaseSpecTestZyncOptions,
+		{
+			"ZyncSecretWithExternalZync", getZyncSecretExternalDatabase(namespace), basicApimanagerWithExternalZyncDatabaseSpecTestZyncOptions,
 			func(opts *component.ZyncOptions) *component.ZyncOptions {
 				expectedOpts := defaultZyncOptions(opts)
 				expectedOpts.SecretKeyBase = zyncSecretKeyBasename
@@ -293,7 +297,8 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithAffinity", nil,
+		{
+			"WithAffinity", nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestZyncOptions()
 				apimanager.Spec.Zync.AppSpec.Affinity = testZyncAffinity()
@@ -309,7 +314,8 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithTolerations", nil,
+		{
+			"WithTolerations", nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestZyncOptions()
 				apimanager.Spec.Zync.AppSpec.Tolerations = testZyncTolerations()
@@ -325,7 +331,8 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithZyncCustomResourceRequirements", nil,
+		{
+			"WithZyncCustomResourceRequirements", nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestZyncOptions()
 				apimanager.Spec.Zync.AppSpec.Resources = testZyncCustomResourceRequirements()
@@ -341,7 +348,8 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithZyncCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil,
+		{
+			"WithZyncCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestZyncOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
@@ -358,7 +366,8 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithoutResourceRequirements", nil,
+		{
+			"WithoutResourceRequirements", nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestZyncOptions()
 				apimanager.Spec.ImagePullSecrets = testZyncQueSACustomImagePullSecrets()

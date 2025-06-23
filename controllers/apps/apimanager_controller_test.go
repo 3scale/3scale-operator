@@ -3,7 +3,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"io"
 	"os"
 	"reflect"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -33,7 +33,7 @@ var _ = Describe("APIManager controller", func() {
 	var testNamespace string
 
 	BeforeEach(func() {
-		var generatedTestNamespace = "test-namespace-" + uuid.New().String()
+		generatedTestNamespace := "test-namespace-" + uuid.New().String()
 		// Add any setup steps that needs to be executed before each test
 		desiredTestNamespace := &corev1.Namespace{
 			TypeMeta: metav1.TypeMeta{
@@ -80,7 +80,6 @@ var _ = Describe("APIManager controller", func() {
 			}
 			return true
 		}, 5*time.Minute, 5*time.Second).Should(BeTrue())
-
 	})
 
 	Context("Run directly without existing APIManager", func() {
@@ -91,7 +90,6 @@ var _ = Describe("APIManager controller", func() {
 
 	Context("Run APIManager standard deploy", func() {
 		It("Should create successfully", func() {
-
 			start := time.Now()
 			os.Setenv("PREFLIGHT_CHECKS_BYPASS", "true")
 			// Create dummy secret needed to deploy an APIManager
@@ -912,7 +910,6 @@ func waitForAllAPIManagerStandardDeployments(namespace string, retryInterval, ti
 			desiredReplicas := createdDeployment.Spec.Replicas
 			fmt.Fprintf(w, "Waiting for full availability of %s Deployment (%d/%d)\n", dName, availableReplicas, desiredReplicas)
 			return false
-
 		}, timeout, retryInterval).Should(BeTrue())
 	}
 
@@ -962,7 +959,6 @@ func waitForAllAPIManagerStandardRoutes(namespace string, retryInterval, timeout
 			fmt.Fprintf(w, "Route '%s' with host '%s' ready\n", route.Name, route.Spec.Host)
 			return true
 		}, timeout, retryInterval).Should(BeTrue())
-
 	}
 
 	return nil

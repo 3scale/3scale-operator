@@ -2,15 +2,16 @@ package controllers
 
 import (
 	"bytes"
+	"io/ioutil"
+	"net/http"
+	"reflect"
+	"testing"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-porta-go-client/client"
-	"io/ioutil"
 	"k8s.io/apimachinery/pkg/types"
-	"net/http"
-	"reflect"
 	controllerruntime "sigs.k8s.io/controller-runtime"
-	"testing"
 )
 
 func mockHttpClientApplication(listAapplicationPlanByProductJson *client.ApplicationPlanJSONList, applicationJson *client.Application) *http.Client {
@@ -45,7 +46,7 @@ func mockHttpClientApplication(listAapplicationPlanByProductJson *client.Applica
 				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(mockResponse))),
 			}
 		}
-		//ApplicationResume
+		// ApplicationResume
 		if req.Method == "PUT" && req.URL.Path == "/admin/api/accounts/3/applications/0/resume.json" {
 			return &http.Response{
 				StatusCode: http.StatusOK,
@@ -53,7 +54,7 @@ func mockHttpClientApplication(listAapplicationPlanByProductJson *client.Applica
 				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
 			}
 		}
-		//ApplicationSuspend
+		// ApplicationSuspend
 		if req.Method == "PUT" && req.URL.Path == "/admin/api/accounts/3/applications/3/suspend.json" {
 			return &http.Response{
 				StatusCode: http.StatusOK,
@@ -134,8 +135,7 @@ func getApplicationJson(state string) *client.Application {
 }
 
 func TestApplicationReconciler_applicationReconciler(t *testing.T) {
-
-	//admin portal
+	// admin portal
 	ap, _ := client.NewAdminPortalFromStr("https://3scale-admin.test.3scale.net")
 	type fields struct {
 		BaseReconciler *reconcilers.BaseReconciler
@@ -260,7 +260,7 @@ func TestApplicationReconciler_applicationReconciler(t *testing.T) {
 }
 
 func TestApplicationReconciler_removeApplicationFrom3scale(t *testing.T) {
-	//admin portal
+	// admin portal
 	ap, _ := client.NewAdminPortalFromStr("https://3scale-admin.test.3scale.net")
 	type fields struct {
 		BaseReconciler *reconcilers.BaseReconciler

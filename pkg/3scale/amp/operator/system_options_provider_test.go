@@ -364,13 +364,15 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 		s3Secret                  *v1.Secret
 		expectedOptionsFactory    func(*component.SystemOptions) *component.SystemOptions
 	}{
-		{"Default", basicApimanagerSpecTestSystemOptions,
+		{
+			"Default", basicApimanagerSpecTestSystemOptions,
 			nil, nil, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				return defaultSystemOptions(opts)
 			},
 		},
-		{"WithoutResourceRequirements",
+		{
+			"WithoutResourceRequirements",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
@@ -385,7 +387,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithMemcachedSecret", basicApimanagerSpecTestSystemOptions,
+		{
+			"WithMemcachedSecret", basicApimanagerSpecTestSystemOptions,
 			getMemcachedSecret(), nil, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
@@ -393,7 +396,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithRecaptchaSecret", basicApimanagerSpecTestSystemOptions,
+		{
+			"WithRecaptchaSecret", basicApimanagerSpecTestSystemOptions,
 			nil, getRecaptchaSecret(), nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
@@ -404,7 +408,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithEventsHookSecret", basicApimanagerSpecTestSystemOptions,
+		{
+			"WithEventsHookSecret", basicApimanagerSpecTestSystemOptions,
 			nil, nil, getEventHookSecret(), nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
@@ -413,7 +418,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithAppSecret", basicApimanagerSpecTestSystemOptions,
+		{
+			"WithAppSecret", basicApimanagerSpecTestSystemOptions,
 			nil, nil, nil, getSystemAppSecret(), nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
@@ -423,7 +429,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithSeedSecret", basicApimanagerSpecTestSystemOptions,
+		{
+			"WithSeedSecret", basicApimanagerSpecTestSystemOptions,
 			nil, nil, nil, nil, getSystemSeedSecret(), nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
@@ -439,7 +446,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithMasterApicastSecret", basicApimanagerSpecTestSystemOptions,
+		{
+			"WithMasterApicastSecret", basicApimanagerSpecTestSystemOptions,
 			nil, nil, nil, nil, nil, getSystemMasterApicastSecret(), nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
@@ -448,7 +456,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithS3IAM",
+		{
+			"WithS3IAM",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.System.FileStorageSpec.PVC = nil
@@ -467,7 +476,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithS3STS",
+		{
+			"WithS3STS",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.System.FileStorageSpec.PVC = nil
@@ -494,7 +504,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithPVC",
+		{
+			"WithPVC",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				tmp := "mystorageclassname"
@@ -519,7 +530,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithAffinity",
+		{
+			"WithAffinity",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.System.AppSpec.Affinity = testSystemAppAffinity()
@@ -533,7 +545,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithTolerations",
+		{
+			"WithTolerations",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.System.AppSpec.Tolerations = testSystemAppTolerations()
@@ -547,7 +560,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithSystemCustomResourceRequirements",
+		{
+			"WithSystemCustomResourceRequirements",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.System.AppSpec.MasterContainerResources = testSystemMasterContainerCustomResourceRequirements()
@@ -565,7 +579,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithSystemCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
+		{
+			"WithSystemCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
@@ -584,7 +599,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithCustomMailFromAddress",
+		{
+			"WithCustomMailFromAddress",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				return apimanager
@@ -596,7 +612,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithExplicitelyEmptyMailFromAddress",
+		{
+			"WithExplicitelyEmptyMailFromAddress",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				return apimanager
@@ -608,7 +625,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithNoEmptyMailFromAddress",
+		{
+			"WithNoEmptyMailFromAddress",
 			// When no SMTP From mail address is defined in the secret then
 			// the corresponding SystemOption option is set as the empty string.
 			// Then in the component if the option is empty or nil the corresponding
@@ -625,7 +643,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithZyncDisabled",
+		{
+			"WithZyncDisabled",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.Zync.Enabled = &falseValue

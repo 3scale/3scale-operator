@@ -92,7 +92,6 @@ func (a *APIManagerBackupOptionsProvider) autodiscoveredAPIManager() (*appsv1alp
 
 	res = &resList.Items[0]
 	return res, nil
-
 }
 
 func (a *APIManagerBackupOptionsProvider) ocCLIImageURL() string {

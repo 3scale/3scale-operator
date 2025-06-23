@@ -2,17 +2,18 @@ package controllers
 
 import (
 	"bytes"
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	"io/ioutil"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 	"net/http"
 	"reflect"
 	"strconv"
 	"testing"
+
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 )
 
 func TestApplicationAuthReconciler_applicationAuthReconciler(t *testing.T) {
@@ -130,7 +131,6 @@ func getApplicationAuthGenerateSecret() (CR *capabilitiesv1beta1.ApplicationAuth
 		},
 	}
 	return CR
-
 }
 
 func getApplicationAuth() (CR *capabilitiesv1beta1.ApplicationAuth) {
@@ -149,7 +149,6 @@ func getApplicationAuth() (CR *capabilitiesv1beta1.ApplicationAuth) {
 		},
 	}
 	return CR
-
 }
 
 func getEmptyAuthSecretObj() *corev1.Secret {
@@ -194,6 +193,7 @@ func getAuthSecretObj() *corev1.Secret {
 	}
 	return secret
 }
+
 func getAuthSecret() AuthSecret {
 	authSecret := AuthSecret{
 		UserKey:        "testkey",

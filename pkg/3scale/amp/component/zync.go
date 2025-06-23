@@ -2,6 +2,7 @@ package component
 
 import (
 	"context"
+
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	k8sappsv1 "k8s.io/api/apps/v1"
@@ -335,6 +336,7 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 		},
 	}
 }
+
 func (zync *Zync) QueDeployment(ctx context.Context, k8sclient client.Client, containerImage string) (*k8sappsv1.Deployment, error) {
 	watchedSecretAnnotations, err := ComputeWatchedSecretAnnotations(ctx, k8sclient, ZyncQueDeploymentName, zync.Options.Namespace, zync)
 	if err != nil {
@@ -630,7 +632,6 @@ func (zync *Zync) zyncPorts() []v1.ContainerPort {
 }
 
 func (zync *Zync) zyncInit(containerImage string) []v1.Container {
-
 	if zync.Options.ZyncDbTLSEnabled {
 		return []v1.Container{
 			{

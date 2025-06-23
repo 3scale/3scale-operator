@@ -32,6 +32,7 @@ func testSearchdBasicSystemDatabaseSecret() *v1.Secret {
 		Type:       "",
 	}
 }
+
 func testSearchdBasicApimanager() *appsv1alpha1.APIManager {
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
@@ -72,6 +73,7 @@ func testSystemSearchdPodTemplateLabels() map[string]string {
 
 	return labels
 }
+
 func testSystemSearchdPVCOptions() component.SearchdPVCOptions {
 	return component.SearchdPVCOptions{
 		StorageClass:    nil,
@@ -120,14 +122,16 @@ func TestGetSystemSearchdOptionsProvider(t *testing.T) {
 		expectedOptionsFactory func() *component.SystemSearchdOptions
 	}{
 		{"Default", testSearchdBasicApimanager, testDefaultExpectedSystemSearchdOptions},
-		{"ResourceRequirementsToTrue",
+		{
+			"ResourceRequirementsToTrue",
 			func() *appsv1alpha1.APIManager {
 				apimanager := testSearchdBasicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &[]bool{true}[0]
 				return apimanager
 			}, testDefaultExpectedSystemSearchdOptions,
 		},
-		{"ResourceRequirementsToFalse",
+		{
+			"ResourceRequirementsToFalse",
 			func() *appsv1alpha1.APIManager {
 				apimanager := testSearchdBasicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &[]bool{false}[0]
@@ -139,7 +143,8 @@ func TestGetSystemSearchdOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
+		{
+			"WithCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
 			func() *appsv1alpha1.APIManager {
 				apimanager := testSearchdBasicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &[]bool{false}[0]
@@ -152,7 +157,8 @@ func TestGetSystemSearchdOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithPVC",
+		{
+			"WithPVC",
 			func() *appsv1alpha1.APIManager {
 				apimanager := testSearchdBasicApimanager()
 				apimanager.Spec.System.SearchdSpec.PVC = &appsv1alpha1.PVCGenericSpec{
@@ -174,7 +180,8 @@ func TestGetSystemSearchdOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithAffinity",
+		{
+			"WithAffinity",
 			func() *appsv1alpha1.APIManager {
 				apimanager := testSearchdBasicApimanager()
 				apimanager.Spec.System.SearchdSpec.Affinity = testSystemSearchdAffinity()
@@ -186,7 +193,8 @@ func TestGetSystemSearchdOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithTolerations",
+		{
+			"WithTolerations",
 			func() *appsv1alpha1.APIManager {
 				apimanager := testSearchdBasicApimanager()
 				apimanager.Spec.System.SearchdSpec.Tolerations = testSystemSearchdTolerations()

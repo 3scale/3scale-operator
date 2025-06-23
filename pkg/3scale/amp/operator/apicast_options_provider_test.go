@@ -210,7 +210,8 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 		expectedOptionsFactory func() *component.ApicastOptions
 	}{
 		{"Default", basicApimanagerTestApicastOptions, defaultApicastOptions},
-		{"WithGlobalResourceRequirementsDisabled",
+		{
+			"WithGlobalResourceRequirementsDisabled",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestApicastOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
@@ -223,7 +224,8 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithAffinity",
+		{
+			"WithAffinity",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestApicastOptions()
 				apimanager.Spec.Apicast.ProductionSpec.Affinity = testApicastProductionAffinity()
@@ -237,7 +239,8 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithTolerations",
+		{
+			"WithTolerations",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestApicastOptions()
 				apimanager.Spec.Apicast.ProductionSpec.Tolerations = testApicastProductionTolerations()
@@ -251,7 +254,8 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithAPIcastCustomResourceRequirements",
+		{
+			"WithAPIcastCustomResourceRequirements",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestApicastOptions()
 				apimanager.Spec.Apicast.ProductionSpec.Resources = testApicastProductionCustomResourceRequirements()
@@ -265,7 +269,8 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithAPIcastCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
+		{
+			"WithAPIcastCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestApicastOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
@@ -280,7 +285,8 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithServiceCacheSize",
+		{
+			"WithServiceCacheSize",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestApicastOptions()
 				var stagingCacheSize int32 = 10
@@ -303,12 +309,13 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithApicastStagingTelemtryConfigurationWithCustomMountPath",
+		{
+			"WithApicastStagingTelemtryConfigurationWithCustomMountPath",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestApicastOptions()
 
-				var trueOpenTelemetry = true
-				var opentelemtryKey = "some-key"
+				trueOpenTelemetry := true
+				opentelemtryKey := "some-key"
 
 				apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.Enabled = &trueOpenTelemetry
 				apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef = &v1.LocalObjectReference{
@@ -331,11 +338,12 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithApicastProductionTelemtryConfigurationWithDefaultMountPath",
+		{
+			"WithApicastProductionTelemtryConfigurationWithDefaultMountPath",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestApicastOptions()
 
-				var trueOpenTelemetry = true
+				trueOpenTelemetry := true
 
 				apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.Enabled = &trueOpenTelemetry
 				apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef = &v1.LocalObjectReference{

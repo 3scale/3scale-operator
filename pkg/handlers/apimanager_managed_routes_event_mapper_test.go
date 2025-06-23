@@ -45,7 +45,7 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 			Name:      component.ZyncQueDeploymentName,
 			Namespace: apimanagerNamespace,
 			OwnerReferences: []metav1.OwnerReference{
-				metav1.OwnerReference{
+				{
 					APIVersion: appsv1alpha1.GroupVersion.String(),
 					Kind:       appscommon.APIManagerKind,
 					Name:       apimanager.Name,
@@ -92,12 +92,12 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 					Name:      "routeDirectlyManagedByAPIManager",
 					Namespace: apimanagerNamespace,
 					OwnerReferences: []metav1.OwnerReference{
-						metav1.OwnerReference{
+						{
 							APIVersion: "v1",
 							Kind:       "Secret",
 							Name:       "asecret",
 						},
-						metav1.OwnerReference{
+						{
 							APIVersion: appsv1alpha1.GroupVersion.String(),
 							Kind:       appscommon.APIManagerKind,
 							Name:       apimanager.Name,
@@ -106,7 +106,7 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 				},
 			},
 			expected: []reconcile.Request{
-				reconcile.Request{NamespacedName: types.NamespacedName{Namespace: apimanagerNamespace, Name: apimanagerName}},
+				{NamespacedName: types.NamespacedName{Namespace: apimanagerNamespace, Name: apimanagerName}},
 			},
 		},
 		{
@@ -120,12 +120,12 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 					Name:      "routeManagedByZyncQue",
 					Namespace: apimanagerNamespace,
 					OwnerReferences: []metav1.OwnerReference{
-						metav1.OwnerReference{
+						{
 							APIVersion: "v1",
 							Kind:       "Secret",
 							Name:       "asecret",
 						},
-						metav1.OwnerReference{
+						{
 							APIVersion: reconcilers.DeploymentAPIVersion,
 							Kind:       reconcilers.DeploymentKind,
 							Name:       component.ZyncQueDeploymentName,
@@ -134,7 +134,7 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 				},
 			},
 			expected: []reconcile.Request{
-				reconcile.Request{NamespacedName: types.NamespacedName{Namespace: apimanagerNamespace, Name: apimanagerName}},
+				{NamespacedName: types.NamespacedName{Namespace: apimanagerNamespace, Name: apimanagerName}},
 			},
 		},
 		{
@@ -162,7 +162,7 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 					Name:      "aroute",
 					Namespace: apimanagerNamespace,
 					OwnerReferences: []metav1.OwnerReference{
-						metav1.OwnerReference{
+						{
 							APIVersion: "v1",
 							Kind:       "Secret",
 							Name:       "asecret",

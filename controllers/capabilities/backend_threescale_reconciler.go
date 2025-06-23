@@ -9,7 +9,6 @@ import (
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
 )
@@ -30,7 +29,6 @@ func NewThreescaleReconciler(b *reconcilers.BaseReconciler,
 	backendRemoteIndex *controllerhelper.BackendAPIRemoteIndex,
 	providerAccount *controllerhelper.ProviderAccount,
 ) *BackendThreescaleReconciler {
-
 	return &BackendThreescaleReconciler{
 		BaseReconciler:      b,
 		backendResource:     backendResource,

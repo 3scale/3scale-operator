@@ -13,10 +13,12 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
-const BackupPVCMountPath = "/backup"
-const SystemFileStoragePVCMountPath = "/system-filestorage-pvc"
-const APIManagerSerializedBackupFileName = "apimanager-backup.json"
-const ServiceAccountName = "apimanager-backup"
+const (
+	BackupPVCMountPath                 = "/backup"
+	SystemFileStoragePVCMountPath      = "/system-filestorage-pvc"
+	APIManagerSerializedBackupFileName = "apimanager-backup.json"
+	ServiceAccountName                 = "apimanager-backup"
+)
 
 var secretsToBackup map[string]string = map[string]string{
 	"SystemSMTP":          "system-smtp",
@@ -129,7 +131,7 @@ func (b *APIManagerBackup) BackupSecretsAndConfigMapsToPVCJob() *batchv1.Job {
 						b.pvcBackupDestinationPodVolume(),
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "backup-cfgmaps-secrets",
 							Image: b.options.OCCLIImageURL,
 							Command: []string{
@@ -140,7 +142,7 @@ func (b *APIManagerBackup) BackupSecretsAndConfigMapsToPVCJob() *batchv1.Job {
 								"-e",
 								b.backupSecretsAndConfigMapsContainerArgs(),
 							},
-							//Env: []v1.EnvVar{},
+							// Env: []v1.EnvVar{},
 							VolumeMounts: []v1.VolumeMount{
 								b.pvcBackupDestinationContainerVolumeMount(),
 							},
@@ -183,7 +185,7 @@ func (b *APIManagerBackup) BackupAPIManagerCustomResourceToPVCJob() *batchv1.Job
 						b.pvcBackupDestinationPodVolume(),
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "backup-apimanager-cr",
 							Image: b.options.OCCLIImageURL,
 							Command: []string{
@@ -194,7 +196,7 @@ func (b *APIManagerBackup) BackupAPIManagerCustomResourceToPVCJob() *batchv1.Job
 								"-e",
 								b.backupAPIManagerCustomResourceContainerArgs(),
 							},
-							//Env: []v1.EnvVar{},
+							// Env: []v1.EnvVar{},
 							VolumeMounts: []v1.VolumeMount{
 								b.pvcBackupDestinationContainerVolumeMount(),
 							},
@@ -238,7 +240,7 @@ func (b *APIManagerBackup) BackupSystemFileStoragePVCToPVCJob() *batchv1.Job {
 						b.systemFileStoragePodVolume(),
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "backup-system-filestorage-pvc",
 							Image: b.options.OCCLIImageURL,
 							Command: []string{
@@ -249,7 +251,7 @@ func (b *APIManagerBackup) BackupSystemFileStoragePVCToPVCJob() *batchv1.Job {
 								"-e",
 								b.backupSystemFilestoragePVCContainerArgs(),
 							},
-							//Env: []v1.EnvVar{},
+							// Env: []v1.EnvVar{},
 							VolumeMounts: []v1.VolumeMount{
 								b.pvcBackupDestinationContainerVolumeMount(),
 								b.systemFileStorageContainerVolumeMount(),
@@ -395,7 +397,7 @@ func (b *APIManagerBackup) Role() *rbacv1.Role {
 			Namespace: b.options.Namespace,
 		},
 		Rules: []rbacv1.PolicyRule{
-			rbacv1.PolicyRule{
+			{
 				APIGroups: []string{""},
 				Resources: []string{
 					"configmaps",
@@ -406,7 +408,7 @@ func (b *APIManagerBackup) Role() *rbacv1.Role {
 					"list",
 				},
 			},
-			rbacv1.PolicyRule{
+			{
 				APIGroups: []string{appsv1alpha1.GroupVersion.Group},
 				Resources: []string{
 					"apimanagers",
@@ -431,7 +433,7 @@ func (b *APIManagerBackup) RoleBinding() *rbacv1.RoleBinding {
 			Namespace: b.options.Namespace,
 		},
 		Subjects: []rbacv1.Subject{
-			rbacv1.Subject{
+			{
 				Kind: "ServiceAccount",
 				Name: ServiceAccountName,
 			},

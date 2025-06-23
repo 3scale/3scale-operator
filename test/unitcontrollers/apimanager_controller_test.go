@@ -110,7 +110,6 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 
 	if finalAPIManager.Annotations == nil {
 		t.Error("APIManager's does not have annotations")
-
 	}
 
 	if val, ok := finalAPIManager.Annotations[appsv1alpha1.OperatorVersionAnnotation]; !ok || val != version.Version {
