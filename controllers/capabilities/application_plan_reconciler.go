@@ -95,7 +95,7 @@ func (a *applicationPlanReconciler) syncPlan(_ interface{}) error {
 
 	if a.resource.SetupFee != nil {
 		// Field CRD openapiV3 validation should ensure no error parsing
-		desiredValue, _ := strconv.ParseFloat(*a.resource.SetupFee, 10)
+		desiredValue, _ := strconv.ParseFloat(*a.resource.SetupFee, 64)
 		if a.planEntity.SetupFee() != desiredValue {
 			params["setup_fee"] = *a.resource.SetupFee
 		}
@@ -103,7 +103,7 @@ func (a *applicationPlanReconciler) syncPlan(_ interface{}) error {
 
 	if a.resource.CostMonth != nil {
 		// Field CRD openapiV3 validation should ensure no error parsing
-		desiredValue, _ := strconv.ParseFloat(*a.resource.CostMonth, 10)
+		desiredValue, _ := strconv.ParseFloat(*a.resource.CostMonth, 64)
 		if a.planEntity.CostPerMonth() != desiredValue {
 			params["cost_per_month"] = *a.resource.CostMonth
 		}

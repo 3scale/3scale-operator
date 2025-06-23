@@ -997,7 +997,7 @@ func TestDeploymentProbesMutator(t *testing.T) {
 												HTTPGet: &corev1.HTTPGetAction{
 													Path: "/status",
 													Port: intstr.IntOrString{
-														Type:   intstr.Type(intstr.Int),
+														Type:   intstr.Int,
 														IntVal: 3000,
 													},
 												},
@@ -1042,7 +1042,7 @@ func TestDeploymentProbesMutator(t *testing.T) {
 												HTTPGet: &corev1.HTTPGetAction{
 													Path: "/status",
 													Port: intstr.IntOrString{
-														Type:   intstr.Type(intstr.Int),
+														Type:   intstr.Int,
 														IntVal: 3000,
 													},
 												},
@@ -1067,7 +1067,7 @@ func TestDeploymentProbesMutator(t *testing.T) {
 												HTTPGet: &corev1.HTTPGetAction{
 													Path: "/status",
 													Port: intstr.IntOrString{
-														Type:   intstr.Type(intstr.Int),
+														Type:   intstr.Int,
 														IntVal: 3000,
 													},
 												},
