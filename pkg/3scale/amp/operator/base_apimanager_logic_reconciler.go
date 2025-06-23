@@ -291,63 +291,63 @@ func (r *BaseAPIManagerLogicReconciler) Logger() logr.Logger {
 	return r.logger
 }
 
-func (b *BaseAPIManagerLogicReconciler) HasGrafanaDashboards() (bool, error) {
+func (r *BaseAPIManagerLogicReconciler) HasGrafanaDashboards() (bool, error) {
 	// Check if we need to update the cache
-	if b.crdAvailabilityCache.grafanaDashboardCRDV4Available == nil || b.crdAvailabilityCache.grafanaDashboardCRDV5Available == nil {
+	if r.crdAvailabilityCache.grafanaDashboardCRDV4Available == nil || r.crdAvailabilityCache.grafanaDashboardCRDV5Available == nil {
 		var err error
 		// Check for Grafana V4 Dashboards
-		v4Available, err := b.BaseReconciler.HasGrafanaV4Dashboards()
+		v4Available, err := r.BaseReconciler.HasGrafanaV4Dashboards()
 		if err != nil {
 			return false, err
 		}
-		b.crdAvailabilityCache.grafanaDashboardCRDV4Available = &v4Available
+		r.crdAvailabilityCache.grafanaDashboardCRDV4Available = &v4Available
 
 		// Check for Grafana V5 Dashboards
-		v5Available, err := b.BaseReconciler.HasGrafanaV5Dashboards()
+		v5Available, err := r.BaseReconciler.HasGrafanaV5Dashboards()
 		if err != nil {
 			return false, err
 		}
-		b.crdAvailabilityCache.grafanaDashboardCRDV5Available = &v5Available
+		r.crdAvailabilityCache.grafanaDashboardCRDV5Available = &v5Available
 	}
 
 	// Combine the results for both versions
-	dashboardsAvailable := *b.crdAvailabilityCache.grafanaDashboardCRDV4Available || *b.crdAvailabilityCache.grafanaDashboardCRDV5Available
+	dashboardsAvailable := *r.crdAvailabilityCache.grafanaDashboardCRDV4Available || *r.crdAvailabilityCache.grafanaDashboardCRDV5Available
 	return dashboardsAvailable, nil
 }
 
 // HasPrometheusRules checks if the PrometheusRules CRD is supported in current cluster
-func (b *BaseAPIManagerLogicReconciler) HasPrometheusRules() (bool, error) {
-	if b.crdAvailabilityCache.prometheusRuleCRDAvailable == nil {
-		res, err := b.BaseReconciler.HasPrometheusRules()
+func (r *BaseAPIManagerLogicReconciler) HasPrometheusRules() (bool, error) {
+	if r.crdAvailabilityCache.prometheusRuleCRDAvailable == nil {
+		res, err := r.BaseReconciler.HasPrometheusRules()
 		if err != nil {
 			return res, err
 		}
-		b.crdAvailabilityCache.prometheusRuleCRDAvailable = &res
+		r.crdAvailabilityCache.prometheusRuleCRDAvailable = &res
 		return res, err
 	}
-	return *b.crdAvailabilityCache.prometheusRuleCRDAvailable, nil
+	return *r.crdAvailabilityCache.prometheusRuleCRDAvailable, nil
 }
 
-func (b *BaseAPIManagerLogicReconciler) HasServiceMonitors() (bool, error) {
-	if b.crdAvailabilityCache.serviceMonitorCRDAvailable == nil {
-		res, err := b.BaseReconciler.HasServiceMonitors()
+func (r *BaseAPIManagerLogicReconciler) HasServiceMonitors() (bool, error) {
+	if r.crdAvailabilityCache.serviceMonitorCRDAvailable == nil {
+		res, err := r.BaseReconciler.HasServiceMonitors()
 		if err != nil {
 			return res, err
 		}
-		b.crdAvailabilityCache.serviceMonitorCRDAvailable = &res
+		r.crdAvailabilityCache.serviceMonitorCRDAvailable = &res
 		return res, err
 	}
-	return *b.crdAvailabilityCache.serviceMonitorCRDAvailable, nil
+	return *r.crdAvailabilityCache.serviceMonitorCRDAvailable, nil
 }
 
-func (b *BaseAPIManagerLogicReconciler) HasPodMonitors() (bool, error) {
-	if b.crdAvailabilityCache.podMonitorCRDAvailable == nil {
-		res, err := b.BaseReconciler.HasPodMonitors()
+func (r *BaseAPIManagerLogicReconciler) HasPodMonitors() (bool, error) {
+	if r.crdAvailabilityCache.podMonitorCRDAvailable == nil {
+		res, err := r.BaseReconciler.HasPodMonitors()
 		if err != nil {
 			return res, err
 		}
-		b.crdAvailabilityCache.podMonitorCRDAvailable = &res
+		r.crdAvailabilityCache.podMonitorCRDAvailable = &res
 		return res, err
 	}
-	return *b.crdAvailabilityCache.podMonitorCRDAvailable, nil
+	return *r.crdAvailabilityCache.podMonitorCRDAvailable, nil
 }

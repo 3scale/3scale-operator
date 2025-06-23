@@ -866,12 +866,12 @@ type OpenTelemetrySpec struct {
 	TracingConfigSecretKey *string `json:"tracingConfigSecretKey,omitempty"`
 }
 
-func (a *APIManager) OpenTelemetryEnabledForStaging() bool {
-	return a.Spec.Apicast != nil && a.Spec.Apicast.StagingSpec != nil && a.Spec.Apicast.StagingSpec.OpenTelemetry != nil && a.Spec.Apicast.StagingSpec.OpenTelemetry.Enabled != nil && *a.Spec.Apicast.StagingSpec.OpenTelemetry.Enabled
+func (apimanager *APIManager) OpenTelemetryEnabledForStaging() bool {
+	return apimanager.Spec.Apicast != nil && apimanager.Spec.Apicast.StagingSpec != nil && apimanager.Spec.Apicast.StagingSpec.OpenTelemetry != nil && apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.Enabled != nil && *apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.Enabled
 }
 
-func (a *APIManager) OpenTelemetryEnabledForProduction() bool {
-	return a.Spec.Apicast != nil && a.Spec.Apicast.ProductionSpec != nil && a.Spec.Apicast.ProductionSpec.OpenTelemetry != nil && a.Spec.Apicast.ProductionSpec.OpenTelemetry.Enabled != nil && *a.Spec.Apicast.ProductionSpec.OpenTelemetry.Enabled
+func (apimanager *APIManager) OpenTelemetryEnabledForProduction() bool {
+	return apimanager.Spec.Apicast != nil && apimanager.Spec.Apicast.ProductionSpec != nil && apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry != nil && apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.Enabled != nil && *apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.Enabled
 }
 
 // SetDefaults sets the default values for the APIManager spec and returns true if the spec was changed
@@ -1377,47 +1377,47 @@ func (apimanager *APIManager) IsZyncEnabled() bool {
 	return true
 }
 
-func (a *APIManager) GetApicastHTTPSCertSecretRefs() []*v1.LocalObjectReference {
+func (apimanager *APIManager) GetApicastHTTPSCertSecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 
-	if a.Spec.Apicast != nil && a.Spec.Apicast.ProductionSpec != nil && a.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef != nil {
-		secretRefs = append(secretRefs, a.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef)
+	if apimanager.Spec.Apicast != nil && apimanager.Spec.Apicast.ProductionSpec != nil && apimanager.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef != nil {
+		secretRefs = append(secretRefs, apimanager.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef)
 	}
 
-	if a.Spec.Apicast != nil && a.Spec.Apicast.StagingSpec != nil && a.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef != nil {
-		secretRefs = append(secretRefs, a.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef)
+	if apimanager.Spec.Apicast != nil && apimanager.Spec.Apicast.StagingSpec != nil && apimanager.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef != nil {
+		secretRefs = append(secretRefs, apimanager.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef)
 	}
 
 	return secretRefs
 }
 
-func (a *APIManager) GetApicastOpenTelemetrySecretRefs() []*v1.LocalObjectReference {
+func (apimanager *APIManager) GetApicastOpenTelemetrySecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 
-	if a.Spec.Apicast != nil && a.Spec.Apicast.ProductionSpec != nil && a.Spec.Apicast.ProductionSpec.OpenTelemetry != nil && a.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef != nil {
-		secretRefs = append(secretRefs, a.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef)
+	if apimanager.Spec.Apicast != nil && apimanager.Spec.Apicast.ProductionSpec != nil && apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry != nil && apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef != nil {
+		secretRefs = append(secretRefs, apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef)
 	}
 
-	if a.Spec.Apicast != nil && a.Spec.Apicast.StagingSpec != nil && a.Spec.Apicast.StagingSpec.OpenTelemetry != nil && a.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef != nil {
-		secretRefs = append(secretRefs, a.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef)
+	if apimanager.Spec.Apicast != nil && apimanager.Spec.Apicast.StagingSpec != nil && apimanager.Spec.Apicast.StagingSpec.OpenTelemetry != nil && apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef != nil {
+		secretRefs = append(secretRefs, apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef)
 	}
 
 	return secretRefs
 }
 
-func (a *APIManager) GetApicastCustomEnvironmentsSecretRefs() []*v1.LocalObjectReference {
+func (apimanager *APIManager) GetApicastCustomEnvironmentsSecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 
-	if a.Spec.Apicast != nil && a.Spec.Apicast.ProductionSpec != nil && a.Spec.Apicast.ProductionSpec.CustomEnvironments != nil {
-		for _, env := range a.Spec.Apicast.ProductionSpec.CustomEnvironments {
+	if apimanager.Spec.Apicast != nil && apimanager.Spec.Apicast.ProductionSpec != nil && apimanager.Spec.Apicast.ProductionSpec.CustomEnvironments != nil {
+		for _, env := range apimanager.Spec.Apicast.ProductionSpec.CustomEnvironments {
 			if env.SecretRef != nil {
 				secretRefs = append(secretRefs, env.SecretRef)
 			}
 		}
 	}
 
-	if a.Spec.Apicast != nil && a.Spec.Apicast.StagingSpec != nil && a.Spec.Apicast.StagingSpec.CustomEnvironments != nil {
-		for _, env := range a.Spec.Apicast.StagingSpec.CustomEnvironments {
+	if apimanager.Spec.Apicast != nil && apimanager.Spec.Apicast.StagingSpec != nil && apimanager.Spec.Apicast.StagingSpec.CustomEnvironments != nil {
+		for _, env := range apimanager.Spec.Apicast.StagingSpec.CustomEnvironments {
 			if env.SecretRef != nil {
 				secretRefs = append(secretRefs, env.SecretRef)
 			}
@@ -1427,19 +1427,19 @@ func (a *APIManager) GetApicastCustomEnvironmentsSecretRefs() []*v1.LocalObjectR
 	return secretRefs
 }
 
-func (a *APIManager) GetApicastCustomPoliciesSecretRefs() []*v1.LocalObjectReference {
+func (apimanager *APIManager) GetApicastCustomPoliciesSecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 
-	if a.Spec.Apicast != nil && a.Spec.Apicast.ProductionSpec != nil && a.Spec.Apicast.ProductionSpec.CustomPolicies != nil {
-		for _, policy := range a.Spec.Apicast.ProductionSpec.CustomPolicies {
+	if apimanager.Spec.Apicast != nil && apimanager.Spec.Apicast.ProductionSpec != nil && apimanager.Spec.Apicast.ProductionSpec.CustomPolicies != nil {
+		for _, policy := range apimanager.Spec.Apicast.ProductionSpec.CustomPolicies {
 			if policy.SecretRef != nil {
 				secretRefs = append(secretRefs, policy.SecretRef)
 			}
 		}
 	}
 
-	if a.Spec.Apicast != nil && a.Spec.Apicast.StagingSpec != nil && a.Spec.Apicast.StagingSpec.CustomPolicies != nil {
-		for _, policy := range a.Spec.Apicast.StagingSpec.CustomPolicies {
+	if apimanager.Spec.Apicast != nil && apimanager.Spec.Apicast.StagingSpec != nil && apimanager.Spec.Apicast.StagingSpec.CustomPolicies != nil {
+		for _, policy := range apimanager.Spec.Apicast.StagingSpec.CustomPolicies {
 			if policy.SecretRef != nil {
 				secretRefs = append(secretRefs, policy.SecretRef)
 			}
@@ -1449,7 +1449,7 @@ func (a *APIManager) GetApicastCustomPoliciesSecretRefs() []*v1.LocalObjectRefer
 	return secretRefs
 }
 
-func (a *APIManager) GetSystemDatabaseSecretRefs() []*v1.LocalObjectReference {
+func (apimanager *APIManager) GetSystemDatabaseSecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 	systemDatabaseSecretRef := v1.LocalObjectReference{
 		Name: "system-database",
@@ -1458,7 +1458,7 @@ func (a *APIManager) GetSystemDatabaseSecretRefs() []*v1.LocalObjectReference {
 	return secretRefs
 }
 
-func (a *APIManager) GetZyncSecretRefs() []*v1.LocalObjectReference {
+func (apimanager *APIManager) GetZyncSecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 	zyncSecretRef := v1.LocalObjectReference{
 		Name: "zync",
@@ -1755,13 +1755,13 @@ func (apimanager *APIManager) IsQueuesRedisTLSEnabled() bool {
 	return false
 }
 
-func (a *APIManager) GetSystemRedisSecretRefs() []*v1.LocalObjectReference {
+func (apimanager *APIManager) GetSystemRedisSecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 	secretRefs = append(secretRefs, &v1.LocalObjectReference{Name: "system-redis"})
 	return secretRefs
 }
 
-func (a *APIManager) GetBackendRedisSecretRefs() []*v1.LocalObjectReference {
+func (apimanager *APIManager) GetBackendRedisSecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 	secretRefs = append(secretRefs, &v1.LocalObjectReference{Name: "backend-redis"})
 	return secretRefs

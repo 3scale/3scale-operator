@@ -145,20 +145,20 @@ func (t *Tenant) TenantSecretKey() client.ObjectKey {
 	}
 }
 
-func (b *Tenant) SpecEqual(other *Tenant, logger logr.Logger) bool {
-	if !reflect.DeepEqual(b.ObjectMeta, other.ObjectMeta) || !reflect.DeepEqual(b.Spec, other.Spec) {
+func (t *Tenant) SpecEqual(other *Tenant, logger logr.Logger) bool {
+	if !reflect.DeepEqual(t.ObjectMeta, other.ObjectMeta) || !reflect.DeepEqual(t.Spec, other.Spec) {
 		return false
 	}
 
 	return true
 }
 
-func (b *TenantStatus) StatusEqual(other *TenantStatus, logger logr.Logger) bool {
-	if b.TenantId != other.TenantId {
+func (t *TenantStatus) StatusEqual(other *TenantStatus, logger logr.Logger) bool {
+	if t.TenantId != other.TenantId {
 		return false
 	}
 
-	if b.AdminId != other.AdminId {
+	if t.AdminId != other.AdminId {
 		return false
 	}
 
@@ -166,7 +166,7 @@ func (b *TenantStatus) StatusEqual(other *TenantStatus, logger logr.Logger) bool
 		return false
 	}
 
-	return conditionsEqual(TenantReadyConditionType, b.Conditions, other.Conditions)
+	return conditionsEqual(TenantReadyConditionType, t.Conditions, other.Conditions)
 }
 
 // Compare conditions of a specific type
