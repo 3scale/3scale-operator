@@ -138,7 +138,7 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 	if err != nil {
 		return nil, err
 	}
-	if metrics != nil && len(metrics) > 0 {
+	if len(metrics) > 0 {
 		product.Spec.Metrics = metrics
 	}
 
@@ -147,7 +147,7 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 	if err != nil {
 		return nil, err
 	}
-	if policies != nil && len(policies) > 0 {
+	if len(policies) > 0 {
 		product.Spec.Policies = policies
 	}
 
@@ -156,7 +156,7 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 	if err != nil {
 		return nil, err
 	}
-	if applicationPlans != nil && len(applicationPlans) > 0 {
+	if len(applicationPlans) > 0 {
 		product.Spec.ApplicationPlans = applicationPlans
 	}
 

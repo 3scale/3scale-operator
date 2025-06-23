@@ -80,12 +80,10 @@ func getBaseReconciler(objects ...runtime.Object) (baseReconciler *reconcilers.B
 	// WithStatusSubresource() takes client.Objects while this function takes runtime.Objects
 	// Populate a []client.Object slice using the passed []runtime.Objects if present
 	var clientObjects []client.Object
-	if objects != nil {
-		for _, o := range objects {
-			co, ok := o.(client.Object)
-			if ok {
-				clientObjects = append(clientObjects, co)
-			}
+	for _, o := range objects {
+		co, ok := o.(client.Object)
+		if ok {
+			clientObjects = append(clientObjects, co)
 		}
 	}
 
