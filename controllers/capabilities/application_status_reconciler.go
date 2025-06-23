@@ -39,7 +39,7 @@ func (s *ApplicationStatusReconciler) Reconcile() (reconcile.Result, error) {
 	newStatus := s.calculateStatus()
 
 	// Need to extract the application CR's applicationID annotation value to compare with the new .status
-	annotationId, _ := s.applicationResource.Annotations[applicationIdAnnotation]
+	annotationId := s.applicationResource.Annotations[applicationIdAnnotation]
 
 	equalStatus := s.applicationResource.Status.Equals(annotationId, newStatus, s.logger)
 	s.logger.V(1).Info("Status", "status is different", !equalStatus)

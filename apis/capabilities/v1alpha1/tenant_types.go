@@ -146,33 +146,27 @@ func (t *Tenant) TenantSecretKey() client.ObjectKey {
 }
 
 func (b *Tenant) SpecEqual(other *Tenant, logger logr.Logger) bool {
-	equal := true
-
 	if !reflect.DeepEqual(b.ObjectMeta, other.ObjectMeta) || !reflect.DeepEqual(b.Spec, other.Spec) {
-		equal = false
+		return false
 	}
 
-	return equal
+	return true
 }
 
 func (b *TenantStatus) StatusEqual(other *TenantStatus, logger logr.Logger) bool {
-	equal := true
-
 	if b.TenantId != other.TenantId {
-		equal = false
+		return false
 	}
 
 	if b.AdminId != other.AdminId {
-		equal = false
+		return false
 	}
 
 	if other.Conditions == nil {
-		equal = false
+		return false
 	}
 
-	equal = conditionsEqual(TenantReadyConditionType, b.Conditions, other.Conditions)
-
-	return equal
+	return conditionsEqual(TenantReadyConditionType, b.Conditions, other.Conditions)
 }
 
 // Compare conditions of a specific type

@@ -216,7 +216,7 @@ func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, d
 			return nil, err
 		}
 		if helper.IsSecretWatchedBy3scale(systemRedisSecret) {
-			annotationKey := fmt.Sprintf("%s", SystemRedisSecretResverAnnotation)
+			annotationKey := SystemRedisSecretResverAnnotation
 			annotations[annotationKey] = systemRedisSecret.ResourceVersion
 		}
 
@@ -264,7 +264,7 @@ func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, d
 			return nil, err
 		}
 		if helper.IsSecretWatchedBy3scale(backendRedisSecret) {
-			annotationKey := fmt.Sprintf("%s", BackendRedisSecretResverAnnotation)
+			annotationKey := BackendRedisSecretResverAnnotation
 			annotations[annotationKey] = backendRedisSecret.ResourceVersion
 		}
 

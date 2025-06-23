@@ -294,11 +294,7 @@ func retrieveRequiredVersion(reqConfigMap v1.ConfigMap) (string, string, string,
 }
 
 func (r *APIManagerReconciler) externalDatabasesPreflightsChecks(apimInstance *appsv1alpha1.APIManager, logger logr.Logger) error {
-	systemDatabaseIsInternal := false
-	systemRedisIsInternal := true
-	backendRedisIsInternal := true
-
-	backendRedisIsInternal, systemRedisIsInternal, systemDatabaseIsInternal = helper.InternalDatabases(*apimInstance, logger)
+	backendRedisIsInternal, systemRedisIsInternal, systemDatabaseIsInternal := helper.InternalDatabases(*apimInstance, logger)
 	// If all are already verified, exit earlier
 
 	if backendRedisIsInternal || systemDatabaseIsInternal || systemRedisIsInternal {
@@ -570,8 +566,6 @@ func (r *APIManagerReconciler) dependencyReconcilerForComponents(baseAPIManagerL
 }
 
 func (r *APIManagerReconciler) instanceRequiresPreflights(cr *appsv1alpha1.APIManager, logger logr.Logger) (ctrl.Result, bool, error) {
-	requirementsConfigMap := &v1.ConfigMap{}
-
 	if helper.IsPreflightBypassed() {
 		return ctrl.Result{}, false, nil
 	}

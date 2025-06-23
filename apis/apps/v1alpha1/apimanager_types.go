@@ -1371,11 +1371,10 @@ func (apimanager *APIManager) IsAsyncDisableAnnotationPresent() bool {
 // IsZyncEnabled checks if zync is enabled.
 // Zync is only considered disabled if the enabled flag is explicitly set to false.
 func (apimanager *APIManager) IsZyncEnabled() bool {
-	zyncEnabled := true
 	if apimanager.Spec.Zync != nil && apimanager.Spec.Zync.Enabled != nil && !*apimanager.Spec.Zync.Enabled {
-		zyncEnabled = false
+		return false
 	}
-	return zyncEnabled
+	return true
 }
 
 func (a *APIManager) GetApicastHTTPSCertSecretRefs() []*v1.LocalObjectReference {
@@ -1730,33 +1729,30 @@ func (apimanager *APIManager) IsZyncDatabaseTLSEnabled() bool {
 }
 
 func (apimanager *APIManager) IsSystemRedisTLSEnabled() bool {
-	tlsEnabled := false
 	if apimanager.Spec.System != nil &&
 		apimanager.Spec.System.SystemRedisTLSEnabled != nil &&
 		*apimanager.Spec.System.SystemRedisTLSEnabled {
-		tlsEnabled = true
+		return true
 	}
-	return tlsEnabled
+	return false
 }
 
 func (apimanager *APIManager) IsBackendRedisTLSEnabled() bool {
-	tlsEnabled := false
 	if apimanager.Spec.Backend != nil &&
 		apimanager.Spec.Backend.BackendRedisTLSEnabled != nil &&
 		*apimanager.Spec.Backend.BackendRedisTLSEnabled {
-		tlsEnabled = true
+		return true
 	}
-	return tlsEnabled
+	return false
 }
 
 func (apimanager *APIManager) IsQueuesRedisTLSEnabled() bool {
-	tlsEnabled := false
 	if apimanager.Spec.Backend != nil &&
 		apimanager.Spec.Backend.QueuesRedisTLSEnabled != nil &&
 		*apimanager.Spec.Backend.QueuesRedisTLSEnabled {
-		tlsEnabled = true
+		return true
 	}
-	return tlsEnabled
+	return false
 }
 
 func (a *APIManager) GetSystemRedisSecretRefs() []*v1.LocalObjectReference {

@@ -25,8 +25,8 @@ func podMonitoringTestFactory(port string) *monitoringv1.PodMonitor {
 }
 
 func TestGenericPodMonitorMutator(t *testing.T) {
-	var existingPort string = "8080"
-	var desiredPort string = "9090"
+	existingPort := "8080"
+	desiredPort := "9090"
 
 	existing := podMonitoringTestFactory(existingPort)
 	desired := podMonitoringTestFactory(desiredPort)

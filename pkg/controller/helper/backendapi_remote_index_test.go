@@ -48,7 +48,7 @@ func TestBackendAPIRemoteIndexFindByID(t *testing.T) {
 	assert(t, backendEntity != nil, "backend entity returned nil")
 	equals(t, int64(1), backendEntity.ID())
 
-	backendEntity, ok = remoteIndex.FindByID(int64(2))
+	_, ok = remoteIndex.FindByID(int64(2))
 	assert(t, !ok, "backend 2 found")
 }
 
@@ -89,7 +89,7 @@ func TestBackendAPIRemoteIndexFindBySystemName(t *testing.T) {
 	assert(t, backendEntity != nil, "backend entity returned nil")
 	equals(t, "backend_01", backendEntity.SystemName())
 
-	backendEntity, ok = remoteIndex.FindBySystemName("not_existing_system_name")
+	_, ok = remoteIndex.FindBySystemName("not_existing_system_name")
 	assert(t, !ok, "unexpected backend found")
 }
 

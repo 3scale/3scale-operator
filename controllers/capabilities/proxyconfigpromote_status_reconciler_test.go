@@ -244,12 +244,13 @@ func TestProxyConfigPromoteStatusReconciler_Reconcile(t *testing.T) {
 				reconcileError:          tt.fields.reconcileError,
 				logger:                  tt.fields.logger,
 			}
-			got, err := s.Reconcile()
+			_, err := s.Reconcile()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Reconcile() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
+			var got reconcile.Result
 			// Requeue as there's a high chance of conflict in updating status.
 			got, err = s.Reconcile()
 			if (err != nil) != tt.wantErr {

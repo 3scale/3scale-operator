@@ -665,7 +665,6 @@ func apicastPodTemplateEnvConfigMapAnnotationsMutator(desired, existing *k8sapps
 }
 
 func (r *ApicastReconciler) reconcileAPImanagerCR(ctx context.Context) (ctrl.Result, error) {
-	changed := false
 	changed, err := r.reconcileApimanagerSecretLabels(ctx)
 	if err != nil {
 		return ctrl.Result{}, err

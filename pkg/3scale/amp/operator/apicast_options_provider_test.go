@@ -328,8 +328,8 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 			func() *component.ApicastOptions {
 				opts := defaultApicastOptions()
 
-				var trueOpenTelemetry bool = true
-				var opentelemtryKey string = component.OpentelemetryConfigMountBasePath + "/some-key"
+				trueOpenTelemetry := true
+				opentelemtryKey := component.OpentelemetryConfigMountBasePath + "/some-key"
 
 				opts.StagingOpentelemetry.Enabled = trueOpenTelemetry
 				opts.StagingOpentelemetry.Secret = *otlpSecret()
@@ -355,8 +355,8 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 			func() *component.ApicastOptions {
 				opts := defaultApicastOptions()
 
-				var trueOpenTelemetry bool = true
-				var opentelemtryKey string = component.OpentelemetryConfigMountBasePath + "/config.json"
+				trueOpenTelemetry := true
+				opentelemtryKey := component.OpentelemetryConfigMountBasePath + "/config.json"
 
 				opts.ProductionOpentelemetry.Enabled = trueOpenTelemetry
 				opts.ProductionOpentelemetry.Secret = *otlpSecret()

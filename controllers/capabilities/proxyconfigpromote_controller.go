@@ -158,7 +158,6 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 				if strings.Contains(err.Error(), "error calling 3scale system - reason: {\"status\":\"Not found\"} - code: 404") {
 					// Log and treat as an empty staging environment
 					reqLogger.Info("Staging environment is empty")
-					latestStagingVersion = 0 // Setting default version for an empty staging environment
 				} else {
 					statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, productIDStr, 0, 0, err)
 					return statusReconciler, err
