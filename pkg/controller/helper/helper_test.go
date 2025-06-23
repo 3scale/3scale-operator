@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"path/filepath"
 	"reflect"
@@ -139,7 +139,7 @@ func GetMethodsMetricsRoundTripFunc(req *http.Request) *http.Response {
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
-		Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+		Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 		Header:     make(http.Header),
 	}
 }

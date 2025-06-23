@@ -3,7 +3,7 @@ package helper
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"regexp"
 	"testing"
@@ -78,7 +78,7 @@ func TestBackendAPIEntityUpdate(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -110,7 +110,7 @@ func TestBackendAPIEntityUpdateError(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusUnprocessableEntity,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -151,7 +151,7 @@ func TestBackendAPIEntityMethodsError(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusUnprocessableEntity,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -183,7 +183,7 @@ func TestBackendAPIEntityCreateMethod(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusCreated,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -205,7 +205,7 @@ func TestBackendAPIEntityDeleteMethod(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(`OK`)),
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
 			Header:     make(http.Header),
 		}
 	})
@@ -239,7 +239,7 @@ func TestBackendAPIEntityUpdateMethod(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -268,7 +268,7 @@ func TestBackendAPIEntityCreateMetric(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusCreated,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -286,7 +286,7 @@ func TestBackendAPIEntityDeleteMetric(t *testing.T) {
 	httpClient := NewTestClient(func(req *http.Request) *http.Response {
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(`OK`)),
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
 			Header:     make(http.Header),
 		}
 	})
@@ -315,7 +315,7 @@ func TestBackendAPIEntityUpdateMetric(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -390,7 +390,7 @@ func TestBackendAPIEntityMappingRules(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -410,7 +410,7 @@ func TestBackendAPIEntityDeleteMappingRule(t *testing.T) {
 	httpClient := NewTestClient(func(req *http.Request) *http.Response {
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(`OK`)),
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
 			Header:     make(http.Header),
 		}
 	})
@@ -441,7 +441,7 @@ func TestBackendAPIEntityCreateMappingRule(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusCreated,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -472,7 +472,7 @@ func TestBackendAPIEntityUpdateMappingRule(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})

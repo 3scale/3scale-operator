@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"reflect"
 	"testing"
@@ -22,7 +22,7 @@ func mockHttpClientApplication(listAapplicationPlanByProductJson *client.Applica
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(listAapplicationPlanByProductJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(listAapplicationPlanByProductJson))),
 			}
 		}
 		// Get Application
@@ -30,7 +30,7 @@ func mockHttpClientApplication(listAapplicationPlanByProductJson *client.Applica
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(listAapplicationPlanByProductJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(listAapplicationPlanByProductJson))),
 			}
 		}
 		// create application
@@ -43,7 +43,7 @@ func mockHttpClientApplication(listAapplicationPlanByProductJson *client.Applica
 			return &http.Response{
 				StatusCode: http.StatusCreated,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(mockResponse))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(mockResponse))),
 			}
 		}
 		// ApplicationResume
@@ -51,7 +51,7 @@ func mockHttpClientApplication(listAapplicationPlanByProductJson *client.Applica
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
 			}
 		}
 		// ApplicationSuspend
@@ -59,14 +59,14 @@ func mockHttpClientApplication(listAapplicationPlanByProductJson *client.Applica
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
 			}
 		}
 		if req.Method == "PUT" && req.URL.Path == "/admin/api/accounts/3/applications/3.json" {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
 			}
 		}
 		// delete application
@@ -74,7 +74,7 @@ func mockHttpClientApplication(listAapplicationPlanByProductJson *client.Applica
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
 			}
 		}
 		// ChangeApplicationPlan(*t.accountResource.Status.ID, *t.applicationResource.Status.ID, planID)
@@ -82,7 +82,7 @@ func mockHttpClientApplication(listAapplicationPlanByProductJson *client.Applica
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
 			}
 		}
 		return nil

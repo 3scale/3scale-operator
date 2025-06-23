@@ -90,7 +90,7 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	// Retrieve the latestInstallPlan to read the CSV configMap
 	latestInstallPlan := &operatorsv1alpha1.InstallPlan{}
-	err = wait.Poll(time.Second*5, time.Minute*3, func() (done bool, err error) {
+	err = wait.PollUntilContextTimeout(ctx, time.Second*5, time.Minute*3, true, func(ctx context.Context) (done bool, err error) {
 		if subscription.Status.InstallPlanRef == nil {
 			logger.Info("ReconcileSubscription", "InstallPlanRef from Subscription is nil, trying again...", fmt.Errorf("subscription doesn't contain install plan reference"))
 			return false, nil

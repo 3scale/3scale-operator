@@ -11,7 +11,7 @@ import (
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -69,7 +69,7 @@ func getApplicationAuthStatus() (CR *capabilitiesv1beta1.ApplicationAuth) {
 		},
 		Spec: capabilitiesv1beta1.ApplicationAuthSpec{
 			ApplicationCRName: "test",
-			GenerateSecret:    pointer.Bool(false),
+			GenerateSecret:    ptr.To(false),
 			AuthSecretRef: &corev1.LocalObjectReference{
 				Name: "test",
 			},

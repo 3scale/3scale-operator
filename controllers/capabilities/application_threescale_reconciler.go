@@ -63,8 +63,11 @@ func (t *ApplicationThreescaleReconciler) reconcile3scaleApplication() (*control
 	}
 
 	if application == nil {
+		params := threescaleapi.Params{
+			"description": t.applicationResource.Spec.Description,
+		}
 		// Application doesn't exist yet - create it
-		a, err := t.threescaleAPIClient.CreateApp(strconv.FormatInt(*t.accountResource.Status.ID, 10), strconv.FormatInt(planObj.Element.ID, 10), t.applicationResource.Spec.Name, t.applicationResource.Spec.Description)
+		a, err := t.threescaleAPIClient.CreateApplication(*t.accountResource.Status.ID, planObj.Element.ID, t.applicationResource.Spec.Name, params)
 		if err != nil {
 			return nil, fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.Name, err)
 		}

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"reflect"
 	"testing"
@@ -150,7 +150,7 @@ func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList
 			return &http.Response{
 				StatusCode: http.StatusCreated,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(proxyJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(proxyJson))),
 			}
 		}
 		// ListProducts
@@ -158,7 +158,7 @@ func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(productList))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(productList))),
 			}
 		}
 		// GetLatestProxyConfig sandbox
@@ -166,7 +166,7 @@ func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementSandbox))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementSandbox))),
 			}
 		}
 		// GetLatestProxyConfig production
@@ -174,7 +174,7 @@ func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementProduction))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementProduction))),
 			}
 		}
 		// PromoteProxyConfig production
@@ -182,7 +182,7 @@ func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList
 			return &http.Response{
 				StatusCode: http.StatusCreated,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementProduction))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementProduction))),
 			}
 		}
 
@@ -191,7 +191,7 @@ func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList
 			return &http.Response{
 				StatusCode: http.StatusNotFound,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementProduction))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementProduction))),
 			}
 		}
 
@@ -206,7 +206,7 @@ func emptyMockHttpClient() *http.Client {
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Header:     make(http.Header),
-			Body:       ioutil.NopCloser(bytes.NewBuffer([]byte{})),
+			Body:       io.NopCloser(bytes.NewBuffer([]byte{})),
 		}
 	})
 }
