@@ -25,7 +25,6 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -292,7 +291,7 @@ func (r *BackendReconciler) removeBackendFrom3scale(backend *capabilitiesv1beta1
 
 	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backend.Namespace, backend.Spec.ProviderAccountRef, logger)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
+		if errors.IsNotFound(err) {
 			logger.Info("backend not deleted from 3scale, provider account not found")
 			return nil
 		}
@@ -320,7 +319,7 @@ func (r *BackendReconciler) fetchTenantProductCRs(productsCRsList *capabilitiesv
 	var productsList []capabilitiesv1beta1.Product
 	backendProviderAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendResource.Namespace, backendResource.Spec.ProviderAccountRef, logger)
 
-	if apierrors.IsNotFound(err) {
+	if errors.IsNotFound(err) {
 		logger.Info("could not look up for products of the same tenant. Tenant not found")
 		return nil, nil
 	}

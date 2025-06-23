@@ -29,7 +29,6 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -393,7 +392,7 @@ func (r *ProductReconciler) removeProductFrom3scale(product *capabilitiesv1beta1
 
 	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), product.Namespace, product.Spec.ProviderAccountRef, logger)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
+		if errors.IsNotFound(err) {
 			logger.Info("product not deleted from 3scale, provider account not found")
 			return nil
 		}

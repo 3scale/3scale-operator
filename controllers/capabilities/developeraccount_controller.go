@@ -31,7 +31,6 @@ import (
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -265,7 +264,7 @@ func (r *DeveloperAccountReconciler) removeDeveloperAccountFrom3scale(developerA
 
 	developerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), developerAccountCR.Namespace, developerAccountCR.Spec.ProviderAccountRef, r.Logger())
 	if err != nil {
-		if apierrors.IsNotFound(err) {
+		if errors.IsNotFound(err) {
 			logger.Info("developer account not deleted from 3scale, provider account not found")
 			return nil
 		}
