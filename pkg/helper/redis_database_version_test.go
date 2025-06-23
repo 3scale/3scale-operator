@@ -13,12 +13,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	caCert   = "./testdata/rootCA.pem"
-	certFile = "./testdata/client.crt"
-	keyFile  = "./testdata/client.key"
-)
-
 type mockRedisServer struct {
 	clientConnected bool
 }

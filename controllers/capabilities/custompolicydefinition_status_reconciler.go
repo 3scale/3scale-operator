@@ -38,10 +38,7 @@ func NewCustomPolicyDefinitionStatusReconciler(b *reconcilers.BaseReconciler, re
 func (s *CustomPolicyDefinitionStatusReconciler) Reconcile() (reconcile.Result, error) {
 	s.logger.V(1).Info("START")
 
-	newStatus, err := s.calculateStatus()
-	if err != nil {
-		return reconcile.Result{}, err
-	}
+	newStatus := s.calculateStatus()
 
 	equalStatus := s.resource.Status.Equals(newStatus, s.logger)
 	s.logger.V(1).Info("Status", "status is different", !equalStatus)
@@ -74,7 +71,7 @@ func (s *CustomPolicyDefinitionStatusReconciler) Reconcile() (reconcile.Result, 
 	return reconcile.Result{}, nil
 }
 
-func (s *CustomPolicyDefinitionStatusReconciler) calculateStatus() (*capabilitiesv1beta1.CustomPolicyDefinitionStatus, error) {
+func (s *CustomPolicyDefinitionStatusReconciler) calculateStatus() *capabilitiesv1beta1.CustomPolicyDefinitionStatus {
 	newStatus := &capabilitiesv1beta1.CustomPolicyDefinitionStatus{}
 
 	if s.customPolicy != nil {
@@ -90,7 +87,7 @@ func (s *CustomPolicyDefinitionStatusReconciler) calculateStatus() (*capabilitie
 	newStatus.Conditions.SetCondition(s.invalidCondition())
 	newStatus.Conditions.SetCondition(s.failedCondition())
 
-	return newStatus, nil
+	return newStatus
 }
 
 func (s *CustomPolicyDefinitionStatusReconciler) readyCondition() common.Condition {

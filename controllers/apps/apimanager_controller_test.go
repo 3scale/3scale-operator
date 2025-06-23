@@ -190,7 +190,7 @@ var _ = Describe("APIManager controller", func() {
 			fmt.Fprintf(GinkgoWriter, "All APIManager managed Deployments are ready\n")
 
 			fmt.Fprintf(GinkgoWriter, "Waiting for all APIManager managed Routes\n")
-			err = waitForAllAPIManagerStandardRoutes(testNamespace, 5*time.Second, 15*time.Minute, wildcardDomain, GinkgoWriter)
+			err = waitForAllAPIManagerStandardRoutes(5*time.Second, 15*time.Minute, wildcardDomain, GinkgoWriter)
 			Expect(err).ToNot(HaveOccurred())
 			fmt.Fprintf(GinkgoWriter, "All APIManager managed Routes are available\n")
 
@@ -212,7 +212,7 @@ var _ = Describe("APIManager controller", func() {
 			// TODO: Add code checking annotations on apicast pods
 
 			fmt.Fprintf(GinkgoWriter, "Waiting until APIManager's 'Available' condition is true\n")
-			err = waitForAPIManagerAvailableCondition(testNamespace, 5*time.Second, 15*time.Minute, apimanager, GinkgoWriter)
+			err = waitForAPIManagerAvailableCondition(5*time.Second, 15*time.Minute, apimanager, GinkgoWriter)
 			Expect(err).ToNot(HaveOccurred())
 			fmt.Fprintf(GinkgoWriter, "APIManager 'Available' condition is true\n")
 
@@ -914,7 +914,7 @@ func waitForAllAPIManagerStandardDeployments(namespace string, retryInterval, ti
 	return nil
 }
 
-func waitForAllAPIManagerStandardRoutes(namespace string, retryInterval, timeout time.Duration, wildcardDomain string, w io.Writer) error {
+func waitForAllAPIManagerStandardRoutes(retryInterval, timeout time.Duration, wildcardDomain string, w io.Writer) error {
 	routeHosts := []string{
 		"backend-3scale." + wildcardDomain,                // Backend Listener route
 		"api-3scale-apicast-production." + wildcardDomain, // Apicast Production '3scale' tenant Route
@@ -962,7 +962,7 @@ func waitForAllAPIManagerStandardRoutes(namespace string, retryInterval, timeout
 	return nil
 }
 
-func waitForAPIManagerAvailableCondition(namespace string, retryInterval, timeout time.Duration, apimanager *appsv1alpha1.APIManager, w io.Writer) error {
+func waitForAPIManagerAvailableCondition(retryInterval, timeout time.Duration, apimanager *appsv1alpha1.APIManager, w io.Writer) error {
 	Eventually(func() bool {
 		err := testK8sClient.Get(context.Background(), types.NamespacedName{Name: apimanager.Name, Namespace: apimanager.Namespace}, apimanager)
 		if err != nil {

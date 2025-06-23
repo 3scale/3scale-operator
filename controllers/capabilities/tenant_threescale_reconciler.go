@@ -98,10 +98,7 @@ func (r *TenantThreescaleReconciler) reconcileTenant() (bool, error) {
 			TenantId: tenantDef.Signup.Account.ID,
 		}
 
-		updated, err := r.reconcileStatusIDs(newStatus)
-		if err != nil {
-			return false, err
-		}
+		updated := r.reconcileStatusIDs(newStatus)
 
 		// If updated - update the status and requeue
 		if updated {
@@ -162,10 +159,7 @@ func (r *TenantThreescaleReconciler) reconcileAdminUser() error {
 		TenantId: tenantID,
 	}
 
-	updated, err := r.reconcileStatusIDs(newStatus)
-	if err != nil {
-		return err
-	}
+	updated := r.reconcileStatusIDs(newStatus)
 
 	// If updated - update the status and requeue
 	if updated {
@@ -293,17 +287,17 @@ func (r *TenantThreescaleReconciler) syncAdminUser(tenantID int64, adminUser *po
 }
 
 // Returns whether the status should be updated or not and the error
-func (r *TenantThreescaleReconciler) reconcileStatusIDs(desiredStatus *apiv1alpha1.TenantStatus) (bool, error) {
+func (r *TenantThreescaleReconciler) reconcileStatusIDs(desiredStatus *apiv1alpha1.TenantStatus) bool {
 	if desiredStatus.TenantId != r.tenantR.Status.TenantId {
 		r.tenantR.Status.TenantId = desiredStatus.TenantId
-		return true, nil
+		return true
 	}
 	if desiredStatus.AdminId != r.tenantR.Status.AdminId {
 		r.tenantR.Status.AdminId = desiredStatus.AdminId
-		return true, nil
+		return true
 	}
 
-	return false, nil
+	return false
 }
 
 // Returns tenant ID, tenant.Status.tenantID takes precedence over annotation value

@@ -37,10 +37,7 @@ func NewProxyConfigPromoteStatusReconciler(b *reconcilers.BaseReconciler, resour
 func (s *ProxyConfigPromoteStatusReconciler) Reconcile() (reconcile.Result, error) {
 	s.logger.V(1).Info("START")
 
-	newStatus, err := s.calculateStatus()
-	if err != nil {
-		return reconcile.Result{}, err
-	}
+	newStatus := s.calculateStatus()
 
 	equalStatus := s.resource.Status.Equals(newStatus, s.logger)
 	s.logger.V(1).Info("Status", "status is different", !equalStatus)
@@ -64,7 +61,7 @@ func (s *ProxyConfigPromoteStatusReconciler) Reconcile() (reconcile.Result, erro
 	return reconcile.Result{}, nil
 }
 
-func (s *ProxyConfigPromoteStatusReconciler) calculateStatus() (*capabilitiesv1beta1.ProxyConfigPromoteStatus, error) {
+func (s *ProxyConfigPromoteStatusReconciler) calculateStatus() *capabilitiesv1beta1.ProxyConfigPromoteStatus {
 	newStatus := &capabilitiesv1beta1.ProxyConfigPromoteStatus{}
 
 	newStatus.ProductId = s.productID
@@ -75,7 +72,7 @@ func (s *ProxyConfigPromoteStatusReconciler) calculateStatus() (*capabilitiesv1b
 	newStatus.Conditions.SetCondition(s.readyCondition())
 	newStatus.Conditions.SetCondition(s.failedCondition())
 
-	return newStatus, nil
+	return newStatus
 }
 
 func (s *ProxyConfigPromoteStatusReconciler) readyCondition() common.Condition {

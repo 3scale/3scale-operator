@@ -24,10 +24,6 @@ func create(x int64) *int64 {
 	return &x
 }
 
-type (
-	fakeThreescaleClient struct{}
-)
-
 type RoundTripFunc func(req *http.Request) *http.Response
 
 func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {

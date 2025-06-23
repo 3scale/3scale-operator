@@ -172,11 +172,7 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 				reconcileError:          tt.fields.reconcileError,
 				logger:                  tt.fields.logger,
 			}
-			got, err := s.calculateStatus()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("calculateStatus() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := s.calculateStatus()
 			if !reflect.DeepEqual(got.ProductId, tt.want.ProductId) {
 				t.Errorf("calculateStatus() got = %v, want %v", got.ProductId, tt.want.ProductId)
 			}

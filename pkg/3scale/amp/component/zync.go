@@ -380,7 +380,7 @@ func (zync *Zync) QueDeployment(ctx context.Context, k8sclient client.Client, co
 					ServiceAccountName:            "zync-que-sa",
 					RestartPolicy:                 v1.RestartPolicyAlways,
 					TerminationGracePeriodSeconds: &[]int64{30}[0],
-					InitContainers:                zync.zyncQueInit(containerImage),
+					InitContainers:                zync.zyncQueInit(),
 					Containers: []v1.Container{
 						{
 							Name:            "que",
@@ -776,7 +776,7 @@ func (zync *Zync) zyncVolume() []v1.Volume {
 	}
 }
 
-func (zync *Zync) zyncQueInit(image string) []v1.Container {
+func (zync *Zync) zyncQueInit() []v1.Container {
 	if zync.Options.ZyncDbTLSEnabled {
 		return []v1.Container{
 			{

@@ -235,10 +235,7 @@ func (r *APIManagerRestoreLogicReconciler) reconcileSystemStoragePVC() (reconcil
 		if apiManagerErr != nil {
 			return reconcile.Result{}, apiManagerErr
 		}
-		restoreInfo, restoreInfoErr := r.runtimeRestoreInfoFromAPIManager(apimanager)
-		if restoreInfoErr != nil {
-			return reconcile.Result{}, restoreInfoErr
-		}
+		restoreInfo := r.runtimeRestoreInfoFromAPIManager(apimanager)
 		err := r.ReconcileResource(&v1.PersistentVolumeClaim{}, r.apiManagerRestore.SystemStoragePVC(restoreInfo), reconcilers.CreateOnlyMutator)
 		if err != nil {
 			return reconcile.Result{}, err
@@ -249,7 +246,7 @@ func (r *APIManagerRestoreLogicReconciler) reconcileSystemStoragePVC() (reconcil
 	return reconcile.Result{}, nil
 }
 
-func (r *APIManagerRestoreLogicReconciler) runtimeRestoreInfoFromAPIManager(apimanager *appsv1alpha1.APIManager) (*restore.RuntimeAPIManagerRestoreInfo, error) {
+func (r *APIManagerRestoreLogicReconciler) runtimeRestoreInfoFromAPIManager(apimanager *appsv1alpha1.APIManager) *restore.RuntimeAPIManagerRestoreInfo {
 	var storageClass *string
 	if apimanager.Spec.System != nil && apimanager.Spec.System.FileStorageSpec != nil && apimanager.Spec.System.FileStorageSpec.PVC != nil {
 		storageClass = apimanager.Spec.System.FileStorageSpec.PVC.StorageClassName
@@ -257,7 +254,7 @@ func (r *APIManagerRestoreLogicReconciler) runtimeRestoreInfoFromAPIManager(apim
 	restoreInfo := &restore.RuntimeAPIManagerRestoreInfo{
 		PVCStorageClass: storageClass,
 	}
-	return restoreInfo, nil
+	return restoreInfo
 }
 
 func (r *APIManagerRestoreLogicReconciler) reconcileRestoreSystemFileStoragePVCFromPVCJob() (reconcile.Result, error) {

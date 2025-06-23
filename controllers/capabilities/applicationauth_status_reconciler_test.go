@@ -150,11 +150,7 @@ func TestApplicationAuthStatusReconciler_calculateStatus(t *testing.T) {
 				reconcileError: tt.fields.reconcileError,
 				logger:         tt.fields.logger,
 			}
-			got, err := s.calculateStatus()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("calculateStatus() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := s.calculateStatus()
 			if got.Conditions.GetCondition(capabilitiesv1beta1.ApplicationAuthReadyConditionType) == tt.want.Conditions.GetCondition(capabilitiesv1beta1.ApplicationAuthReadyConditionType) {
 				if !reflect.DeepEqual(got.Conditions.IsTrueFor(capabilitiesv1beta1.ApplicationAuthReadyConditionType), tt.want.Conditions.IsTrueFor(capabilitiesv1beta1.ApplicationAuthReadyConditionType)) {
 					t.Errorf("calculateStatus() got = %v, want %v", got.Conditions.IsTrueFor(capabilitiesv1beta1.ApplicationAuthReadyConditionType), tt.want.Conditions.IsTrueFor(capabilitiesv1beta1.ApplicationAuthReadyConditionType))

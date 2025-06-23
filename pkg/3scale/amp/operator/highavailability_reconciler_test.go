@@ -93,14 +93,6 @@ func testSystemRedisSecret() *v1.Secret {
 	return GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, data)
 }
 
-func testBackendRedisPodTemplateAnnotations() map[string]string {
-	return map[string]string{"redisConfigMapResourceVersion": "999"}
-}
-
-func testSystemRedisPodTemplateAnnotations() map[string]string {
-	return map[string]string{"redisConfigMapResourceVersion": "999"}
-}
-
 func testBackendRedisSecret() *v1.Secret {
 	data := map[string]string{
 		component.BackendSecretBackendRedisStorageURLFieldName:           "redis://storageURLValue",

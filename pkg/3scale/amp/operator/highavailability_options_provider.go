@@ -345,13 +345,6 @@ func (h *HighAvailabilityOptionsProvider) setSystemDatabaseOptions() error {
 	return nil
 }
 
-func (h *HighAvailabilityOptionsProvider) backendRedisLabels() map[string]string {
-	return map[string]string{
-		"app":                  *h.apimanager.Spec.AppLabel,
-		"threescale_component": "backend",
-	}
-}
-
 func (h *HighAvailabilityOptionsProvider) SystemDatabaseLabels() map[string]string {
 	return map[string]string{
 		"app":                  *h.apimanager.Spec.AppLabel,

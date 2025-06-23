@@ -46,10 +46,7 @@ func NewDeveloperUserStatusReconciler(b *reconcilers.BaseReconciler,
 func (s *DeveloperUserStatusReconciler) Reconcile() (reconcile.Result, error) {
 	s.logger.V(1).Info("START")
 
-	newStatus, err := s.calculateStatus()
-	if err != nil {
-		return reconcile.Result{}, err
-	}
+	newStatus := s.calculateStatus()
 
 	equalStatus := s.userCR.Status.Equals(newStatus, s.logger)
 	s.logger.V(1).Info("Status", "status is different", !equalStatus)
@@ -82,7 +79,7 @@ func (s *DeveloperUserStatusReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (s *DeveloperUserStatusReconciler) calculateStatus() (*capabilitiesv1beta1.DeveloperUserStatus, error) {
+func (s *DeveloperUserStatusReconciler) calculateStatus() *capabilitiesv1beta1.DeveloperUserStatus {
 	// If there is an error and s.remoteDeveloperUser is nil, do not change status fields read from it
 	// Initialize with existing data for data coming from 3scale
 	// just in case in this reconciliation loop something goes wrong and avoid replacing right data with nil
@@ -113,7 +110,7 @@ func (s *DeveloperUserStatusReconciler) calculateStatus() (*capabilitiesv1beta1.
 	newStatus.Conditions.SetCondition(s.orphanCondition())
 	newStatus.Conditions.SetCondition(s.failedCondition())
 
-	return newStatus, nil
+	return newStatus
 }
 
 func (s *DeveloperUserStatusReconciler) readyCondition() common.Condition {

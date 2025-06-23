@@ -240,13 +240,6 @@ func Backend(apimanager *appsv1alpha1.APIManager, client client.Client) (*compon
 	return component.NewBackend(opts), nil
 }
 
-func containsAsyncDisable(m map[string]string, key, value string) bool {
-	if v, ok := m[key]; ok {
-		return v == value
-	}
-	return false
-}
-
 func (r *BackendReconciler) backendRedisTLSEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	// Reconcile EnvVar only for Redis TLS
 	var changed bool

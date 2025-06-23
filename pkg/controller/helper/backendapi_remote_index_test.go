@@ -96,7 +96,7 @@ func TestBackendAPIRemoteIndexFindBySystemName(t *testing.T) {
 func TestBackendAPIRemoteIndexCreateBackendAPI(t *testing.T) {
 	token := "12345"
 
-	listBackendHandler := func(req *http.Request) *http.Response {
+	listBackendHandler := func(_ *http.Request) *http.Response {
 		respObject := &threescaleapi.BackendApiList{
 			Backends: []threescaleapi.BackendApi{
 				{
@@ -121,7 +121,7 @@ func TestBackendAPIRemoteIndexCreateBackendAPI(t *testing.T) {
 		}
 	}
 
-	createBackendHandler := func(req *http.Request) *http.Response {
+	createBackendHandler := func(_ *http.Request) *http.Response {
 		respObject := threescaleapi.BackendApi{
 			Element: threescaleapi.BackendApiItem{
 				ID:              int64(2),
