@@ -1,71 +1,71 @@
 ---
-- - :whitelist
+- - :permit
   - MIT
   - :who: 3scale Engineering
     :why: 
     :versions: []
     :when: 2016-08-16 09:25:15.635515271 Z
-- - :whitelist
+- - :permit
   - Apache 2.0
   - :who: 3scale Engineering
     :why: 
     :versions: []
     :when: 2016-08-16 09:26:31.814319646 Z
-- - :whitelist
+- - :permit
   - MIT-LICENSE
   - :who: 3scale Engineering
     :why: It's the same as MIT
     :versions: []
     :when: 2016-08-16 09:27:49.047135842 Z
-- - :whitelist
+- - :permit
   - BSD
   - :who: Jeff Kaufmann and Richard Fontana (Red Hat Legal)
     :why: 
     :versions: []
     :when: 2016-11-23 11:02:51.564502000 Z
-- - :whitelist
+- - :permit
   - New BSD
   - :who: Jeff Kaufmann and Richard Fontana (Red Hat Legal)
     :why: 
     :versions: []
     :when: 2016-11-23 11:03:04.247155000 Z
-- - :whitelist
+- - :permit
   - Simplified BSD
   - :who: Jeff Kaufmann and Richard Fontana (Red Hat Legal)
     :why: 
     :versions: []
     :when: 2016-11-23 11:03:33.341497000 Z
-- - :whitelist
+- - :permit
   - LGPLv2+
   - :who: Jeff Kaufmann and Richard Fontana (Red Hat Legal)
     :why: 
     :versions: []
     :when: 2016-11-23 11:04:13.584885000 Z
-- - :whitelist
+- - :permit
   - 2-clause BSDL
   - :who: Jeff Kaufmann and Richard Fontana (Red Hat Legal)
     :why: 
     :versions: []
     :when: 2016-11-23 11:04:37.776089000 Z
-- - :whitelist
+- - :permit
   - ISC
   - :who: Red Hat Legal
     :why: 
     :versions: []
     :when: 2019-07-08 11:21:47.572394330 Z
-- - :whitelist
+- - :permit
   - Mozilla Public License 2.0
   - :who: Red Hat Legal
     :why: 
     :versions: []
     :when: 2019-07-08 11:22:39.984050478 Z
-- - :whitelist
+- - :permit
   - OSI MIT
   - :who: Red Hat Legal
     :why: 
     :versions: []
     :when: 2019-07-08 11:35:10.347334185 Z
-- - :whitelist
+- - :permit
   - 3-clause BSD License
   - :who: Red Hat Legal
     :why: 
@@ -183,7 +183,7 @@
     :why: 3-clause BSD License https://github.com/evanphx/json-patch/blob/master/LICENSE
     :versions: []
     :when: 2019-10-24 09:56:58.733603332 Z
-- - :whitelist
+- - :permit
   - CC0 1.0 Universal
   - :who: Jeff Kaufmann and Richard Fontana (Red Hat Legal)
     :why: 
