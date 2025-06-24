@@ -18,7 +18,6 @@ require (
 	github.com/grafana-operator/grafana-operator/v4 v4.5.0
 	github.com/grafana-operator/grafana-operator/v5 v5.5.2
 	github.com/jackc/pgx/v5 v5.7.2
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.34.1
 	github.com/openshift/api v3.9.0+incompatible
