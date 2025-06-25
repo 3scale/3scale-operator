@@ -118,9 +118,9 @@ func (r *APIManagerBackupLogicReconciler) reconcilePostBackupSteps() (reconcile.
 		return result, err
 	}
 
-	result, err = r.reconcileBackupCompletion()
-	if result.Requeue || err != nil {
-		return result, err
+	err = r.reconcileBackupCompletion()
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	return reconcile.Result{}, nil
@@ -153,9 +153,9 @@ func (r *APIManagerBackupLogicReconciler) reconcileBackupInPVCDestination() (rec
 		return res, err
 	}
 
-	res, err = r.reconcileBackupJobsPermissions()
-	if res.Requeue || err != nil {
-		return res, err
+	err = r.reconcileBackupJobsPermissions()
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	res, err = r.reconcileBackupSecretsAndConfigMapsToPVCJob()
@@ -258,7 +258,7 @@ func (r *APIManagerBackupLogicReconciler) reconcileBackupSystemFileStoragePVCToP
 	return r.reconcileJob(desired)
 }
 
-func (r *APIManagerBackupLogicReconciler) reconcileBackupCompletion() (reconcile.Result, error) {
+func (r *APIManagerBackupLogicReconciler) reconcileBackupCompletion() error {
 	if !r.cr.BackupCompleted() {
 		// TODO make this more robust only setting it in case all substeps have been completed?
 		// It might be a little bit redundant because the steps are checked during the reconciliation
@@ -268,10 +268,10 @@ func (r *APIManagerBackupLogicReconciler) reconcileBackupCompletion() (reconcile
 		r.cr.Status.CompletionTime = &completionTimeUTC
 		err := r.UpdateResourceStatus(r.cr)
 		if err != nil {
-			return reconcile.Result{}, err
+			return err
 		}
 	}
-	return reconcile.Result{}, nil
+	return nil
 }
 
 func (r *APIManagerBackupLogicReconciler) reconcileAPIManagerSourceStatusField() (reconcile.Result, error) {
@@ -357,45 +357,33 @@ func (r *APIManagerBackupLogicReconciler) reconcileJobsCleanup() (reconcile.Resu
 	return reconcile.Result{}, nil
 }
 
-func (r *APIManagerBackupLogicReconciler) reconcileBackupJobsPermissions() (reconcile.Result, error) {
-	res, err := r.reconcileBackupJobsServiceAccount()
-	if res.Requeue || err != nil {
-		return res, err
+func (r *APIManagerBackupLogicReconciler) reconcileBackupJobsPermissions() error {
+	err := r.reconcileBackupJobsServiceAccount()
+	if err != nil {
+		return err
 	}
 
-	res, err = r.reconcileBackupJobsRole()
-	if res.Requeue || err != nil {
-		return res, err
+	err = r.reconcileBackupJobsRole()
+	if err != nil {
+		return err
 	}
 
-	res, err = r.reconcileBackupJobsRoleBinding()
-	if res.Requeue || err != nil {
-		return res, err
+	err = r.reconcileBackupJobsRoleBinding()
+	if err != nil {
+		return err
 	}
 
-	return res, err
+	return nil
 }
 
-func (r *APIManagerBackupLogicReconciler) reconcileBackupJobsServiceAccount() (reconcile.Result, error) {
-	err := r.ReconcileResource(&v1.ServiceAccount{}, r.apiManagerBackup.ServiceAccount(), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	return reconcile.Result{}, nil
+func (r *APIManagerBackupLogicReconciler) reconcileBackupJobsServiceAccount() error {
+	return r.ReconcileResource(&v1.ServiceAccount{}, r.apiManagerBackup.ServiceAccount(), reconcilers.CreateOnlyMutator)
 }
 
-func (r *APIManagerBackupLogicReconciler) reconcileBackupJobsRole() (reconcile.Result, error) {
-	err := r.ReconcileResource(&rbacv1.Role{}, r.apiManagerBackup.Role(), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	return reconcile.Result{}, nil
+func (r *APIManagerBackupLogicReconciler) reconcileBackupJobsRole() error {
+	return r.ReconcileResource(&rbacv1.Role{}, r.apiManagerBackup.Role(), reconcilers.CreateOnlyMutator)
 }
 
-func (r *APIManagerBackupLogicReconciler) reconcileBackupJobsRoleBinding() (reconcile.Result, error) {
-	err := r.ReconcileResource(&rbacv1.RoleBinding{}, r.apiManagerBackup.RoleBinding(), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	return reconcile.Result{}, nil
+func (r *APIManagerBackupLogicReconciler) reconcileBackupJobsRoleBinding() error {
+	return r.ReconcileResource(&rbacv1.RoleBinding{}, r.apiManagerBackup.RoleBinding(), reconcilers.CreateOnlyMutator)
 }

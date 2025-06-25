@@ -474,9 +474,9 @@ func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIMana
 	}
 
 	// Create the hashed secret to track watched secrets' changes
-	result, err = r.reconcileHashedSecret(cr)
-	if err != nil || result.Requeue {
-		return result, err
+	err = r.reconcileHashedSecret(cr)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	// 3scale 2.14 -> 2.15
@@ -620,14 +620,14 @@ func (r *APIManagerReconciler) setRequirementsAnnotation(apim *appsv1alpha1.APIM
 	return nil
 }
 
-func (r *APIManagerReconciler) reconcileHashedSecret(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+func (r *APIManagerReconciler) reconcileHashedSecret(cr *appsv1alpha1.APIManager) error {
 	secretLabels := map[string]string{
 		"app": *cr.Spec.AppLabel,
 	}
 	secret, err := component.HashedSecret(r.Context(), r.Client(), cr.Get3scaleSecretRefs(), cr.Namespace, secretLabels)
 	if err != nil {
 		r.Logger().Error(err, "failed to generate hashed-secret-data secret")
-		return reconcile.Result{}, err
+		return err
 	}
 
 	secretMutators := []reconcilers.SecretMutateFn{
@@ -636,8 +636,8 @@ func (r *APIManagerReconciler) reconcileHashedSecret(cr *appsv1alpha1.APIManager
 	err = r.ReconcileResource(&v1.Secret{}, secret, reconcilers.DeploymentSecretMutator(secretMutators...))
 	if err != nil {
 		r.Logger().Error(err, "failed to reconcile hashed-secret-data secret")
-		return reconcile.Result{}, err
+		return err
 	}
 
-	return reconcile.Result{}, nil
+	return nil
 }
