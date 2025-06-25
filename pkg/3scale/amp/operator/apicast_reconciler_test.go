@@ -1278,7 +1278,7 @@ func TestReplicaApicastTelemtryReconciler(t *testing.T) {
 			if tc.reReconcile && tc.expectedError == false {
 				apimDisabledOtlp := tc.apimanager
 				if tc.disableOtlp {
-					err, apimDisabledOtlp = disableOpentelemtry(tc.objName, cl)
+					apimDisabledOtlp, err = disableOpentelemtry(tc.objName, cl)
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -1381,7 +1381,7 @@ func validateOpentelemetryIsDisabled(dType string, desiredConfigValue string, cl
 	return true, nil
 }
 
-func disableOpentelemtry(deployment string, client k8sclient.WithWatch) (error, *appsv1alpha1.APIManager) {
+func disableOpentelemtry(deployment string, client k8sclient.WithWatch) (*appsv1alpha1.APIManager, error) {
 	apim := &appsv1alpha1.APIManager{}
 	namespacedName := types.NamespacedName{
 		Name:      "example-apimanager",
@@ -1390,7 +1390,7 @@ func disableOpentelemtry(deployment string, client k8sclient.WithWatch) (error, 
 
 	err := client.Get(context.TODO(), namespacedName, apim)
 	if err != nil {
-		return fmt.Errorf("error fetching APIM %s", err), nil
+		return nil, fmt.Errorf("error fetching APIM %s", err)
 	}
 
 	if deployment == "apicast-staging" {
@@ -1400,7 +1400,7 @@ func disableOpentelemtry(deployment string, client k8sclient.WithWatch) (error, 
 		*apim.Spec.Apicast.ProductionSpec.OpenTelemetry = appsv1alpha1.OpenTelemetrySpec{}
 	}
 
-	return nil, apim
+	return apim, nil
 }
 
 func opentelemetryEnvExistsWithDefaultValues(dType string, desiredConfigValue string, client k8sclient.WithWatch) (bool, error) {
