@@ -18,7 +18,7 @@ type TaskRunner interface {
 	Run() error
 	// AddTask register tasks to be executed sequentially
 	// Tasks will be executed in order. First in, first to be executed.
-	AddTask(string, func(interface{}) error)
+	AddTask(name string, f func(interface{}) error)
 }
 
 type taskRunnerImpl struct {
