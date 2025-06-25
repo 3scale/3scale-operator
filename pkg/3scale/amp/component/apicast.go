@@ -505,7 +505,7 @@ func (apicast *Apicast) ProductionPodDisruptionBudget() *policyv1.PodDisruptionB
 }
 
 func (apicast *Apicast) productionVolumeMounts() []v1.VolumeMount {
-	var volumeMounts []v1.VolumeMount
+	volumeMounts := []v1.VolumeMount{}
 
 	for _, customPolicy := range apicast.Options.ProductionCustomPolicies {
 		volumeMounts = append(volumeMounts, v1.VolumeMount{
@@ -550,7 +550,7 @@ func (apicast *Apicast) productionVolumeMounts() []v1.VolumeMount {
 }
 
 func (apicast *Apicast) stagingVolumeMounts() []v1.VolumeMount {
-	var volumeMounts []v1.VolumeMount
+	volumeMounts := []v1.VolumeMount{}
 
 	for _, customPolicy := range apicast.Options.StagingCustomPolicies {
 		volumeMounts = append(volumeMounts, v1.VolumeMount{
@@ -611,7 +611,7 @@ func customEnvAnnotationValue(secret *v1.Secret) string {
 }
 
 func (apicast *Apicast) productionVolumes() []v1.Volume {
-	var volumes []v1.Volume
+	volumes := []v1.Volume{}
 
 	for _, customPolicy := range apicast.Options.ProductionCustomPolicies {
 		volumes = append(volumes, v1.Volume{
@@ -679,7 +679,7 @@ func (apicast *Apicast) productionVolumes() []v1.Volume {
 }
 
 func (apicast *Apicast) stagingVolumes() []v1.Volume {
-	var volumes []v1.Volume
+	volumes := []v1.Volume{}
 
 	for _, customPolicy := range apicast.Options.StagingCustomPolicies {
 		volumes = append(volumes, v1.Volume{
