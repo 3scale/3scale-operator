@@ -539,7 +539,7 @@ func (a *ApicastOptionsProvider) getOpenTelemetryStagingConfig(ctx context.Conte
 		return res, err.ToAggregate()
 	}
 
-	res.Secret = *secret
+	res.Secret = secret
 
 	secretKeys := helper.MapKeys(helper.GetSecretStringDataFromData(secret.Data))
 	if len(secretKeys) == 0 {
@@ -602,7 +602,7 @@ func (a *ApicastOptionsProvider) getOpenTelemetryProductionConfig(ctx context.Co
 		return res, err.ToAggregate()
 	}
 
-	res.Secret = *secret
+	res.Secret = secret
 
 	secretKeys := helper.MapKeys(helper.GetSecretStringDataFromData(secret.Data))
 	if len(secretKeys) == 0 {

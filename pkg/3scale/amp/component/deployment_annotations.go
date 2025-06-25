@@ -102,8 +102,8 @@ func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, d
 				}
 			}
 
-			if &apicast.Options.ProductionOpentelemetry != nil && apicast.Options.ProductionOpentelemetry.Enabled {
-				if &apicast.Options.ProductionOpentelemetry.Secret != nil && apicast.Options.ProductionOpentelemetry.Secret.Name != "" {
+			if apicast.Options.ProductionOpentelemetry.Enabled {
+				if apicast.Options.ProductionOpentelemetry.Secret != nil && apicast.Options.ProductionOpentelemetry.Secret.Name != "" {
 					telemetryConfigSecret := &corev1.Secret{}
 					telemetryConfigSecretKey := k8sclient.ObjectKey{
 						Name:      apicast.Options.ProductionOpentelemetry.Secret.Name,
@@ -154,8 +154,8 @@ func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, d
 				}
 			}
 
-			if &apicast.Options.StagingOpentelemetry != nil && apicast.Options.StagingOpentelemetry.Enabled {
-				if &apicast.Options.StagingOpentelemetry.Secret != nil && apicast.Options.StagingOpentelemetry.Secret.Name != "" {
+			if apicast.Options.StagingOpentelemetry.Enabled {
+				if apicast.Options.StagingOpentelemetry.Secret != nil && apicast.Options.StagingOpentelemetry.Secret.Name != "" {
 					telemetryConfigSecret := &corev1.Secret{}
 					telemetryConfigSecretKey := k8sclient.ObjectKey{
 						Name:      apicast.Options.StagingOpentelemetry.Secret.Name,
