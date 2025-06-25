@@ -12,7 +12,7 @@ import (
 	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/RHsyseng/operator-utils/pkg/validation"
-	"github.com/ghodss/yaml"
+	"sigs.k8s.io/yaml"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -100,7 +100,6 @@ func TestSampleCustomResources(t *testing.T) {
 		for _, samplesRoot := range samplesRootList {
 			validateCustomResources(t, schemaRoot, samplesRoot, crd, elem.crPrefix, elem.apiVersion)
 		}
-
 	}
 }
 

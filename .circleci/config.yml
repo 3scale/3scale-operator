@@ -213,7 +213,7 @@ jobs:
             SUDO=sudo
             fi
             # Install ruby
-            $SUDO gem install license_finder --version 5.7.1
+            $SUDO gem install license_finder --version 7.2.1
       - checkout
       - install-dependencies
       - run: make licenses-check

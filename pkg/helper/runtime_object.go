@@ -1,8 +1,8 @@
 package helper
 
 import (
-	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/yaml"
 )
 
 func MarshalObjectToYAML(object runtime.Object) ([]byte, error) {
