@@ -2,6 +2,7 @@ package component
 
 import (
 	"context"
+
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	k8sappsv1 "k8s.io/api/apps/v1"
@@ -335,6 +336,7 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 		},
 	}
 }
+
 func (zync *Zync) QueDeployment(ctx context.Context, k8sclient client.Client, containerImage string) (*k8sappsv1.Deployment, error) {
 	watchedSecretAnnotations, err := ComputeWatchedSecretAnnotations(ctx, k8sclient, ZyncQueDeploymentName, zync.Options.Namespace, zync)
 	if err != nil {
@@ -378,7 +380,7 @@ func (zync *Zync) QueDeployment(ctx context.Context, k8sclient client.Client, co
 					ServiceAccountName:            "zync-que-sa",
 					RestartPolicy:                 v1.RestartPolicyAlways,
 					TerminationGracePeriodSeconds: &[]int64{30}[0],
-					InitContainers:                zync.zyncQueInit(containerImage),
+					InitContainers:                zync.zyncQueInit(),
 					Containers: []v1.Container{
 						{
 							Name:            "que",
@@ -630,7 +632,6 @@ func (zync *Zync) zyncPorts() []v1.ContainerPort {
 }
 
 func (zync *Zync) zyncInit(containerImage string) []v1.Container {
-
 	if zync.Options.ZyncDbTLSEnabled {
 		return []v1.Container{
 			{
@@ -775,7 +776,7 @@ func (zync *Zync) zyncVolume() []v1.Volume {
 	}
 }
 
-func (zync *Zync) zyncQueInit(image string) []v1.Container {
+func (zync *Zync) zyncQueInit() []v1.Container {
 	if zync.Options.ZyncDbTLSEnabled {
 		return []v1.Container{
 			{

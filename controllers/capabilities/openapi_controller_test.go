@@ -131,12 +131,10 @@ func getOpenAPIBaseReconciler(objects ...runtime.Object) (baseReconciler *reconc
 	}
 
 	var clientObjects []client.Object
-	if objects != nil {
-		for _, o := range objects {
-			co, ok := o.(client.Object)
-			if ok {
-				clientObjects = append(clientObjects, co)
-			}
+	for _, o := range objects {
+		co, ok := o.(client.Object)
+		if ok {
+			clientObjects = append(clientObjects, co)
 		}
 	}
 

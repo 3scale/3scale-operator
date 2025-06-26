@@ -1,8 +1,9 @@
 package reconcilers
 
 import (
-	v1 "k8s.io/api/core/v1"
 	"strings"
+
+	v1 "k8s.io/api/core/v1"
 )
 
 func ConfigMapReconcileField(desired, existing *v1.ConfigMap, fieldName string) bool {

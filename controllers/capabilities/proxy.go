@@ -2,18 +2,17 @@ package controllers
 
 import (
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"strconv"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
-
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 func (t *ProductThreescaleReconciler) syncProxy(_ interface{}) error {
 	existing, err := t.productEntity.Proxy()
 	if err != nil {
-		return fmt.Errorf("Error sync product [%s] proxy: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("error sync product [%s] proxy: %w", t.resource.Spec.SystemName, err)
 	}
 
 	// respect 3scale defaults.
@@ -89,13 +88,13 @@ func (t *ProductThreescaleReconciler) syncProxy(_ interface{}) error {
 
 	err = t.syncProxyOIDC(params, existing)
 	if err != nil {
-		return fmt.Errorf("Error syncProxyOIDC: %w", err)
+		return fmt.Errorf("error syncProxyOIDC: %w", err)
 	}
 
 	if len(params) > 0 {
 		err := t.productEntity.UpdateProxy(params)
 		if err != nil {
-			return fmt.Errorf("Error updating product proxy: %w", err)
+			return fmt.Errorf("error updating product proxy: %w", err)
 		}
 	}
 	return nil

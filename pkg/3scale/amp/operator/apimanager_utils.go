@@ -17,7 +17,6 @@ func apimanagerSecretLabelKey(uid string) string {
 }
 
 func replaceAPIManagerSecretLabels(apimanager *appsv1alpha1.APIManager, desiredSecretUIDs map[string]string) bool {
-
 	existingLabels := apimanager.GetLabels()
 
 	if existingLabels == nil {

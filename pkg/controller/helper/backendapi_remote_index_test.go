@@ -3,7 +3,7 @@ package helper
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
@@ -34,7 +34,7 @@ func TestBackendAPIRemoteIndexFindByID(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -48,7 +48,7 @@ func TestBackendAPIRemoteIndexFindByID(t *testing.T) {
 	assert(t, backendEntity != nil, "backend entity returned nil")
 	equals(t, int64(1), backendEntity.ID())
 
-	backendEntity, ok = remoteIndex.FindByID(int64(2))
+	_, ok = remoteIndex.FindByID(int64(2))
 	assert(t, !ok, "backend 2 found")
 }
 
@@ -75,7 +75,7 @@ func TestBackendAPIRemoteIndexFindBySystemName(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -89,14 +89,14 @@ func TestBackendAPIRemoteIndexFindBySystemName(t *testing.T) {
 	assert(t, backendEntity != nil, "backend entity returned nil")
 	equals(t, "backend_01", backendEntity.SystemName())
 
-	backendEntity, ok = remoteIndex.FindBySystemName("not_existing_system_name")
+	_, ok = remoteIndex.FindBySystemName("not_existing_system_name")
 	assert(t, !ok, "unexpected backend found")
 }
 
 func TestBackendAPIRemoteIndexCreateBackendAPI(t *testing.T) {
 	token := "12345"
 
-	listBackendHandler := func(req *http.Request) *http.Response {
+	listBackendHandler := func(_ *http.Request) *http.Response {
 		respObject := &threescaleapi.BackendApiList{
 			Backends: []threescaleapi.BackendApi{
 				{
@@ -116,12 +116,12 @@ func TestBackendAPIRemoteIndexCreateBackendAPI(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	}
 
-	createBackendHandler := func(req *http.Request) *http.Response {
+	createBackendHandler := func(_ *http.Request) *http.Response {
 		respObject := threescaleapi.BackendApi{
 			Element: threescaleapi.BackendApiItem{
 				ID:              int64(2),
@@ -137,7 +137,7 @@ func TestBackendAPIRemoteIndexCreateBackendAPI(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusCreated,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	}

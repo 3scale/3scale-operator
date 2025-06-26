@@ -59,13 +59,9 @@ func (r *WebConsoleReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, nil
 	}
 
-	result, err := r.reconcileMasterLink(req, logger)
+	err = r.reconcileMasterLink(req, logger)
 	if err != nil {
-		return result, err
-	}
-	if result.Requeue {
-		logger.Info("Master link reconciled. Needs Requeueing.")
-		return result, nil
+		return ctrl.Result{}, err
 	}
 
 	logger.V(1).Info("END")
@@ -79,17 +75,17 @@ func (r *WebConsoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *WebConsoleReconciler) reconcileMasterLink(request reconcile.Request, logger logr.Logger) (reconcile.Result, error) {
+func (r *WebConsoleReconciler) reconcileMasterLink(request reconcile.Request, logger logr.Logger) error {
 	if !strings.Contains(request.Name, "zync-3scale-master") {
 		// Nothing to do
-		return ctrl.Result{}, nil
+		return nil
 	}
 
 	route := &routev1.Route{}
 	err := r.Client().Get(r.Context(), request.NamespacedName, route)
 	if err != nil && !errors.IsNotFound(err) {
 		// Error reading the object - requeue the request.
-		return ctrl.Result{}, err
+		return err
 	}
 
 	if errors.IsNotFound(err) {
@@ -104,12 +100,12 @@ func (r *WebConsoleReconciler) reconcileMasterLink(request reconcile.Request, lo
 		}
 		common.TagObjectToDelete(desired)
 		err := r.ReconcileResource(&consolev1.ConsoleLink{}, desired, reconcilers.CreateOnlyMutator)
-		return ctrl.Result{}, err
+		return err
 	}
 
 	logger.V(1).Info("Master route found", "name", request.Name)
 
 	err = r.ReconcileResource(&consolev1.ConsoleLink{}, helper.GetMasterConsoleLink(route), helper.GenericConsoleLinkMutator)
 	logger.V(1).Info("Reconcile master consolelink", "err", err)
-	return ctrl.Result{}, err
+	return err
 }

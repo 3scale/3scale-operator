@@ -3,6 +3,9 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"testing"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
@@ -14,12 +17,10 @@ import (
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"testing"
 )
 
 func getApiManger() (apimanager *appsv1alpha1.APIManager) {
@@ -55,6 +56,7 @@ func getApiManger() (apimanager *appsv1alpha1.APIManager) {
 	}
 	return apimanager
 }
+
 func getProxyConfigPromoteCR() (CR *capabilitiesv1beta1.ProxyConfigPromote) {
 	CR = &capabilitiesv1beta1.ProxyConfigPromote{
 		ObjectMeta: metav1.ObjectMeta{
@@ -71,19 +73,24 @@ func getProxyConfigPromoteCR() (CR *capabilitiesv1beta1.ProxyConfigPromote) {
 func getBaseReconciler(objects ...runtime.Object) (baseReconciler *reconcilers.BaseReconciler) {
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	capabilitiesv1beta1.AddToScheme(s)
-	appsv1alpha1.AddToScheme(s)
+	err := capabilitiesv1beta1.AddToScheme(s)
+	if err != nil {
+		return nil
+	}
+
+	err = appsv1alpha1.AddToScheme(s)
+	if err != nil {
+		return nil
+	}
 
 	// controller-runtime version >= 0.15.0 requires fake clients to specify WithStatusSubresource() in order to protect objects' .status block
 	// WithStatusSubresource() takes client.Objects while this function takes runtime.Objects
 	// Populate a []client.Object slice using the passed []runtime.Objects if present
 	var clientObjects []client.Object
-	if objects != nil {
-		for _, o := range objects {
-			co, ok := o.(client.Object)
-			if ok {
-				clientObjects = append(clientObjects, co)
-			}
+	for _, o := range objects {
+		co, ok := o.(client.Object)
+		if ok {
+			clientObjects = append(clientObjects, co)
 		}
 	}
 
@@ -172,11 +179,7 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 				reconcileError:          tt.fields.reconcileError,
 				logger:                  tt.fields.logger,
 			}
-			got, err := s.calculateStatus()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("calculateStatus() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := s.calculateStatus()
 			if !reflect.DeepEqual(got.ProductId, tt.want.ProductId) {
 				t.Errorf("calculateStatus() got = %v, want %v", got.ProductId, tt.want.ProductId)
 			}
@@ -209,7 +212,7 @@ func TestProxyConfigPromoteStatusReconciler_Reconcile(t *testing.T) {
 		reconcileError          error
 		logger                  logr.Logger
 	}
-	var tests = []struct {
+	tests := []struct {
 		name    string
 		fields  fields
 		want    reconcile.Result
@@ -242,12 +245,13 @@ func TestProxyConfigPromoteStatusReconciler_Reconcile(t *testing.T) {
 				reconcileError:          tt.fields.reconcileError,
 				logger:                  tt.fields.logger,
 			}
-			got, err := s.Reconcile()
+			_, err := s.Reconcile()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Reconcile() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
+			var got reconcile.Result
 			// Requeue as there's a high chance of conflict in updating status.
 			got, err = s.Reconcile()
 			if (err != nil) != tt.wantErr {

@@ -144,7 +144,6 @@ func configureRedis(cfg *RedisConfig) (*goredis.Client, error) {
 
 	if cfg.TLS != nil && cfg.TLS.Enabled {
 		tlsConfig, err := LoadCerts(cfg.TLS)
-
 		if err != nil {
 			return nil, err
 		}
@@ -166,7 +165,6 @@ func configureRedisSentinel(cfg *RedisConfig) (*goredis.Client, error) {
 }
 
 func sentinelOptions(cfg *RedisConfig) (*goredis.FailoverOptions, error) {
-
 	if cfg.URL == "" {
 		return nil, fmt.Errorf("URL cannot be nil")
 	}
@@ -266,7 +264,6 @@ func sentinelOptions(cfg *RedisConfig) (*goredis.FailoverOptions, error) {
 
 func verifyRedisVersion(client *goredis.Client, requiredVersion string) (bool, error) {
 	info, err := client.Info(context.Background(), "server").Result()
-
 	if err != nil {
 		return false, fmt.Errorf("failed to execute command to retrieve the Redis version - error: %w", err)
 	}

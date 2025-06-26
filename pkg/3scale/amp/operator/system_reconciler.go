@@ -439,36 +439,6 @@ func (r *SystemReconciler) systemZyncEnvVarMutator(desired, existing *k8sappsv1.
 	return update, nil
 }
 
-func (r *SystemReconciler) isZyncReady() (bool, error) {
-	zyncDeploymentNames := []string{"zync", "zync-database", "zync-que"}
-
-	for _, deploymentName := range zyncDeploymentNames {
-		deployment := &k8sappsv1.Deployment{}
-		err := r.Client().Get(r.Context(), k8sclient.ObjectKey{
-			Namespace: r.apiManager.GetNamespace(),
-			Name:      deploymentName,
-		}, deployment)
-
-		// Return error if can't get deployment
-		if err != nil && !k8serr.IsNotFound(err) {
-			return false, fmt.Errorf("error getting deployment %s: %w", deployment.Name, err)
-		}
-
-		// Return without error if deployment doesn't exist to prevent spamming log with errors
-		if k8serr.IsNotFound(err) {
-			return false, nil
-		}
-
-		// Return false because deployment is not yet available
-		if !helper.IsDeploymentAvailable(deployment) || helper.IsDeploymentProgressing(deployment) {
-			return false, nil
-		}
-	}
-
-	// All zync deployments exist and are available
-	return true, nil
-}
-
 // systemConfigMapMutator creates facilitates the creation of the ConfigMap on the first reconcile loop
 // It also will update the endpoint in case zync is enabled|disabled while preserving all other values in the .data
 func systemConfigMapMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {

@@ -4,39 +4,38 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"reflect"
+	"testing"
+	"time"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
-	"io/ioutil"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net/http"
-	"reflect"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
-	"time"
 )
 
 func create(x int64) *int64 {
 	return &x
 }
 
-type (
-	fakeThreescaleClient struct{}
-)
-
 type RoundTripFunc func(req *http.Request) *http.Response
 
 func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req), nil
 }
+
 func NewTestClient(fn RoundTripFunc) *http.Client {
 	return &http.Client{
-		Transport: RoundTripFunc(fn),
+		Transport: fn,
 	}
 }
+
 func getProviderAccount() (Secret *v1.Secret) {
 	Secret = &v1.Secret{
 		TypeMeta: metav1.TypeMeta{},
@@ -53,10 +52,12 @@ func getProviderAccount() (Secret *v1.Secret) {
 	}
 	return Secret
 }
+
 func newTrue() *bool {
 	b := true
 	return &b
 }
+
 func getProxyConfigPromoteCRStaging() (CR *capabilitiesv1beta1.ProxyConfigPromote) {
 	CR = &capabilitiesv1beta1.ProxyConfigPromote{
 		ObjectMeta: metav1.ObjectMeta{
@@ -69,6 +70,7 @@ func getProxyConfigPromoteCRStaging() (CR *capabilitiesv1beta1.ProxyConfigPromot
 	}
 	return CR
 }
+
 func getProxyConfigPromoteCRProduction() (CR *capabilitiesv1beta1.ProxyConfigPromote) {
 	CR = &capabilitiesv1beta1.ProxyConfigPromote{
 		ObjectMeta: metav1.ObjectMeta{
@@ -88,7 +90,8 @@ func getProductList() (productList *capabilitiesv1beta1.ProductList) {
 		TypeMeta: metav1.TypeMeta{},
 		ListMeta: metav1.ListMeta{},
 		Items: []capabilitiesv1beta1.Product{
-			{TypeMeta: metav1.TypeMeta{},
+			{
+				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: "test",
@@ -111,7 +114,6 @@ func getProductList() (productList *capabilitiesv1beta1.ProductList) {
 }
 
 func getProductCR() (CR *capabilitiesv1beta1.Product) {
-
 	CR = &capabilitiesv1beta1.Product{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
@@ -135,6 +137,7 @@ func getProductCR() (CR *capabilitiesv1beta1.Product) {
 	}
 	return CR
 }
+
 func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList, proxyConfigElementSandbox *client.ProxyConfigElement, proxyConfigElementProduction *client.ProxyConfigElement) *http.Client {
 	// override httpClient
 	httpClient := NewTestClient(func(req *http.Request) *http.Response {
@@ -143,7 +146,7 @@ func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList
 			return &http.Response{
 				StatusCode: http.StatusCreated,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(proxyJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(proxyJson))),
 			}
 		}
 		// ListProducts
@@ -151,7 +154,7 @@ func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(productList))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(productList))),
 			}
 		}
 		// GetLatestProxyConfig sandbox
@@ -159,7 +162,7 @@ func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementSandbox))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementSandbox))),
 			}
 		}
 		// GetLatestProxyConfig production
@@ -167,7 +170,7 @@ func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementProduction))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementProduction))),
 			}
 		}
 		// PromoteProxyConfig production
@@ -175,7 +178,7 @@ func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList
 			return &http.Response{
 				StatusCode: http.StatusCreated,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementProduction))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementProduction))),
 			}
 		}
 
@@ -184,7 +187,7 @@ func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList
 			return &http.Response{
 				StatusCode: http.StatusNotFound,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementProduction))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementProduction))),
 			}
 		}
 
@@ -199,7 +202,7 @@ func emptyMockHttpClient() *http.Client {
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Header:     make(http.Header),
-			Body:       ioutil.NopCloser(bytes.NewBuffer([]byte{})),
+			Body:       io.NopCloser(bytes.NewBuffer([]byte{})),
 		}
 	})
 }

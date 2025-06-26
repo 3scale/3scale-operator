@@ -997,7 +997,7 @@ func TestDeploymentProbesMutator(t *testing.T) {
 												HTTPGet: &corev1.HTTPGetAction{
 													Path: "/status",
 													Port: intstr.IntOrString{
-														Type:   intstr.Type(intstr.Int),
+														Type:   intstr.Int,
 														IntVal: 3000,
 													},
 												},
@@ -1042,7 +1042,7 @@ func TestDeploymentProbesMutator(t *testing.T) {
 												HTTPGet: &corev1.HTTPGetAction{
 													Path: "/status",
 													Port: intstr.IntOrString{
-														Type:   intstr.Type(intstr.Int),
+														Type:   intstr.Int,
 														IntVal: 3000,
 													},
 												},
@@ -1067,7 +1067,7 @@ func TestDeploymentProbesMutator(t *testing.T) {
 												HTTPGet: &corev1.HTTPGetAction{
 													Path: "/status",
 													Port: intstr.IntOrString{
-														Type:   intstr.Type(intstr.Int),
+														Type:   intstr.Int,
 														IntVal: 3000,
 													},
 												},
@@ -1400,7 +1400,7 @@ func TestDeploymentVolumeMuator(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "VolumesMutator - additonal new volume",
+			name: "VolumesMutator - additional new volume",
 			args: args{
 				desired: &k8sappsv1.Deployment{
 					Spec: k8sappsv1.DeploymentSpec{

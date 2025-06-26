@@ -3,7 +3,7 @@ package helper
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
@@ -59,7 +59,7 @@ func TestApplicationPlanEntityUpdate(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -86,7 +86,7 @@ func TestApplicationPlanEntityUpdateError(t *testing.T) {
 		errObj := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(errObj)
@@ -94,7 +94,7 @@ func TestApplicationPlanEntityUpdateError(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusUnprocessableEntity,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -137,7 +137,7 @@ func TestApplicationPlanEntityLimits(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -159,7 +159,7 @@ func TestApplicationPlanEntityLimitsError(t *testing.T) {
 		errObj := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(errObj)
@@ -167,7 +167,7 @@ func TestApplicationPlanEntityLimitsError(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusUnprocessableEntity,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -186,7 +186,7 @@ func TestApplicationPlanEntityDeleteLimit(t *testing.T) {
 	httpClient := NewTestClient(func(req *http.Request) *http.Response {
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(`OK`)),
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
 			Header:     make(http.Header),
 		}
 	})
@@ -206,7 +206,7 @@ func TestApplicationPlanEntityDeleteLimitError(t *testing.T) {
 		errObj := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(errObj)
@@ -214,7 +214,7 @@ func TestApplicationPlanEntityDeleteLimitError(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusUnprocessableEntity,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -245,7 +245,7 @@ func TestApplicationPlanEntityCreateLimit(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusCreated,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -265,7 +265,7 @@ func TestApplicationPlanEntityCreateLimitError(t *testing.T) {
 		errObj := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(errObj)
@@ -273,7 +273,7 @@ func TestApplicationPlanEntityCreateLimitError(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusUnprocessableEntity,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -318,7 +318,7 @@ func TestApplicationPlanEntityPricingRules(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -340,7 +340,7 @@ func TestApplicationPlanEntityPricingRulesError(t *testing.T) {
 		errObj := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(errObj)
@@ -348,7 +348,7 @@ func TestApplicationPlanEntityPricingRulesError(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusUnprocessableEntity,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -367,7 +367,7 @@ func TestApplicationPlanEntityDeletePricingRule(t *testing.T) {
 	httpClient := NewTestClient(func(req *http.Request) *http.Response {
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(`OK`)),
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
 			Header:     make(http.Header),
 		}
 	})
@@ -387,7 +387,7 @@ func TestApplicationPlanEntityDeletePricingRuleError(t *testing.T) {
 		errObj := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(errObj)
@@ -395,7 +395,7 @@ func TestApplicationPlanEntityDeletePricingRuleError(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusUnprocessableEntity,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -427,7 +427,7 @@ func TestApplicationPlanEntityCreatePricingRule(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusCreated,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -447,7 +447,7 @@ func TestApplicationPlanEntityCreatePricingRuleError(t *testing.T) {
 		errObj := struct {
 			Errors map[string][]string `json:"errors"`
 		}{
-			map[string][]string{"some_attr": []string{"not valid"}},
+			map[string][]string{"some_attr": {"not valid"}},
 		}
 
 		responseBodyBytes, err := json.Marshal(errObj)
@@ -455,7 +455,7 @@ func TestApplicationPlanEntityCreatePricingRuleError(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusUnprocessableEntity,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})

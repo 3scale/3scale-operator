@@ -94,9 +94,9 @@ func (r *APIManagerRestoreLogicReconciler) reconcilePostRestoreSteps() (reconcil
 		return result, err
 	}
 
-	result, err = r.reconcileRestoreCompletion()
+	err = r.reconcileRestoreCompletion()
 	if result.Requeue || err != nil {
-		return result, err
+		return reconcile.Result{}, err
 	}
 
 	return reconcile.Result{}, nil
@@ -111,7 +111,6 @@ func (r *APIManagerRestoreLogicReconciler) reconcileSetMainStepsCompleted() (rec
 			return reconcile.Result{}, err
 		}
 		return reconcile.Result{Requeue: true}, nil
-
 	}
 	return reconcile.Result{}, nil
 }
@@ -130,9 +129,9 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreFromPVCSource() (reco
 	var res reconcile.Result
 	var err error
 
-	res, err = r.reconcileRestoreJobsPermissions()
-	if res.Requeue || err != nil {
-		return res, err
+	err = r.reconcileRestoreJobsPermissions()
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	res, err = r.reconcileRestoreSecretsAndConfigMapsFromPVCJob()
@@ -150,9 +149,9 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreFromPVCSource() (reco
 		return res, err
 	}
 
-	res, err = r.reconcileRestoreAPIManager()
-	if res.Requeue || err != nil {
-		return res, err
+	err = r.reconcileRestoreAPIManager()
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	res, err = r.reconcileResynchronizeZyncDomains()
@@ -236,10 +235,7 @@ func (r *APIManagerRestoreLogicReconciler) reconcileSystemStoragePVC() (reconcil
 		if apiManagerErr != nil {
 			return reconcile.Result{}, apiManagerErr
 		}
-		restoreInfo, restoreInfoErr := r.runtimeRestoreInfoFromAPIManager(apimanager)
-		if restoreInfoErr != nil {
-			return reconcile.Result{}, restoreInfoErr
-		}
+		restoreInfo := r.runtimeRestoreInfoFromAPIManager(apimanager)
 		err := r.ReconcileResource(&v1.PersistentVolumeClaim{}, r.apiManagerRestore.SystemStoragePVC(restoreInfo), reconcilers.CreateOnlyMutator)
 		if err != nil {
 			return reconcile.Result{}, err
@@ -250,7 +246,7 @@ func (r *APIManagerRestoreLogicReconciler) reconcileSystemStoragePVC() (reconcil
 	return reconcile.Result{}, nil
 }
 
-func (r *APIManagerRestoreLogicReconciler) runtimeRestoreInfoFromAPIManager(apimanager *appsv1alpha1.APIManager) (*restore.RuntimeAPIManagerRestoreInfo, error) {
+func (r *APIManagerRestoreLogicReconciler) runtimeRestoreInfoFromAPIManager(apimanager *appsv1alpha1.APIManager) *restore.RuntimeAPIManagerRestoreInfo {
 	var storageClass *string
 	if apimanager.Spec.System != nil && apimanager.Spec.System.FileStorageSpec != nil && apimanager.Spec.System.FileStorageSpec.PVC != nil {
 		storageClass = apimanager.Spec.System.FileStorageSpec.PVC.StorageClassName
@@ -258,7 +254,7 @@ func (r *APIManagerRestoreLogicReconciler) runtimeRestoreInfoFromAPIManager(apim
 	restoreInfo := &restore.RuntimeAPIManagerRestoreInfo{
 		PVCStorageClass: storageClass,
 	}
-	return restoreInfo, nil
+	return restoreInfo
 }
 
 func (r *APIManagerRestoreLogicReconciler) reconcileRestoreSystemFileStoragePVCFromPVCJob() (reconcile.Result, error) {
@@ -288,7 +284,7 @@ func (r *APIManagerRestoreLogicReconciler) systemStoragePVCExists() (bool, error
 	return true, nil
 }
 
-func (r *APIManagerRestoreLogicReconciler) reconcileRestoreCompletion() (reconcile.Result, error) {
+func (r *APIManagerRestoreLogicReconciler) reconcileRestoreCompletion() error {
 	if !r.cr.RestoreCompleted() {
 		// TODO make this more robust only setting it in case all substeps have been completed?
 		// It might be a little bit redundant because the steps are checked during the reconciliation
@@ -298,10 +294,10 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreCompletion() (reconci
 		r.cr.Status.CompletionTime = &completionTimeUTC
 		err := r.UpdateResourceStatus(r.cr)
 		if err != nil {
-			return reconcile.Result{}, err
+			return err
 		}
 	}
-	return reconcile.Result{}, nil
+	return nil
 }
 
 func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManagerInSharedSecret() (reconcile.Result, error) {
@@ -325,7 +321,6 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManagerInSharedSec
 			return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
 		}
 		apimanager, err := r.apiManagerFromSharedBackupSecret()
-
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -353,7 +348,7 @@ func (r *APIManagerRestoreLogicReconciler) sharedBackupSecret() (*v1.Secret, err
 
 	_, ok := secret.Data[backup.APIManagerSerializedBackupFileName]
 	if !ok {
-		return nil, fmt.Errorf("Expected key '%s' in secret '%s' not found", r.apiManagerRestore.SecretToShareName(), backup.APIManagerSerializedBackupFileName)
+		return nil, fmt.Errorf("expected key '%s' in secret '%s' not found", r.apiManagerRestore.SecretToShareName(), backup.APIManagerSerializedBackupFileName)
 	}
 
 	return secret, nil
@@ -365,7 +360,7 @@ func (r *APIManagerRestoreLogicReconciler) apiManagerFromSharedBackupSecret() (*
 		return nil, err
 	}
 	if secret == nil {
-		return nil, fmt.Errorf("Secret '%s' not found", r.apiManagerRestore.SecretToShareName())
+		return nil, fmt.Errorf("secret '%s' not found", r.apiManagerRestore.SecretToShareName())
 	}
 
 	// Deserialize APIManager using K8s apimachinery decoder in order to
@@ -393,7 +388,7 @@ func (r *APIManagerRestoreLogicReconciler) apiManagerFromSharedBackupSecret() (*
 	return apimanager, nil
 }
 
-func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManager() (reconcile.Result, error) {
+func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManager() error {
 	// At this point and subsequent steps APIManagerToRestoreRef should never be
 	// nil and Name should be a non-empty string. Thus, no checks related to
 	// that are performed each time the attribute is referenced in steps that
@@ -402,21 +397,21 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManager() (reconci
 
 	err := r.GetResource(types.NamespacedName{Name: apiManagerToRestoreName, Namespace: r.cr.Namespace}, &appsv1alpha1.APIManager{})
 	if err != nil && !errors.IsNotFound(err) {
-		return reconcile.Result{}, err
+		return err
 	}
 	if err == nil {
-		return reconcile.Result{}, nil
+		return nil
 	}
 
 	// We proceed here when APIManager has not been found
 	apimanager, err := r.apiManagerFromSharedBackupSecret()
 	if err != nil {
-		return reconcile.Result{}, err
+		return err
 	}
 
 	existing := &appsv1alpha1.APIManager{}
 	err = r.ReconcileResource(existing, apimanager, reconcilers.CreateOnlyMutator)
-	return reconcile.Result{}, err
+	return err
 }
 
 func (r *APIManagerRestoreLogicReconciler) reconcileAPIManagerBackupSharedInSecretCleanup() (reconcile.Result, error) {
@@ -426,7 +421,6 @@ func (r *APIManagerRestoreLogicReconciler) reconcileAPIManagerBackupSharedInSecr
 		return reconcile.Result{}, err
 	}
 	if desiredSecret != nil {
-
 		common.TagObjectToDelete(desiredSecret)
 		err = r.ReconcileResource(&v1.Secret{}, desiredSecret, reconcilers.CreateOnlyMutator)
 		if err != nil {
@@ -541,45 +535,33 @@ func (r *APIManagerRestoreLogicReconciler) reconcileJobsCleanup() (reconcile.Res
 	return reconcile.Result{}, nil
 }
 
-func (r *APIManagerRestoreLogicReconciler) reconcileRestoreJobsPermissions() (reconcile.Result, error) {
-	res, err := r.reconcileJobsServiceAccount()
-	if res.Requeue || err != nil {
-		return res, err
+func (r *APIManagerRestoreLogicReconciler) reconcileRestoreJobsPermissions() error {
+	err := r.reconcileJobsServiceAccount()
+	if err != nil {
+		return err
 	}
 
-	res, err = r.reconcileJobsRole()
-	if res.Requeue || err != nil {
-		return res, err
+	err = r.reconcileJobsRole()
+	if err != nil {
+		return err
 	}
 
-	res, err = r.reconcileJobsRoleBinding()
-	if res.Requeue || err != nil {
-		return res, err
+	err = r.reconcileJobsRoleBinding()
+	if err != nil {
+		return err
 	}
 
-	return res, err
+	return nil
 }
 
-func (r *APIManagerRestoreLogicReconciler) reconcileJobsServiceAccount() (reconcile.Result, error) {
-	err := r.ReconcileResource(&v1.ServiceAccount{}, r.apiManagerRestore.ServiceAccount(), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	return reconcile.Result{}, nil
+func (r *APIManagerRestoreLogicReconciler) reconcileJobsServiceAccount() error {
+	return r.ReconcileResource(&v1.ServiceAccount{}, r.apiManagerRestore.ServiceAccount(), reconcilers.CreateOnlyMutator)
 }
 
-func (r *APIManagerRestoreLogicReconciler) reconcileJobsRole() (reconcile.Result, error) {
-	err := r.ReconcileResource(&rbacv1.Role{}, r.apiManagerRestore.Role(), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	return reconcile.Result{}, nil
+func (r *APIManagerRestoreLogicReconciler) reconcileJobsRole() error {
+	return r.ReconcileResource(&rbacv1.Role{}, r.apiManagerRestore.Role(), reconcilers.CreateOnlyMutator)
 }
 
-func (r *APIManagerRestoreLogicReconciler) reconcileJobsRoleBinding() (reconcile.Result, error) {
-	err := r.ReconcileResource(&rbacv1.RoleBinding{}, r.apiManagerRestore.RoleBinding(), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	return reconcile.Result{}, nil
+func (r *APIManagerRestoreLogicReconciler) reconcileJobsRoleBinding() error {
+	return r.ReconcileResource(&rbacv1.RoleBinding{}, r.apiManagerRestore.RoleBinding(), reconcilers.CreateOnlyMutator)
 }

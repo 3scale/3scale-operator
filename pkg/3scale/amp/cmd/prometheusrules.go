@@ -62,7 +62,7 @@ func runPrometheusRulesCommand(cmd *cobra.Command, args []string) error {
 	prName := args[0]
 	factory, ok := factoryMap[prName]
 	if !ok {
-		return fmt.Errorf("Factory %s not found", prName)
+		return fmt.Errorf("factory %s not found", prName)
 	}
 
 	prometheusRulesObj := factory.PrometheusRule(compatPre49, prometheusRulesNamespace)
@@ -73,8 +73,11 @@ func runPrometheusRulesCommand(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
-	prometheusRulesCmd.PersistentFlags().StringVar(&prometheusRulesNamespace, "namespace", "", "Namespace to be used when generating the prometheus rules")
-	prometheusRulesCmd.PersistentFlags().BoolVar(&compatPre49, "compat", false, "Generate rules compatible with Openshift releases prior to 4.9")
-	prometheusRulesCmd.MarkFlagRequired("namespace")
+	prometheusRulesCmd.Flags().StringVar(&prometheusRulesNamespace, "namespace", "", "Namespace to be used when generating the prometheus rules")
+	prometheusRulesCmd.Flags().BoolVar(&compatPre49, "compat", false, "Generate rules compatible with Openshift releases prior to 4.9")
+	err := prometheusRulesCmd.MarkFlagRequired("namespace")
+	if err != nil {
+		panic(err)
+	}
 	rootCmd.AddCommand(prometheusRulesCmd)
 }

@@ -47,7 +47,7 @@ func (a *APIManagerBackupOptionsProvider) Options() (*APIManagerBackupOptions, e
 
 	// TODO can this checks be omitted and just rely on the validator package in the APIManagerBackup struct?
 	if pvcOptions == nil {
-		return nil, fmt.Errorf("At least one backup destination has to be specified")
+		return nil, fmt.Errorf("at least one backup destination has to be specified")
 	}
 
 	res.APIManagerBackupPVCOptions = pvcOptions
@@ -84,15 +84,14 @@ func (a *APIManagerBackupOptionsProvider) autodiscoveredAPIManager() (*appsv1alp
 
 	var res *appsv1alpha1.APIManager
 	if len(resList.Items) == 0 {
-		return nil, fmt.Errorf("No APIManagers found in namespace '%s'", a.APIManagerBackupCR.Namespace)
+		return nil, fmt.Errorf("no APIManagers found in namespace '%s'", a.APIManagerBackupCR.Namespace)
 	}
 	if len(resList.Items) > 1 {
-		return nil, fmt.Errorf("Multiple APIManagers found in namespace '%s'. Unsupported scenario", a.APIManagerBackupCR.Namespace)
+		return nil, fmt.Errorf("multiple APIManagers found in namespace '%s'. Unsupported scenario", a.APIManagerBackupCR.Namespace)
 	}
 
 	res = &resList.Items[0]
 	return res, nil
-
 }
 
 func (a *APIManagerBackupOptionsProvider) ocCLIImageURL() string {

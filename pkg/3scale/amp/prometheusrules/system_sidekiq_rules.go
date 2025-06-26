@@ -10,8 +10,7 @@ func init() {
 	PrometheusRuleFactories = append(PrometheusRuleFactories, NewSystemSidekiqPrometheusRuleFactory)
 }
 
-type SystemSidekiqPrometheusRuleFactory struct {
-}
+type SystemSidekiqPrometheusRuleFactory struct{}
 
 func NewSystemSidekiqPrometheusRuleFactory() PrometheusRuleFactory {
 	return &SystemSidekiqPrometheusRuleFactory{}

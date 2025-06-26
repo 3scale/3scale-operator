@@ -51,10 +51,12 @@ import (
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-var cfg *rest.Config
-var testK8sClient client.Client
-var testK8sAPIClient client.Reader
-var testEnv *envtest.Environment
+var (
+	cfg              *rest.Config
+	testK8sClient    client.Client
+	testK8sAPIClient client.Reader
+	testEnv          *envtest.Environment
+)
 
 func TestAPIManager(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -129,7 +131,7 @@ var _ = BeforeSuite(func() {
 			mgr.GetClient(),
 			mgr.GetScheme(),
 			mgr.GetAPIReader(),
-			//zap.LoggerTo(ioutil.Discard, true),
+			// zap.LoggerTo(ioutil.Discard, true),
 			ctrl.Log.WithName("controllers").WithName("APIManager"),
 			discoveryClientAPIManager,
 			mgr.GetEventRecorderFor("APIManager"),

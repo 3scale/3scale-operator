@@ -2,9 +2,10 @@ package reconcilers
 
 import (
 	"fmt"
+	"reflect"
+
 	"github.com/3scale/3scale-operator/pkg/common"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"reflect"
 )
 
 func GenericPodMonitorMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {

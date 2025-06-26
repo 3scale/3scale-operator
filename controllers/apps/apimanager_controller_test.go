@@ -3,7 +3,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"io"
 	"os"
 	"reflect"
@@ -11,15 +10,14 @@ import (
 
 	"github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
-	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,7 +31,7 @@ var _ = Describe("APIManager controller", func() {
 	var testNamespace string
 
 	BeforeEach(func() {
-		var generatedTestNamespace = "test-namespace-" + uuid.New().String()
+		generatedTestNamespace := "test-namespace-" + uuid.New().String()
 		// Add any setup steps that needs to be executed before each test
 		desiredTestNamespace := &corev1.Namespace{
 			TypeMeta: metav1.TypeMeta{
@@ -80,7 +78,6 @@ var _ = Describe("APIManager controller", func() {
 			}
 			return true
 		}, 5*time.Minute, 5*time.Second).Should(BeTrue())
-
 	})
 
 	Context("Run directly without existing APIManager", func() {
@@ -91,13 +88,12 @@ var _ = Describe("APIManager controller", func() {
 
 	Context("Run APIManager standard deploy", func() {
 		It("Should create successfully", func() {
-
 			start := time.Now()
 			os.Setenv("PREFLIGHT_CHECKS_BYPASS", "true")
 			// Create dummy secret needed to deploy an APIManager
 			// with S3 configuration for the E2E tests. As long as
 			// S3-related functionality is exercised it should work correctly.
-			dummyS3Secret := &v1.Secret{
+			dummyS3Secret := &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "dummy-s3-secret",
 					Namespace: testNamespace,
@@ -147,7 +143,7 @@ var _ = Describe("APIManager controller", func() {
 					System: &appsv1alpha1.SystemSpec{
 						FileStorageSpec: &appsv1alpha1.SystemFileStorageSpec{
 							S3: &appsv1alpha1.SystemS3Spec{
-								ConfigurationSecretRef: v1.LocalObjectReference{
+								ConfigurationSecretRef: corev1.LocalObjectReference{
 									Name: dummyS3Secret.Name,
 								},
 							},
@@ -157,7 +153,7 @@ var _ = Describe("APIManager controller", func() {
 						StagingSpec: &appsv1alpha1.ApicastStagingSpec{
 							CustomEnvironments: []appsv1alpha1.CustomEnvironmentSpec{
 								{
-									SecretRef: &v1.LocalObjectReference{
+									SecretRef: &corev1.LocalObjectReference{
 										Name: customEnvSecret.Name,
 									},
 								},
@@ -166,7 +162,7 @@ var _ = Describe("APIManager controller", func() {
 						ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
 							CustomEnvironments: []appsv1alpha1.CustomEnvironmentSpec{
 								{
-									SecretRef: &v1.LocalObjectReference{
+									SecretRef: &corev1.LocalObjectReference{
 										Name: customEnvSecret.Name,
 									},
 								},
@@ -189,35 +185,29 @@ var _ = Describe("APIManager controller", func() {
 			}, 5*time.Minute, 5*time.Second).Should(BeTrue())
 
 			fmt.Fprintf(GinkgoWriter, "Waiting for all APIManager managed Deployments\n")
-			err = waitForAllAPIManagerStandardDeployments(testNamespace, 5*time.Second, 15*time.Minute, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			waitForAllAPIManagerStandardDeployments(testNamespace, 5*time.Second, 15*time.Minute, GinkgoWriter)
 			fmt.Fprintf(GinkgoWriter, "All APIManager managed Deployments are ready\n")
 
 			fmt.Fprintf(GinkgoWriter, "Waiting for all APIManager managed Routes\n")
-			err = waitForAllAPIManagerStandardRoutes(testNamespace, 5*time.Second, 15*time.Minute, wildcardDomain, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			waitForAllAPIManagerStandardRoutes(5*time.Second, 15*time.Minute, wildcardDomain, GinkgoWriter)
 			fmt.Fprintf(GinkgoWriter, "All APIManager managed Routes are available\n")
 
 			fmt.Fprintf(GinkgoWriter, "Waiting until APIManager CR has the correct secret UIDs\n")
-			err = waitForAPIManagerLabels(testNamespace, 5*time.Second, 5*time.Minute, apimanager, customEnvSecret, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			waitForAPIManagerLabels(testNamespace, 5*time.Second, 5*time.Minute, apimanager, customEnvSecret, GinkgoWriter)
 			fmt.Fprintf(GinkgoWriter, "APIManager CR has the correct secret UIDs\n")
 
 			fmt.Fprintf(GinkgoWriter, "Waiting until hashed secret has been created and is accurate\n")
-			err = waitForHashedSecret(testNamespace, 5*time.Second, 5*time.Minute, customEnvSecret, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			waitForHashedSecret(testNamespace, 5*time.Second, 5*time.Minute, customEnvSecret, GinkgoWriter)
 			fmt.Fprintf(GinkgoWriter, "Hashed secret has been created and is accurate\n")
 
 			fmt.Fprintf(GinkgoWriter, "Waiting until apicast pod annotations have been verified\n")
-			err = waitForApicastPodAnnotations(testNamespace, 5*time.Second, 5*time.Minute, customEnvSecret, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			waitForApicastPodAnnotations(testNamespace, 5*time.Second, 5*time.Minute, customEnvSecret, GinkgoWriter)
 			fmt.Fprintf(GinkgoWriter, "Apicast pod annotations have been verified\n")
 
 			// TODO: Add code checking annotations on apicast pods
 
 			fmt.Fprintf(GinkgoWriter, "Waiting until APIManager's 'Available' condition is true\n")
-			err = waitForAPIManagerAvailableCondition(testNamespace, 5*time.Second, 15*time.Minute, apimanager, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			waitForAPIManagerAvailableCondition(5*time.Second, 15*time.Minute, apimanager, GinkgoWriter)
 			fmt.Fprintf(GinkgoWriter, "APIManager 'Available' condition is true\n")
 
 			elapsed := time.Since(start)
@@ -321,9 +311,9 @@ func createRedisDeployment(deploymentName, pvcName, namespace string, k8sclient 
 									corev1.ResourceCPU:    resource.MustParse("500m"),
 								},
 							},
-							LivenessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
-									TCPSocket: &v1.TCPSocketAction{
+							LivenessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									TCPSocket: &corev1.TCPSocketAction{
 										Port: intstr.IntOrString{
 											Type:   intstr.Int,
 											IntVal: 6379,
@@ -336,9 +326,9 @@ func createRedisDeployment(deploymentName, pvcName, namespace string, k8sclient 
 								SuccessThreshold:    0,
 								FailureThreshold:    0,
 							},
-							ReadinessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
-									TCPSocket: &v1.TCPSocketAction{
+							ReadinessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									TCPSocket: &corev1.TCPSocketAction{
 										Port: intstr.FromInt(6379),
 									},
 								},
@@ -512,7 +502,7 @@ func createMysqlDatabase(namespace string, k8sclient client.Client) error {
 
 func createMainConfigCM(namespace string, k8sclient client.Client) error {
 	// Define the ConfigMap
-	configMap := &v1.ConfigMap{
+	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "mysql-main-conf",
 			Namespace: namespace,
@@ -526,7 +516,7 @@ func createMainConfigCM(namespace string, k8sclient client.Client) error {
 	}
 
 	// Check if the configmap already exists
-	existingCM := &v1.ConfigMap{}
+	existingCM := &corev1.ConfigMap{}
 	err := k8sclient.Get(context.TODO(), client.ObjectKey{
 		Name:      "mysql-main-conf",
 		Namespace: namespace,
@@ -549,7 +539,7 @@ func createMainConfigCM(namespace string, k8sclient client.Client) error {
 }
 
 func createConfigurationCM(namespace string, k8sclient client.Client) error {
-	configMap := &v1.ConfigMap{
+	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "mysql-extra-conf",
 			Namespace: namespace,
@@ -575,7 +565,7 @@ default_authentication_plugin=mysql_native_password
 	}
 
 	// Check if the configmap already exists
-	existingCM := &v1.ConfigMap{}
+	existingCM := &corev1.ConfigMap{}
 	err := k8sclient.Get(context.TODO(), client.ObjectKey{
 		Name:      "mysql-extra-conf",
 		Namespace: namespace,
@@ -598,7 +588,7 @@ default_authentication_plugin=mysql_native_password
 }
 
 func createMySQLDeployment(namespace string, k8sclient client.Client) error {
-	deployment := &k8sappsv1.Deployment{
+	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "system-mysql",
 			Namespace: namespace,
@@ -606,9 +596,9 @@ func createMySQLDeployment(namespace string, k8sclient client.Client) error {
 				"app": "mysql",
 			},
 		},
-		Spec: k8sappsv1.DeploymentSpec{
-			Strategy: k8sappsv1.DeploymentStrategy{
-				Type: k8sappsv1.RecreateDeploymentStrategyType,
+		Spec: appsv1.DeploymentSpec{
+			Strategy: appsv1.DeploymentStrategy{
+				Type: appsv1.RecreateDeploymentStrategyType,
 			},
 			Replicas: int32Ptr(1),
 			Selector: &metav1.LabelSelector{
@@ -616,18 +606,18 @@ func createMySQLDeployment(namespace string, k8sclient client.Client) error {
 					"app": "mysql",
 				},
 			},
-			Template: v1.PodTemplateSpec{
+			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
 						"app": "mysql",
 					},
 				},
-				Spec: v1.PodSpec{
-					Volumes: []v1.Volume{
+				Spec: corev1.PodSpec{
+					Volumes: []corev1.Volume{
 						{
 							Name: "mysql-storage",
-							VolumeSource: v1.VolumeSource{
-								PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+							VolumeSource: corev1.VolumeSource{
+								PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
 									ClaimName: "system-mysql-pvc",
 									ReadOnly:  false,
 								},
@@ -635,9 +625,9 @@ func createMySQLDeployment(namespace string, k8sclient client.Client) error {
 						},
 						{
 							Name: "mysql-extra-conf",
-							VolumeSource: v1.VolumeSource{
-								ConfigMap: &v1.ConfigMapVolumeSource{
-									LocalObjectReference: v1.LocalObjectReference{
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "mysql-extra-conf",
 									},
 								},
@@ -645,27 +635,27 @@ func createMySQLDeployment(namespace string, k8sclient client.Client) error {
 						},
 						{
 							Name: "mysql-main-conf",
-							VolumeSource: v1.VolumeSource{
-								ConfigMap: &v1.ConfigMapVolumeSource{
-									LocalObjectReference: v1.LocalObjectReference{
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "mysql-main-conf",
 									},
 								},
 							},
 						},
 					},
-					Containers: []v1.Container{
+					Containers: []corev1.Container{
 						{
 							Name:  "system-mysql",
 							Image: "quay.io/sclorg/mysql-80-c8s",
-							Ports: []v1.ContainerPort{
+							Ports: []corev1.ContainerPort{
 								{
 									HostPort:      0,
 									ContainerPort: 3306,
-									Protocol:      v1.ProtocolTCP,
+									Protocol:      corev1.ProtocolTCP,
 								},
 							},
-							Env: []v1.EnvVar{
+							Env: []corev1.EnvVar{
 								helper.EnvVarFromSecret("MYSQL_USER", "system-database", "DB_USER"),
 								helper.EnvVarFromSecret("MYSQL_PASSWORD", "system-database", "DB_PASSWORD"),
 								helper.EnvVarFromValue("MYSQL_DATABASE", "dev"),
@@ -673,7 +663,7 @@ func createMySQLDeployment(namespace string, k8sclient client.Client) error {
 								helper.EnvVarFromValue("MYSQL_LOWER_CASE_TABLE_NAMES", "1"),
 								helper.EnvVarFromValue("MYSQL_DEFAULTS_FILE", "/etc/my-extra/my.cnf"),
 							},
-							VolumeMounts: []v1.VolumeMount{
+							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      "mysql-storage",
 									ReadOnly:  false,
@@ -690,9 +680,9 @@ func createMySQLDeployment(namespace string, k8sclient client.Client) error {
 									MountPath: "/etc/my-extra",
 								},
 							},
-							LivenessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
-									TCPSocket: &v1.TCPSocketAction{
+							LivenessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									TCPSocket: &corev1.TCPSocketAction{
 										Port: intstr.IntOrString{
 											Type:   intstr.Int,
 											IntVal: 3306,
@@ -705,9 +695,9 @@ func createMySQLDeployment(namespace string, k8sclient client.Client) error {
 								SuccessThreshold:    0,
 								FailureThreshold:    0,
 							},
-							ReadinessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
-									Exec: &v1.ExecAction{
+							ReadinessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									Exec: &corev1.ExecAction{
 										Command: []string{"/bin/sh", "-i", "-c", "MYSQL_PWD=\"$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'"},
 									},
 								},
@@ -717,7 +707,7 @@ func createMySQLDeployment(namespace string, k8sclient client.Client) error {
 								SuccessThreshold:    0,
 								FailureThreshold:    0,
 							},
-							ImagePullPolicy: v1.PullIfNotPresent,
+							ImagePullPolicy: corev1.PullIfNotPresent,
 						},
 					},
 				},
@@ -833,7 +823,7 @@ func createSystemDatabaseSecret(namespace string, k8sclient client.Client) error
 
 func createPVC(name, namespace string, k8sclient client.Client) error {
 	// Define the PVC
-	pvc := &v1.PersistentVolumeClaim{
+	pvc := &corev1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PersistentVolumeClaim",
 			APIVersion: "v1",
@@ -842,13 +832,13 @@ func createPVC(name, namespace string, k8sclient client.Client) error {
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: v1.PersistentVolumeClaimSpec{
-			AccessModes: []v1.PersistentVolumeAccessMode{
-				v1.PersistentVolumeAccessMode("ReadWriteOnce"),
+		Spec: corev1.PersistentVolumeClaimSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{
+				corev1.PersistentVolumeAccessMode("ReadWriteOnce"),
 			},
-			Resources: v1.VolumeResourceRequirements{
-				Requests: v1.ResourceList{
-					v1.ResourceStorage: resource.MustParse("1Gi"),
+			Resources: corev1.VolumeResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceStorage: resource.MustParse("1Gi"),
 				},
 			},
 		},
@@ -875,7 +865,7 @@ func createPVC(name, namespace string, k8sclient client.Client) error {
 	return nil
 }
 
-func waitForAllAPIManagerStandardDeployments(namespace string, retryInterval, timeout time.Duration, w io.Writer) error {
+func waitForAllAPIManagerStandardDeployments(namespace string, retryInterval, timeout time.Duration, w io.Writer) {
 	deploymentNames := []string{ // TODO gather this from constants/somewhere centralized
 		"apicast-production",
 		"apicast-staging",
@@ -896,7 +886,7 @@ func waitForAllAPIManagerStandardDeployments(namespace string, retryInterval, ti
 
 	for _, dName := range deploymentNames {
 		lookupKey := types.NamespacedName{Name: dName, Namespace: namespace}
-		createdDeployment := &k8sappsv1.Deployment{}
+		createdDeployment := &appsv1.Deployment{}
 		Eventually(func() bool {
 			err := testK8sClient.Get(context.Background(), lookupKey, createdDeployment)
 			if err != nil {
@@ -912,14 +902,11 @@ func waitForAllAPIManagerStandardDeployments(namespace string, retryInterval, ti
 			desiredReplicas := createdDeployment.Spec.Replicas
 			fmt.Fprintf(w, "Waiting for full availability of %s Deployment (%d/%d)\n", dName, availableReplicas, desiredReplicas)
 			return false
-
 		}, timeout, retryInterval).Should(BeTrue())
 	}
-
-	return nil
 }
 
-func waitForAllAPIManagerStandardRoutes(namespace string, retryInterval, timeout time.Duration, wildcardDomain string, w io.Writer) error {
+func waitForAllAPIManagerStandardRoutes(retryInterval, timeout time.Duration, wildcardDomain string, w io.Writer) {
 	routeHosts := []string{
 		"backend-3scale." + wildcardDomain,                // Backend Listener route
 		"api-3scale-apicast-production." + wildcardDomain, // Apicast Production '3scale' tenant Route
@@ -962,13 +949,10 @@ func waitForAllAPIManagerStandardRoutes(namespace string, retryInterval, timeout
 			fmt.Fprintf(w, "Route '%s' with host '%s' ready\n", route.Name, route.Spec.Host)
 			return true
 		}, timeout, retryInterval).Should(BeTrue())
-
 	}
-
-	return nil
 }
 
-func waitForAPIManagerAvailableCondition(namespace string, retryInterval, timeout time.Duration, apimanager *appsv1alpha1.APIManager, w io.Writer) error {
+func waitForAPIManagerAvailableCondition(retryInterval, timeout time.Duration, apimanager *appsv1alpha1.APIManager, w io.Writer) {
 	Eventually(func() bool {
 		err := testK8sClient.Get(context.Background(), types.NamespacedName{Name: apimanager.Name, Namespace: apimanager.Namespace}, apimanager)
 		if err != nil {
@@ -978,11 +962,9 @@ func waitForAPIManagerAvailableCondition(namespace string, retryInterval, timeou
 
 		return apimanager.Status.Conditions.IsTrueFor(appsv1alpha1.APIManagerAvailableConditionType)
 	}, timeout, retryInterval).Should(BeTrue())
-
-	return nil
 }
 
-func waitForAPIManagerLabels(namespace string, retryInterval time.Duration, timeout time.Duration, apimanager *appsv1alpha1.APIManager, customEnvSecret *v1.Secret, w io.Writer) error {
+func waitForAPIManagerLabels(namespace string, retryInterval time.Duration, timeout time.Duration, apimanager *appsv1alpha1.APIManager, customEnvSecret *corev1.Secret, w io.Writer) {
 	Eventually(func() bool {
 		reconciledApimanager := &appsv1alpha1.APIManager{}
 		reconciledApimanagerKey := types.NamespacedName{Name: apimanager.Name, Namespace: namespace}
@@ -999,14 +981,12 @@ func waitForAPIManagerLabels(namespace string, retryInterval time.Duration, time
 		// Then verify that the hash matches the hashed config secret
 		return reflect.DeepEqual(reconciledApimanager.Labels, expectedLabels)
 	}, timeout, retryInterval).Should(BeTrue())
-
-	return nil
 }
 
-func waitForHashedSecret(namespace string, retryInterval time.Duration, timeout time.Duration, customEnvSecret *v1.Secret, w io.Writer) error {
+func waitForHashedSecret(namespace string, retryInterval time.Duration, timeout time.Duration, customEnvSecret *corev1.Secret, w io.Writer) {
 	Eventually(func() bool {
 		// First get the master hashed secret
-		hashedSecret := &v1.Secret{}
+		hashedSecret := &corev1.Secret{}
 		hashedSecretLookupKey := types.NamespacedName{Name: component.HashedSecretName, Namespace: namespace}
 		err := testK8sClient.Get(context.Background(), hashedSecretLookupKey, hashedSecret)
 		if err != nil {
@@ -1017,11 +997,9 @@ func waitForHashedSecret(namespace string, retryInterval time.Duration, timeout 
 		// Then verify that the hash matches the hashed custom environment secret
 		return helper.GetSecretStringDataFromData(hashedSecret.Data)[customEnvSecret.Name] == component.HashSecret(customEnvSecret.Data)
 	}, timeout, retryInterval).Should(BeTrue())
-
-	return nil
 }
 
-func waitForApicastPodAnnotations(namespace string, retryInterval time.Duration, timeout time.Duration, customEnvSecret *v1.Secret, w io.Writer) error {
+func waitForApicastPodAnnotations(namespace string, retryInterval time.Duration, timeout time.Duration, customEnvSecret *corev1.Secret, w io.Writer) {
 	apicastDeploymentNames := []string{
 		"apicast-production",
 		"apicast-staging",
@@ -1029,7 +1007,7 @@ func waitForApicastPodAnnotations(namespace string, retryInterval time.Duration,
 
 	for _, dName := range apicastDeploymentNames {
 		apicastDeploymentLookupKey := types.NamespacedName{Name: dName, Namespace: namespace}
-		apicastDeployment := &k8sappsv1.Deployment{}
+		apicastDeployment := &appsv1.Deployment{}
 		Eventually(func() bool {
 			err := testK8sClient.Get(context.Background(), apicastDeploymentLookupKey, apicastDeployment)
 			if err != nil {
@@ -1050,8 +1028,6 @@ func waitForApicastPodAnnotations(namespace string, retryInterval time.Duration,
 			return false
 		}, timeout, retryInterval).Should(BeTrue())
 	}
-
-	return nil
 }
 
 func testCustomEnvironmentContent() string {
@@ -1076,8 +1052,8 @@ func testCustomEnvironmentContent() string {
 `
 }
 
-func testGetCustomEnvironmentSecret(namespace string) *v1.Secret {
-	customEnvironmentSecret := v1.Secret{
+func testGetCustomEnvironmentSecret(namespace string) *corev1.Secret {
+	customEnvironmentSecret := corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
 			Kind:       "Secret",

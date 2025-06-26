@@ -22,22 +22,19 @@ import (
 	"fmt"
 	"strconv"
 
-	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
-
+	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -152,10 +149,10 @@ func (r *DeveloperAccountReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	statusResult, statusUpdateErr := statusReconciler.Reconcile()
 	if statusUpdateErr != nil {
 		if reconcileErr != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed to reconcile developer account: %v. Failed to update status: %w", reconcileErr, statusUpdateErr)
+			return ctrl.Result{}, fmt.Errorf("failed to reconcile developer account: %v. Failed to update status: %w", reconcileErr, statusUpdateErr)
 		}
 
-		return ctrl.Result{}, fmt.Errorf("Failed to update developers account status: %w", statusUpdateErr)
+		return ctrl.Result{}, fmt.Errorf("failed to update developers account status: %w", statusUpdateErr)
 	}
 
 	if statusResult.Requeue {
@@ -267,7 +264,7 @@ func (r *DeveloperAccountReconciler) removeDeveloperAccountFrom3scale(developerA
 
 	developerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), developerAccountCR.Namespace, developerAccountCR.Spec.ProviderAccountRef, r.Logger())
 	if err != nil {
-		if apierrors.IsNotFound(err) {
+		if errors.IsNotFound(err) {
 			logger.Info("developer account not deleted from 3scale, provider account not found")
 			return nil
 		}

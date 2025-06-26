@@ -49,10 +49,7 @@ const (
 	BackendFailedConditionType common.ConditionType = "Failed"
 )
 
-var (
-	//
-	backendSystemNameRegexp = regexp.MustCompile("[^a-zA-Z0-9]+")
-)
+var backendSystemNameRegexp = regexp.MustCompile("[^a-zA-Z0-9]+")
 
 // BackendStatusError represents that the combination of configuration in the BackendSpec
 // is not supported by this cluster. This is not a transient error, but

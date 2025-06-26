@@ -56,10 +56,7 @@ const (
 	ActiveDocFailedConditionType common.ConditionType = "Failed"
 )
 
-var (
-	//
-	activeDocSystemNameRegexp = regexp.MustCompile("[^a-zA-Z0-9]+")
-)
+var activeDocSystemNameRegexp = regexp.MustCompile("[^a-zA-Z0-9]+")
 
 // ActiveDocOpenAPIRefSpec Reference to the OpenAPI Specification
 type ActiveDocOpenAPIRefSpec struct {

@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-logr/logr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	controllerclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ProductList returns a list of product custom resources where all elements:
@@ -16,8 +15,8 @@ import (
 // - Same 3scale provider Account
 func ProductList(ns string, cl client.Client, providerAccountURLStr string, logger logr.Logger) ([]capabilitiesv1beta1.Product, error) {
 	productList := &capabilitiesv1beta1.ProductList{}
-	opts := []controllerclient.ListOption{
-		controllerclient.InNamespace(ns),
+	opts := []client.ListOption{
+		client.InNamespace(ns),
 	}
 	err := cl.List(context.TODO(), productList, opts...)
 	logger.V(1).Info("Get list of Product resources.", "Err", err)

@@ -12,7 +12,7 @@ func (t *ProductThreescaleReconciler) syncOIDCConfiguration(_ interface{}) error
 
 	existing, err := t.productEntity.OIDCConfiguration()
 	if err != nil {
-		return fmt.Errorf("Error sync product [%s] oidc configuration: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("error sync product [%s] oidc configuration: %w", t.resource.Spec.SystemName, err)
 	}
 
 	newOIDCConf := *existing
@@ -42,7 +42,7 @@ func (t *ProductThreescaleReconciler) syncOIDCConfiguration(_ interface{}) error
 	if updated {
 		err := t.productEntity.UpdateOIDCConfiguration(&newOIDCConf)
 		if err != nil {
-			return fmt.Errorf("Error sync product [%s] oidc configuration: %w", t.resource.Spec.SystemName, err)
+			return fmt.Errorf("error sync product [%s] oidc configuration: %w", t.resource.Spec.SystemName, err)
 		}
 	}
 

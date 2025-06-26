@@ -17,11 +17,12 @@ limitations under the License.
 package v1beta1
 
 import (
+	"reflect"
+
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"reflect"
 )
 
 const (

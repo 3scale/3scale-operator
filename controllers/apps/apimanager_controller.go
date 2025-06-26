@@ -294,11 +294,7 @@ func retrieveRequiredVersion(reqConfigMap v1.ConfigMap) (string, string, string,
 }
 
 func (r *APIManagerReconciler) externalDatabasesPreflightsChecks(apimInstance *appsv1alpha1.APIManager, logger logr.Logger) error {
-	systemDatabaseIsInternal := false
-	systemRedisIsInternal := true
-	backendRedisIsInternal := true
-
-	backendRedisIsInternal, systemRedisIsInternal, systemDatabaseIsInternal = helper.InternalDatabases(*apimInstance, logger)
+	backendRedisIsInternal, systemRedisIsInternal, systemDatabaseIsInternal := helper.InternalDatabases(*apimInstance, logger)
 	// If all are already verified, exit earlier
 
 	if backendRedisIsInternal || systemDatabaseIsInternal || systemRedisIsInternal {
@@ -336,7 +332,7 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	labelSelectorPredicate, err := predicate.LabelSelectorPredicate(r.SecretLabelSelector)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	resourceVersionChangePredicate := predicate.ResourceVersionChangedPredicate{}
@@ -348,7 +344,7 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 	redisConfigLabelPredicate, err := predicate.LabelSelectorPredicate(*redisConfigLabelSelector)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -478,9 +474,9 @@ func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIMana
 	}
 
 	// Create the hashed secret to track watched secrets' changes
-	result, err = r.reconcileHashedSecret(cr)
-	if err != nil || result.Requeue {
-		return result, err
+	err = r.reconcileHashedSecret(cr)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	// 3scale 2.14 -> 2.15
@@ -570,8 +566,6 @@ func (r *APIManagerReconciler) dependencyReconcilerForComponents(baseAPIManagerL
 }
 
 func (r *APIManagerReconciler) instanceRequiresPreflights(cr *appsv1alpha1.APIManager, logger logr.Logger) (ctrl.Result, bool, error) {
-	requirementsConfigMap := &v1.ConfigMap{}
-
 	if helper.IsPreflightBypassed() {
 		return ctrl.Result{}, false, nil
 	}
@@ -598,7 +592,7 @@ func (r *APIManagerReconciler) instanceRequiresPreflights(cr *appsv1alpha1.APIMa
 	// - external DB check
 	externalDatabasesCheckError := r.externalDatabasesPreflightsChecks(cr, logger)
 	if externalDatabasesCheckError != nil {
-		return ctrl.Result{}, true, nil
+		return ctrl.Result{}, true, externalDatabasesCheckError
 	}
 
 	// Check if current requirements are already confirmed
@@ -626,14 +620,14 @@ func (r *APIManagerReconciler) setRequirementsAnnotation(apim *appsv1alpha1.APIM
 	return nil
 }
 
-func (r *APIManagerReconciler) reconcileHashedSecret(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+func (r *APIManagerReconciler) reconcileHashedSecret(cr *appsv1alpha1.APIManager) error {
 	secretLabels := map[string]string{
 		"app": *cr.Spec.AppLabel,
 	}
 	secret, err := component.HashedSecret(r.Context(), r.Client(), cr.Get3scaleSecretRefs(), cr.Namespace, secretLabels)
 	if err != nil {
 		r.Logger().Error(err, "failed to generate hashed-secret-data secret")
-		return reconcile.Result{}, err
+		return err
 	}
 
 	secretMutators := []reconcilers.SecretMutateFn{
@@ -642,8 +636,8 @@ func (r *APIManagerReconciler) reconcileHashedSecret(cr *appsv1alpha1.APIManager
 	err = r.ReconcileResource(&v1.Secret{}, secret, reconcilers.DeploymentSecretMutator(secretMutators...))
 	if err != nil {
 		r.Logger().Error(err, "failed to reconcile hashed-secret-data secret")
-		return reconcile.Result{}, err
+		return err
 	}
 
-	return reconcile.Result{}, nil
+	return nil
 }

@@ -358,9 +358,12 @@ func (b *ProductEntity) Policies() (*threescaleapi.PoliciesConfigList, error) {
 }
 
 func (b *ProductEntity) UpdatePolicies(policies *threescaleapi.PoliciesConfigList) error {
-	policiesJSON, _ := json.Marshal(policies)
+	policiesJSON, err := json.Marshal(policies)
+	if err != nil {
+		return err
+	}
 	b.logger.V(1).Info("UpdatePolicies", "policies", string(policiesJSON))
-	_, err := b.client.UpdatePolicies(b.productObj.Element.ID, policies)
+	_, err = b.client.UpdatePolicies(b.productObj.Element.ID, policies)
 	if err != nil {
 		return fmt.Errorf("product [%s] update policies: %w", b.productObj.Element.SystemName, err)
 	}

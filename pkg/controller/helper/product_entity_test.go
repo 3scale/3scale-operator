@@ -3,7 +3,7 @@ package helper
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"regexp"
 	"testing"
@@ -52,7 +52,7 @@ func TestProductEntityUpdate(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -103,7 +103,7 @@ func TestProductEntityCreateMethod(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusCreated,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -125,7 +125,7 @@ func TestProductEntityDeleteMethod(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(`OK`)),
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
 			Header:     make(http.Header),
 		}
 	})
@@ -159,7 +159,7 @@ func TestProductEntityUpdateMethod(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -188,7 +188,7 @@ func TestProductEntityCreateMetric(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusCreated,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -206,7 +206,7 @@ func TestProductEntityDeleteMetric(t *testing.T) {
 	httpClient := NewTestClient(func(req *http.Request) *http.Response {
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(`OK`)),
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
 			Header:     make(http.Header),
 		}
 	})
@@ -235,7 +235,7 @@ func TestProductEntityUpdateMetric(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -310,7 +310,7 @@ func TestProductEntityMappingRules(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -330,7 +330,7 @@ func TestProductEntityDeleteMappingRule(t *testing.T) {
 	httpClient := NewTestClient(func(req *http.Request) *http.Response {
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(`OK`)),
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
 			Header:     make(http.Header),
 		}
 	})
@@ -361,7 +361,7 @@ func TestProductEntityCreateMappingRule(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusCreated,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -392,7 +392,7 @@ func TestProductEntityUpdateMappingRule(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -459,7 +459,7 @@ func TestProductEntityBackendUsages(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -481,7 +481,7 @@ func TestProductEntityDeleteBackendUsage(t *testing.T) {
 	httpClient := NewTestClient(func(req *http.Request) *http.Response {
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(`OK`)),
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
 			Header:     make(http.Header),
 		}
 	})
@@ -508,7 +508,7 @@ func TestProductEntityUpdateBackendUsage(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -535,7 +535,7 @@ func TestProductEntityCreateBackendUsage(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusCreated,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -560,7 +560,7 @@ func TestProductEntityProxy(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -587,7 +587,7 @@ func TestProductEntityUpdateProxy(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -622,7 +622,7 @@ func TestProductEntityApplicationPlans(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -645,7 +645,7 @@ func TestProductEntityDeleteApplicationPlan(t *testing.T) {
 	httpClient := NewTestClient(func(req *http.Request) *http.Response {
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(`OK`)),
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
 			Header:     make(http.Header),
 		}
 	})
@@ -670,7 +670,7 @@ func TestProductEntityCreateApplicationPlan(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusCreated,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -697,7 +697,7 @@ func TestProductEntityPromoteProxyToStaging(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusCreated,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -726,7 +726,7 @@ func TestProductEntityPolicies(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -760,7 +760,7 @@ func TestProductEntityUpdatePolicies(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -785,7 +785,7 @@ func TestProductEntityOIDCConfiguration(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})
@@ -812,7 +812,7 @@ func TestProductEntityUpdateOIDCConfiguration(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+			Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 			Header:     make(http.Header),
 		}
 	})

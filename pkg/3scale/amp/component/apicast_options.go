@@ -41,7 +41,7 @@ type APIcastTracingConfig struct {
 
 type OpentelemetryConfig struct {
 	Enabled    bool
-	Secret     v1.Secret
+	Secret     *v1.Secret
 	ConfigFile string
 }
 

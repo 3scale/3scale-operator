@@ -56,7 +56,7 @@ func (s *DeveloperAccountThreescaleReconciler) Reconcile() (*threescaleapi.Devel
 	if devAccount == nil {
 		s.logger.V(1).Info("DeveloperAccount does not exist", "OrgName", s.resource.Spec.OrgName)
 		// The DeveloperAccount doesn't exist yet and must be created in 3scale
-		createdDevAccount, createErr, devUserCR := s.createDevAccount()
+		createdDevAccount, devUserCR, createErr := s.createDevAccount()
 		if createErr != nil {
 			// Occasionally system will return a 409 error even though the DeveloperAccount was created successfully.
 			// When this happens, the returned createdDevAccount will have nil values for all its fields.
@@ -99,7 +99,7 @@ func (s *DeveloperAccountThreescaleReconciler) retrieveAccountID() (int64, error
 			// If the accountID annotation is found, convert it to int64
 			accountIdConvertedFromString, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
-				return 0, errors.New(fmt.Sprintf("failed to convert accountID annotation value %s to int64", value))
+				return 0, fmt.Errorf("failed to convert accountID annotation value %s to int64", value)
 			}
 
 			accountId = accountIdConvertedFromString
@@ -147,23 +147,23 @@ func (s *DeveloperAccountThreescaleReconciler) findDevAccountByAdminUsername(adm
 	return devAccount, nil
 }
 
-func (s *DeveloperAccountThreescaleReconciler) createDevAccount() (*threescaleapi.DeveloperAccount, error, *capabilitiesv1beta1.DeveloperUser) {
+func (s *DeveloperAccountThreescaleReconciler) createDevAccount() (*threescaleapi.DeveloperAccount, *capabilitiesv1beta1.DeveloperUser, error) {
 	// 3scale API requires one developer user to be created as admin in the process of creating a developer account
 	devAdminUserCR, err := s.findDeveloperAdminUserCR()
 	if err != nil {
-		return nil, err, nil
+		return nil, nil, err
 	}
 
 	if devAdminUserCR == nil {
 		// There should be one, wait for it
-		return nil, &helper.WaitError{
-			Err: errors.New("Valid admin developer user CR not found"),
-		}, nil
+		return nil, nil, &helper.WaitError{
+			Err: errors.New("valid admin developer user CR not found"),
+		}
 	}
 
 	password, err := s.getAdminUserPassword(devAdminUserCR)
 	if err != nil {
-		return nil, err, nil
+		return nil, nil, err
 	}
 
 	params := threescaleapi.Params{
@@ -187,7 +187,7 @@ func (s *DeveloperAccountThreescaleReconciler) createDevAccount() (*threescaleap
 
 	devAccountObj, signupErr := s.threescaleAPIClient.Signup(params)
 
-	return devAccountObj, signupErr, devAdminUserCR
+	return devAccountObj, devAdminUserCR, signupErr
 }
 
 func (s *DeveloperAccountThreescaleReconciler) findDeveloperAdminUserCR() (*capabilitiesv1beta1.DeveloperUser, error) {
@@ -224,7 +224,6 @@ func (s *DeveloperAccountThreescaleReconciler) findDeveloperAdminUserCR() (*capa
 		controllerhelper.DeveloperUserProviderAccountFilter(s.Client(), s.resource.Namespace, s.providerAccountHost, s.logger),
 		orphanFilter,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -314,7 +313,7 @@ func (s *DeveloperAccountThreescaleReconciler) getAdminUserPassword(adminUserCR 
 
 	passwordByteArray, ok := secret.Data[capabilitiesv1beta1.DeveloperUserPasswordSecretField]
 	if !ok {
-		return "", fmt.Errorf("Not found password field in secret (ns: %s, name: %s) field: %s",
+		return "", fmt.Errorf("not found password field in secret (ns: %s, name: %s) field: %s",
 			namespace, adminUserCR.Spec.PasswordCredentialsRef.Name, capabilitiesv1beta1.DeveloperUserPasswordSecretField)
 	}
 

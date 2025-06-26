@@ -22,9 +22,7 @@ import (
 )
 
 func TestSystemSearchdReconciler(t *testing.T) {
-	var (
-		log = logf.Log.WithName("operator_test")
-	)
+	log := logf.Log.WithName("operator_test")
 
 	ctx := context.TODO()
 

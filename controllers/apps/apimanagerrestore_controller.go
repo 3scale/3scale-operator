@@ -114,7 +114,6 @@ func (r *APIManagerRestoreReconciler) apiManagerRestoreLogicReconciler(cr *appsv
 
 	apiManagerRestore := restore.NewAPIManagerRestore(options)
 	return NewAPIManagerRestoreLogicReconciler(r.BaseReconciler, cr, apiManagerRestore), nil
-
 }
 
 func (r *APIManagerRestoreReconciler) SetupWithManager(mgr ctrl.Manager) error {

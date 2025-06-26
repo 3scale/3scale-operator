@@ -25,7 +25,6 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -154,7 +153,7 @@ func (r *BackendReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if backend.SetDefaults(reqLogger) {
 		err := r.Client().Update(r.Context(), backend)
 		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed setting backend defaults: %w", err)
+			return ctrl.Result{}, fmt.Errorf("failed setting backend defaults: %w", err)
 		}
 
 		reqLogger.Info("resource defaults updated. Requeueing.")
@@ -165,10 +164,10 @@ func (r *BackendReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	statusResult, statusUpdateErr := statusReconciler.Reconcile()
 	if statusUpdateErr != nil {
 		if reconcileErr != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed to sync backend: %v. Failed to update backend status: %w", reconcileErr, statusUpdateErr)
+			return ctrl.Result{}, fmt.Errorf("failed to sync backend: %v. Failed to update backend status: %w", reconcileErr, statusUpdateErr)
 		}
 
-		return ctrl.Result{}, fmt.Errorf("Failed to update backend status: %w", statusUpdateErr)
+		return ctrl.Result{}, fmt.Errorf("failed to update backend status: %w", statusUpdateErr)
 	}
 
 	if statusResult.Requeue {
@@ -292,7 +291,7 @@ func (r *BackendReconciler) removeBackendFrom3scale(backend *capabilitiesv1beta1
 
 	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backend.Namespace, backend.Spec.ProviderAccountRef, logger)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
+		if errors.IsNotFound(err) {
 			logger.Info("backend not deleted from 3scale, provider account not found")
 			return nil
 		}
@@ -320,7 +319,7 @@ func (r *BackendReconciler) fetchTenantProductCRs(productsCRsList *capabilitiesv
 	var productsList []capabilitiesv1beta1.Product
 	backendProviderAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendResource.Namespace, backendResource.Spec.ProviderAccountRef, logger)
 
-	if apierrors.IsNotFound(err) {
+	if errors.IsNotFound(err) {
 		logger.Info("could not look up for products of the same tenant. Tenant not found")
 		return nil, nil
 	}

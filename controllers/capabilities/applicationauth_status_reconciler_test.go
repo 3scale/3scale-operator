@@ -2,17 +2,18 @@ package controllers
 
 import (
 	"fmt"
+	"reflect"
+	"testing"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
-	"reflect"
+	"k8s.io/utils/ptr"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"testing"
 )
 
 func TestApplicationAuthStatusReconciler_Reconcile(t *testing.T) {
@@ -68,7 +69,7 @@ func getApplicationAuthStatus() (CR *capabilitiesv1beta1.ApplicationAuth) {
 		},
 		Spec: capabilitiesv1beta1.ApplicationAuthSpec{
 			ApplicationCRName: "test",
-			GenerateSecret:    pointer.Bool(false),
+			GenerateSecret:    ptr.To(false),
 			AuthSecretRef: &corev1.LocalObjectReference{
 				Name: "test",
 			},
@@ -89,7 +90,6 @@ func getApplicationAuthStatus() (CR *capabilitiesv1beta1.ApplicationAuth) {
 		},
 	}
 	return CR
-
 }
 
 func TestApplicationAuthStatusReconciler_calculateStatus(t *testing.T) {
@@ -150,11 +150,7 @@ func TestApplicationAuthStatusReconciler_calculateStatus(t *testing.T) {
 				reconcileError: tt.fields.reconcileError,
 				logger:         tt.fields.logger,
 			}
-			got, err := s.calculateStatus()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("calculateStatus() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := s.calculateStatus()
 			if got.Conditions.GetCondition(capabilitiesv1beta1.ApplicationAuthReadyConditionType) == tt.want.Conditions.GetCondition(capabilitiesv1beta1.ApplicationAuthReadyConditionType) {
 				if !reflect.DeepEqual(got.Conditions.IsTrueFor(capabilitiesv1beta1.ApplicationAuthReadyConditionType), tt.want.Conditions.IsTrueFor(capabilitiesv1beta1.ApplicationAuthReadyConditionType)) {
 					t.Errorf("calculateStatus() got = %v, want %v", got.Conditions.IsTrueFor(capabilitiesv1beta1.ApplicationAuthReadyConditionType), tt.want.Conditions.IsTrueFor(capabilitiesv1beta1.ApplicationAuthReadyConditionType))

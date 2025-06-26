@@ -3,7 +3,7 @@ package helper
 import "sort"
 
 func SortedMapStringStringValues(input map[string]string) []string {
-	var sortedValues []string
+	sortedValues := []string{}
 	for _, v := range input {
 		sortedValues = append(sortedValues, v)
 	}
@@ -12,7 +12,7 @@ func SortedMapStringStringValues(input map[string]string) []string {
 }
 
 func SortedMapStringStringKeys(input map[string]string) []string {
-	var sortedKeys []string
+	sortedKeys := []string{}
 	for k := range input {
 		sortedKeys = append(sortedKeys, k)
 	}

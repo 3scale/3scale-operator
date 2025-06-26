@@ -10,8 +10,7 @@ func init() {
 	PrometheusRuleFactories = append(PrometheusRuleFactories, NewZyncQuePrometheusRuleFactory)
 }
 
-type ZyncQuePrometheusRuleFactory struct {
-}
+type ZyncQuePrometheusRuleFactory struct{}
 
 func NewZyncQuePrometheusRuleFactory() PrometheusRuleFactory {
 	return &ZyncQuePrometheusRuleFactory{}

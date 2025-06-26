@@ -403,7 +403,7 @@ func testZyncAPIManagerCreator(zyncReplicas, zyncQueReplicas *int64) *appsv1alph
 }
 
 func testZyncSecret() *v1.Secret {
-	var namespace = "operator-unittest"
+	namespace := "operator-unittest"
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{

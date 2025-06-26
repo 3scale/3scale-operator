@@ -28,10 +28,9 @@ func NewTenantStatusReconciler(b *reconcilers.BaseReconciler, tenantResource *ca
 // Status reconciler returns an error if there's an error updating the resource. If resource is updated, due to watchers, a new reconcile will trigger
 // therefore no manual retrigger of reconcile is required
 func (s *TenantStatusReconciler) Reconcile() (bool, error) {
-	equalStatus := true
 	// Check for changes to the status
 	newStatus := s.calculateStatus()
-	equalStatus = s.tenantResource.Status.StatusEqual(&newStatus, s.logger)
+	equalStatus := s.tenantResource.Status.StatusEqual(&newStatus, s.logger)
 
 	if !equalStatus {
 		s.logger.Info("updating tenant status")

@@ -59,6 +59,7 @@ func getBackendRedisSecretMissingQueueURL() *v1.Secret {
 	}
 	return GetTestSecret(namespace, component.BackendSecretBackendRedisSecretName, data)
 }
+
 func getBackendRedisSecret() *v1.Secret {
 	data := map[string]string{
 		component.BackendSecretBackendRedisStorageURLFieldName: backendStorageURL,

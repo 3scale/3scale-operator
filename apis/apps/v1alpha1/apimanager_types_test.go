@@ -92,13 +92,15 @@ func TestZyncExternalDatabaseIsEnabled(t *testing.T) {
 		apimanagerFactory func() *APIManager
 		expectedResult    bool
 	}{
-		{"WithDefaultAPIManager",
+		{
+			"WithDefaultAPIManager",
 			func() *APIManager {
 				return minimumAPIManagerTest()
 			},
 			false,
 		},
-		{"WithHighAvailabilityEnabledOnly",
+		{
+			"WithHighAvailabilityEnabledOnly",
 			func() *APIManager {
 				apimanager := minimumAPIManagerTest()
 				apimanager.Spec.HighAvailability = &HighAvailabilitySpec{
@@ -108,7 +110,8 @@ func TestZyncExternalDatabaseIsEnabled(t *testing.T) {
 			},
 			false,
 		},
-		{"WithBothHighAvailabilityAndExternalZyncDBEnabled",
+		{
+			"WithBothHighAvailabilityAndExternalZyncDBEnabled",
 			func() *APIManager {
 				apimanager := minimumAPIManagerTest()
 				apimanager.Spec.HighAvailability = &HighAvailabilitySpec{
@@ -122,7 +125,8 @@ func TestZyncExternalDatabaseIsEnabled(t *testing.T) {
 			},
 			true,
 		},
-		{"WithHADisabledAndExternalZyncDBEnabled",
+		{
+			"WithHADisabledAndExternalZyncDBEnabled",
 			func() *APIManager {
 				apimanager := minimumAPIManagerTest()
 				apimanager.Spec.HighAvailability = &HighAvailabilitySpec{
@@ -133,7 +137,8 @@ func TestZyncExternalDatabaseIsEnabled(t *testing.T) {
 			},
 			false,
 		},
-		{"WithHAEnabledAndExternalZyncDBDisabled",
+		{
+			"WithHAEnabledAndExternalZyncDBDisabled",
 			func() *APIManager {
 				apimanager := minimumAPIManagerTest()
 				apimanager.Spec.HighAvailability = &HighAvailabilitySpec{

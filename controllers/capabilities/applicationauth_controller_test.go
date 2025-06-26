@@ -2,17 +2,18 @@ package controllers
 
 import (
 	"bytes"
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
-	"io/ioutil"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"io"
 	"net/http"
 	"reflect"
 	"strconv"
 	"testing"
+
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
 func TestApplicationAuthReconciler_applicationAuthReconciler(t *testing.T) {
@@ -122,7 +123,7 @@ func getApplicationAuthGenerateSecret() (CR *capabilitiesv1beta1.ApplicationAuth
 		},
 		Spec: capabilitiesv1beta1.ApplicationAuthSpec{
 			ApplicationCRName: "test",
-			GenerateSecret:    pointer.Bool(true),
+			GenerateSecret:    ptr.To(true),
 			AuthSecretRef: &corev1.LocalObjectReference{
 				Name: "test",
 			},
@@ -130,7 +131,6 @@ func getApplicationAuthGenerateSecret() (CR *capabilitiesv1beta1.ApplicationAuth
 		},
 	}
 	return CR
-
 }
 
 func getApplicationAuth() (CR *capabilitiesv1beta1.ApplicationAuth) {
@@ -141,7 +141,7 @@ func getApplicationAuth() (CR *capabilitiesv1beta1.ApplicationAuth) {
 		},
 		Spec: capabilitiesv1beta1.ApplicationAuthSpec{
 			ApplicationCRName: "test",
-			GenerateSecret:    pointer.Bool(false),
+			GenerateSecret:    ptr.To(false),
 			AuthSecretRef: &corev1.LocalObjectReference{
 				Name: "test",
 			},
@@ -149,7 +149,6 @@ func getApplicationAuth() (CR *capabilitiesv1beta1.ApplicationAuth) {
 		},
 	}
 	return CR
-
 }
 
 func getEmptyAuthSecretObj() *corev1.Secret {
@@ -194,6 +193,7 @@ func getAuthSecretObj() *corev1.Secret {
 	}
 	return secret
 }
+
 func getAuthSecret() AuthSecret {
 	authSecret := AuthSecret{
 		UserKey:        "testkey",
@@ -210,21 +210,21 @@ func mockHttpApplicationAuthClient(applicationUpdate *threescaleapi.ApplicationE
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationUpdate))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationUpdate))),
 			}
 		}
 		if req.Method == http.MethodPost && req.URL.Path == "/admin/api/accounts/3/applications/3/keys.json" {
 			return &http.Response{
 				StatusCode: http.StatusCreated,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationKeyCreate))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationKeyCreate))),
 			}
 		}
 		if req.Method == http.MethodGet && req.URL.Path == "/admin/api/accounts/3/applications/3/keys.json" {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationKeyList))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationKeyList))),
 			}
 		}
 

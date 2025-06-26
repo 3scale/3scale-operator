@@ -69,7 +69,7 @@ func (s *OpenAPIStatusReconciler) Reconcile() (reconcile.Result, error) {
 			return reconcile.Result{Requeue: true}, nil
 		}
 
-		return reconcile.Result{}, fmt.Errorf("Failed to update status: %w", updateErr)
+		return reconcile.Result{}, fmt.Errorf("failed to update status: %w", updateErr)
 	}
 	return reconcile.Result{}, nil
 }
@@ -150,7 +150,7 @@ func (s *OpenAPIStatusReconciler) getManagedProduct() (*corev1.LocalObjectRefere
 	productList := &capabilitiesv1beta1.ProductList{}
 	err := s.Client().List(s.Context(), productList, listOps...)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to list product: %w", err)
+		return nil, fmt.Errorf("failed to list product: %w", err)
 	}
 
 	for _, product := range productList.Items {
@@ -173,7 +173,7 @@ func (s *OpenAPIStatusReconciler) getManagedBackends() ([]corev1.LocalObjectRefe
 	list := &capabilitiesv1beta1.BackendList{}
 	err := s.Client().List(s.Context(), list, listOps...)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to list backends: %w", err)
+		return nil, fmt.Errorf("failed to list backends: %w", err)
 	}
 
 	var managedBackends []corev1.LocalObjectReference

@@ -77,7 +77,7 @@ func providerAccountFromSecretReferenceSource(cl client.Client, ns string, provi
 }
 
 func providerAccountFromDefaultSecretSource(cl client.Client, ns string, providerAccountRef *corev1.LocalObjectReference, logger logr.Logger) (*ProviderAccount, error) {
-	// if exists, fiels are required.
+	// if exists, fields are required.
 	defaulSecret, err := helper.GetSecret(providerAccountDefaultSecretName, ns, cl)
 	if err == nil {
 		adminURLStr := helper.GetSecretDataValue(defaulSecret.Data, providerAccountSecretURLFieldName)

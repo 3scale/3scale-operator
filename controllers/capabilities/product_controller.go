@@ -21,21 +21,19 @@ import (
 	"encoding/json"
 	"fmt"
 
-	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/util/validation/field"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
+	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // ProductReconciler reconciles a Product object
@@ -141,7 +139,7 @@ func (r *ProductReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if product.SetDefaults(reqLogger) {
 		err := r.Client().Update(r.Context(), product)
 		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed setting product defaults: %w", err)
+			return ctrl.Result{}, fmt.Errorf("failed setting product defaults: %w", err)
 		}
 
 		reqLogger.Info("resource defaults updated. Requeueing.")
@@ -152,10 +150,10 @@ func (r *ProductReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	statusResult, statusUpdateErr := statusReconciler.Reconcile()
 	if statusUpdateErr != nil {
 		if reconcileErr != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed to sync product: %v. Failed to update product status: %w", reconcileErr, statusUpdateErr)
+			return ctrl.Result{}, fmt.Errorf("failed to sync product: %v. Failed to update product status: %w", reconcileErr, statusUpdateErr)
 		}
 
-		return ctrl.Result{}, fmt.Errorf("Failed to update product status: %w", statusUpdateErr)
+		return ctrl.Result{}, fmt.Errorf("failed to update product status: %w", statusUpdateErr)
 	}
 
 	if statusResult.Requeue {
@@ -394,7 +392,7 @@ func (r *ProductReconciler) removeProductFrom3scale(product *capabilitiesv1beta1
 
 	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), product.Namespace, product.Spec.ProviderAccountRef, logger)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
+		if errors.IsNotFound(err) {
 			logger.Info("product not deleted from 3scale, provider account not found")
 			return nil
 		}

@@ -28,9 +28,7 @@ func TestCreateOnlyMutator(t *testing.T) {
 }
 
 func TestBaseReconcilerCreate(t *testing.T) {
-	var (
-		namespace = "operator-unittest"
-	)
+	namespace := "operator-unittest"
 
 	ctx := context.TODO()
 

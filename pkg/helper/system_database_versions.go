@@ -51,7 +51,6 @@ func VerifySystemDatabase(k8sclient client.Client, reqConfigMap *v1.ConfigMap, a
 		}
 
 		databaseVersionVerified, err = verifyMySQLVersion(dbConfig, databaseRequirement)
-
 		if err != nil {
 			logger.Info("Failed to verify MySQL database version", "err", err)
 			return false, err

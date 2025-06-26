@@ -190,7 +190,7 @@ func (s *ActiveDocThreescaleReconciler) getDesiredProductIDFromCR() (*int64, err
 	idx := controllerhelper.FindProductBySystemName(productList, *s.resource.Spec.ProductSystemName)
 	if idx < 0 {
 		// External references validation makes sure product CR exists
-		return nil, errors.New("Product CR not found. External references validation should avoid reaching this state")
+		return nil, errors.New("product CR not found. External references validation should avoid reaching this state")
 	}
 
 	return productList[idx].Status.ID, nil

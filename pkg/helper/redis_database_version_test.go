@@ -13,12 +13,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	caCert   = "./testdata/rootCA.pem"
-	certFile = "./testdata/client.crt"
-	keyFile  = "./testdata/client.key"
-)
-
 type mockRedisServer struct {
 	clientConnected bool
 }
@@ -33,7 +27,8 @@ func (m *mockRedisServer) Listen(t *testing.T) string {
 		conn, err := ln.Accept()
 		assert.NoError(t, err)
 		m.clientConnected = true
-		conn.Write([]byte("OK\n"))
+		_, err = conn.Write([]byte("OK\n"))
+		assert.NoError(t, err)
 	}()
 
 	return ln.Addr().String()
@@ -45,7 +40,6 @@ func (m *mockRedisServer) Connected() bool {
 
 // Secret reconcile test
 func TestReconcileRedisSecrets(t *testing.T) {
-
 	testCases := []struct {
 		testName            string
 		redisSecretFunction func(v1.Secret) *RedisConfig
@@ -130,7 +124,6 @@ func TestConfigureWithEmptyConfig(t *testing.T) {
 }
 
 func TestConfigureWithInvalidConfig(t *testing.T) {
-
 	testCases := []struct {
 		testName    string
 		redisConfig *RedisConfig

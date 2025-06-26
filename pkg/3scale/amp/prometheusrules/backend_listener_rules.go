@@ -10,8 +10,7 @@ func init() {
 	PrometheusRuleFactories = append(PrometheusRuleFactories, NewBackendListenerPrometheusRuleFactory)
 }
 
-type BackendListenerPrometheusRuleFactory struct {
-}
+type BackendListenerPrometheusRuleFactory struct{}
 
 func NewBackendListenerPrometheusRuleFactory() PrometheusRuleFactory {
 	return &BackendListenerPrometheusRuleFactory{}

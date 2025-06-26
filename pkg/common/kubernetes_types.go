@@ -41,7 +41,6 @@ func TagToObjectDeleteWithPropagationPolicy(obj KubernetesObject, deletionPropag
 	if annotations == nil {
 		annotations = make(map[string]string)
 		obj.SetAnnotations(annotations)
-
 	}
 	annotations[DeleteTagAnnotation] = "true"
 	annotations[DeletePropagationPolicyTagAnnotation] = string(deletionPropagationPolicy)

@@ -23,7 +23,7 @@ func (t *ProductThreescaleReconciler) syncMetrics(_ interface{}) error {
 	existingMap := map[string]threescaleapi.MetricItem{}
 	existingList, err := t.productEntity.Metrics()
 	if err != nil {
-		return fmt.Errorf("Error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
 	}
 
 	existingKeys := make([]string, 0, len(existingList.Metrics))
@@ -47,7 +47,7 @@ func (t *ProductThreescaleReconciler) syncMetrics(_ interface{}) error {
 	}
 	err = t.processNotDesiredMetrics(notDesiredMap)
 	if err != nil {
-		return fmt.Errorf("Error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
 	}
 
 	//
@@ -66,7 +66,7 @@ func (t *ProductThreescaleReconciler) syncMetrics(_ interface{}) error {
 
 	err = t.reconcileMatchedMetrics(matchedMap)
 	if err != nil {
-		return fmt.Errorf("Error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
 	}
 
 	//
@@ -83,7 +83,7 @@ func (t *ProductThreescaleReconciler) syncMetrics(_ interface{}) error {
 	}
 	err = t.createNewMetrics(desiredNewMap)
 	if err != nil {
-		return fmt.Errorf("Error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
 	}
 
 	return nil
@@ -117,7 +117,7 @@ func (t *ProductThreescaleReconciler) reconcileMatchedMetrics(matchedMap map[str
 		if len(params) > 0 {
 			err := t.productEntity.UpdateMetric(data.item.ID, params)
 			if err != nil {
-				return fmt.Errorf("Error updating product metric: %w", err)
+				return fmt.Errorf("error updating product metric: %w", err)
 			}
 		}
 	}

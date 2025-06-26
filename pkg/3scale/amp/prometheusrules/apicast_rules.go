@@ -12,8 +12,7 @@ func init() {
 	PrometheusRuleFactories = append(PrometheusRuleFactories, NewApicastPrometheusRuleFactory)
 }
 
-type ApicastPrometheusRuleFactory struct {
-}
+type ApicastPrometheusRuleFactory struct{}
 
 func NewApicastPrometheusRuleFactory() PrometheusRuleFactory {
 	return &ApicastPrometheusRuleFactory{}
