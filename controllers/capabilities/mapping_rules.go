@@ -22,7 +22,7 @@ func (t *ProductThreescaleReconciler) syncMappingRules(_ interface{}) error {
 
 	existingMap, err := t.getExistingMappingRules()
 	if err != nil {
-		return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
 	}
 	existingKeys := make([]string, 0, len(existingMap))
 	for existingKey := range existingMap {
@@ -42,7 +42,7 @@ func (t *ProductThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	}
 	err = t.processNotDesiredMappingRules(notDesiredList)
 	if err != nil {
-		return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
 	}
 
 	// If existing non-desired mapping rules have been detected we refetch
@@ -51,7 +51,7 @@ func (t *ProductThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	if len(notDesiredList) > 0 {
 		existingMap, err = t.getExistingMappingRules()
 		if err != nil {
-			return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
+			return fmt.Errorf("error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
 		}
 	}
 
@@ -88,19 +88,19 @@ func (t *ProductThreescaleReconciler) syncMappingRules(_ interface{}) error {
 			t.logger.V(1).Info("syncMappingRules", "desiredMappingRuleToReconcile", desiredKey, "position", desiredIdx)
 			err := t.reconcileMappingRuleWithPosition(desiredMappingRule, desiredIdx, existingMappingRule)
 			if err != nil {
-				return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
+				return fmt.Errorf("error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
 			}
 		} else {
 			// Create MappingRule
 			t.logger.V(1).Info("syncMappingRules", "desiredMappingRuleToCreate", desiredKey, "position", desiredIdx)
 			err := t.createNewMappingRuleWithPosition(desiredMappingRule, desiredIdx)
 			if err != nil {
-				return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
+				return fmt.Errorf("error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
 			}
 		}
 		existingMap, err = t.getExistingMappingRules()
 		if err != nil {
-			return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
+			return fmt.Errorf("error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
 		}
 	}
 
@@ -121,7 +121,7 @@ func (t *ProductThreescaleReconciler) getExistingMappingRules() (map[string]thre
 	existingMap := map[string]threescaleapi.MappingRuleItem{}
 	existingList, err := t.productEntity.MappingRules()
 	if err != nil {
-		return nil, fmt.Errorf("Error getting product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
+		return nil, fmt.Errorf("error getting product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
 	}
 	for _, item := range existingList.MappingRules {
 		key := fmt.Sprintf("%s:%s:%s", item.Element.HTTPMethod, item.Element.Pattern, fmt.Sprint(item.Element.Position))
@@ -139,7 +139,7 @@ func (t *ProductThreescaleReconciler) reconcileMappingRuleWithPosition(desired c
 	//
 	metricID, err := t.productEntity.FindMethodMetricIDBySystemName(desired.MetricMethodRef)
 	if err != nil {
-		return fmt.Errorf("Error reconcile product mapping rule: %w", err)
+		return fmt.Errorf("error reconcile product mapping rule: %w", err)
 	}
 
 	if metricID < 0 {
@@ -179,7 +179,7 @@ func (t *ProductThreescaleReconciler) reconcileMappingRuleWithPosition(desired c
 	if len(params) > 0 {
 		err := t.productEntity.UpdateMappingRule(existing.ID, params)
 		if err != nil {
-			return fmt.Errorf("Error reconcile product mapping rule: %w", err)
+			return fmt.Errorf("error reconcile product mapping rule: %w", err)
 		}
 	}
 
@@ -189,7 +189,7 @@ func (t *ProductThreescaleReconciler) reconcileMappingRuleWithPosition(desired c
 func (t *ProductThreescaleReconciler) createNewMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int) error {
 	metricID, err := t.productEntity.FindMethodMetricIDBySystemName(desired.MetricMethodRef)
 	if err != nil {
-		return fmt.Errorf("Error creating product [%s] mappingrule: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("error creating product [%s] mappingrule: %w", t.resource.Spec.SystemName, err)
 	}
 
 	if metricID < 0 {
@@ -212,7 +212,7 @@ func (t *ProductThreescaleReconciler) createNewMappingRuleWithPosition(desired c
 
 	err = t.productEntity.CreateMappingRule(params)
 	if err != nil {
-		return fmt.Errorf("Error creating product [%s] mappingrule: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("error creating product [%s] mappingrule: %w", t.resource.Spec.SystemName, err)
 	}
 
 	return nil

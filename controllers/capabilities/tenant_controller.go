@@ -105,7 +105,7 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	if err != nil {
 		_, statusReconcilerError := r.reconcileStatus(tenantCR, err)
 		if statusReconcilerError != nil {
-			return helper.ReconcileErrorHandler(err, reqLogger), nil
+			return helper.ReconcileErrorHandler(err, reqLogger), statusReconcilerError
 		}
 
 		return helper.ReconcileErrorHandler(err, reqLogger), nil
@@ -216,7 +216,6 @@ func (r *TenantReconciler) fetchMasterCredentials(tenantR *capabilitiesv1alpha1.
 	masterCredentialsSecret := &corev1.Secret{}
 
 	err := r.Client().Get(context.TODO(), tenantR.MasterSecretKey(), masterCredentialsSecret)
-
 	if err != nil {
 		return "", err
 	}

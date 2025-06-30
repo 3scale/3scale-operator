@@ -98,39 +98,39 @@ type DeveloperAccountStatus struct {
 	Conditions common.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,2,rep,name=conditions"`
 }
 
-func (a *DeveloperAccountStatus) Equals(other *DeveloperAccountStatus, logger logr.Logger) bool {
-	if !reflect.DeepEqual(a.ID, other.ID) {
-		diff := cmp.Diff(a.ID, other.ID)
+func (s *DeveloperAccountStatus) Equals(other *DeveloperAccountStatus, logger logr.Logger) bool {
+	if !reflect.DeepEqual(s.ID, other.ID) {
+		diff := cmp.Diff(s.ID, other.ID)
 		logger.V(1).Info("ID not equal", "difference", diff)
 		return false
 	}
 
-	if a.ProviderAccountHost != other.ProviderAccountHost {
-		diff := cmp.Diff(a.ProviderAccountHost, other.ProviderAccountHost)
+	if s.ProviderAccountHost != other.ProviderAccountHost {
+		diff := cmp.Diff(s.ProviderAccountHost, other.ProviderAccountHost)
 		logger.V(1).Info("ProviderAccountHost not equal", "difference", diff)
 		return false
 	}
 
-	if !reflect.DeepEqual(a.AccountState, other.AccountState) {
-		diff := cmp.Diff(a.AccountState, other.AccountState)
+	if !reflect.DeepEqual(s.AccountState, other.AccountState) {
+		diff := cmp.Diff(s.AccountState, other.AccountState)
 		logger.V(1).Info("AccountState not equal", "difference", diff)
 		return false
 	}
 
-	if !reflect.DeepEqual(a.CreditCardStored, other.CreditCardStored) {
-		diff := cmp.Diff(a.CreditCardStored, other.CreditCardStored)
+	if !reflect.DeepEqual(s.CreditCardStored, other.CreditCardStored) {
+		diff := cmp.Diff(s.CreditCardStored, other.CreditCardStored)
 		logger.V(1).Info("CreditCardStored not equal", "difference", diff)
 		return false
 	}
 
-	if a.ObservedGeneration != other.ObservedGeneration {
-		diff := cmp.Diff(a.ObservedGeneration, other.ObservedGeneration)
+	if s.ObservedGeneration != other.ObservedGeneration {
+		diff := cmp.Diff(s.ObservedGeneration, other.ObservedGeneration)
 		logger.V(1).Info("ObservedGeneration not equal", "difference", diff)
 		return false
 	}
 
 	// Marshalling sorts by condition type
-	currentMarshaledJSON, _ := a.Conditions.MarshalJSON()
+	currentMarshaledJSON, _ := s.Conditions.MarshalJSON()
 	otherMarshaledJSON, _ := other.Conditions.MarshalJSON()
 	if string(currentMarshaledJSON) != string(otherMarshaledJSON) {
 		diff := cmp.Diff(string(currentMarshaledJSON), string(otherMarshaledJSON))

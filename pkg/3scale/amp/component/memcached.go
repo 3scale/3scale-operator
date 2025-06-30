@@ -49,16 +49,18 @@ func (m *Memcached) Deployment(containerImage string) *k8sappsv1.Deployment {
 				Spec: v1.PodSpec{
 					Affinity:           m.Options.Affinity,
 					Tolerations:        m.Options.Tolerations,
-					ServiceAccountName: "amp", //TODO make this configurable via flag
+					ServiceAccountName: "amp", // TODO make this configurable via flag
 					Containers: []v1.Container{
 						{
 							Name:    "memcache",
 							Image:   containerImage,
 							Command: []string{"memcached", "-m", "64"},
 							Ports: []v1.ContainerPort{
-								{HostPort: 0,
+								{
+									HostPort:      0,
 									ContainerPort: 11211,
-									Protocol:      v1.ProtocolTCP},
+									Protocol:      v1.ProtocolTCP,
+								},
 							},
 							Resources: m.Options.ResourceRequirements,
 							LivenessProbe: &v1.Probe{

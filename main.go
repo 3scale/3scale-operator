@@ -127,7 +127,7 @@ func main() {
 
 	// If a watch namespace is detected (i.e. operator is namespace scoped), then pass the NS to cache.Options.DefaultNamespaces
 	// If no watch namespace is detected (i.e. operator is cluster scoped), then pass an empty Cache object
-	var managerCache = cache.Options{}
+	managerCache := cache.Options{}
 	if namespace != "" {
 		managerCache = cache.Options{
 			// If running in target ns mode or own ns mode, include the operator ns and product ns include both, sub and config maps inn cache

@@ -10,7 +10,6 @@ import (
 )
 
 func TestRoleRuleMutator(t *testing.T) {
-
 	testRules1 := []rbacv1.PolicyRule{
 		{
 			APIGroups: []string{"apps"},

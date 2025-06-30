@@ -2,11 +2,11 @@ package controllers
 
 import (
 	"fmt"
+	"strings"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"strings"
-
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -32,10 +32,7 @@ func NewApplicationAuthStatusReconciler(b *reconcilers.BaseReconciler, resource 
 func (s *ApplicationAuthStatusReconciler) Reconcile() (reconcile.Result, error) {
 	s.logger.V(1).Info("START")
 
-	newStatus, err := s.calculateStatus()
-	if err != nil {
-		return reconcile.Result{}, err
-	}
+	newStatus := s.calculateStatus()
 
 	equalStatus := s.resource.Status.Equals(newStatus, s.logger)
 	s.logger.V(1).Info("Status", "status is different", !equalStatus)
@@ -59,14 +56,14 @@ func (s *ApplicationAuthStatusReconciler) Reconcile() (reconcile.Result, error) 
 	return reconcile.Result{}, nil
 }
 
-func (s *ApplicationAuthStatusReconciler) calculateStatus() (*capabilitiesv1beta1.ApplicationAuthStatus, error) {
+func (s *ApplicationAuthStatusReconciler) calculateStatus() *capabilitiesv1beta1.ApplicationAuthStatus {
 	newStatus := &capabilitiesv1beta1.ApplicationAuthStatus{}
 
 	newStatus.Conditions = s.resource.Status.Conditions.Copy()
 	newStatus.Conditions.SetCondition(s.readyCondition())
 	newStatus.Conditions.SetCondition(s.failedCondition())
 
-	return newStatus, nil
+	return newStatus
 }
 
 func (s *ApplicationAuthStatusReconciler) readyCondition() common.Condition {

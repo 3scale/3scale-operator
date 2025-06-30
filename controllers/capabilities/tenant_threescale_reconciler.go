@@ -5,19 +5,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"strconv"
-
-	porta_client_pkg "github.com/3scale/3scale-porta-go-client/client"
-	"github.com/go-logr/logr"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	apiv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
 	apispkghelper "github.com/3scale/3scale-operator/pkg/apispkg/helper"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	porta_client_pkg "github.com/3scale/3scale-porta-go-client/client"
+	"github.com/go-logr/logr"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // TenantThreescaleReconciler reconciles a Tenant object
@@ -30,7 +29,8 @@ type TenantThreescaleReconciler struct {
 
 // NewTenantThreescaleReconciler constructs InternalReconciler object
 func NewTenantThreescaleReconciler(b *reconcilers.BaseReconciler, tenantR *apiv1alpha1.Tenant,
-	portaClient *porta_client_pkg.ThreeScaleClient, log logr.Logger) *TenantThreescaleReconciler {
+	portaClient *porta_client_pkg.ThreeScaleClient, log logr.Logger,
+) *TenantThreescaleReconciler {
 	return &TenantThreescaleReconciler{
 		BaseReconciler: b,
 		tenantR:        tenantR,
@@ -98,10 +98,7 @@ func (r *TenantThreescaleReconciler) reconcileTenant() (bool, error) {
 			TenantId: tenantDef.Signup.Account.ID,
 		}
 
-		updated, err := r.reconcileStatusIDs(newStatus)
-		if err != nil {
-			return false, err
-		}
+		updated := r.reconcileStatusIDs(newStatus)
 
 		// If updated - update the status and requeue
 		if updated {
@@ -162,10 +159,7 @@ func (r *TenantThreescaleReconciler) reconcileAdminUser() error {
 		TenantId: tenantID,
 	}
 
-	updated, err := r.reconcileStatusIDs(newStatus)
-	if err != nil {
-		return err
-	}
+	updated := r.reconcileStatusIDs(newStatus)
 
 	// If updated - update the status and requeue
 	if updated {
@@ -234,9 +228,8 @@ func (r *TenantThreescaleReconciler) createTenant() (*porta_client_pkg.Tenant, e
 		"Username", r.tenantR.Spec.Username, "Email", r.tenantR.Spec.Email)
 
 	tenantEntity, err := r.portaClient.CreateTenant(params)
-
 	if err != nil {
-		return nil, fmt.Errorf("Error creating tenant [%s]: %w", r.tenantR.Spec.Username, err)
+		return nil, fmt.Errorf("error creating tenant [%s]: %w", r.tenantR.Spec.Username, err)
 	}
 
 	return tenantEntity, nil
@@ -247,7 +240,6 @@ func (r *TenantThreescaleReconciler) getAdminPassword() (string, error) {
 	tenantAdminSecret := &v1.Secret{}
 
 	err := r.Client().Get(context.TODO(), r.tenantR.AdminPassSecretKey(), tenantAdminSecret)
-
 	if err != nil {
 		return "", err
 	}
@@ -295,17 +287,17 @@ func (r *TenantThreescaleReconciler) syncAdminUser(tenantID int64, adminUser *po
 }
 
 // Returns whether the status should be updated or not and the error
-func (r *TenantThreescaleReconciler) reconcileStatusIDs(desiredStatus *apiv1alpha1.TenantStatus) (bool, error) {
+func (r *TenantThreescaleReconciler) reconcileStatusIDs(desiredStatus *apiv1alpha1.TenantStatus) bool {
 	if desiredStatus.TenantId != r.tenantR.Status.TenantId {
 		r.tenantR.Status.TenantId = desiredStatus.TenantId
-		return true, nil
+		return true
 	}
 	if desiredStatus.AdminId != r.tenantR.Status.AdminId {
 		r.tenantR.Status.AdminId = desiredStatus.AdminId
-		return true, nil
+		return true
 	}
 
-	return false, nil
+	return false
 }
 
 // Returns tenant ID, tenant.Status.tenantID takes precedence over annotation value

@@ -22,10 +22,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-var (
-	// LastSlashRegexp matches the last slash
-	LastSlashRegexp = regexp.MustCompile(`/$`)
-)
+// LastSlashRegexp matches the last slash
+var LastSlashRegexp = regexp.MustCompile(`/$`)
 
 type OpenAPIProductReconciler struct {
 	*reconcilers.BaseReconciler
@@ -140,7 +138,7 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 	if err != nil {
 		return nil, err
 	}
-	if metrics != nil && len(metrics) > 0 {
+	if len(metrics) > 0 {
 		product.Spec.Metrics = metrics
 	}
 
@@ -149,7 +147,7 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 	if err != nil {
 		return nil, err
 	}
-	if policies != nil && len(policies) > 0 {
+	if len(policies) > 0 {
 		product.Spec.Policies = policies
 	}
 
@@ -158,7 +156,7 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 	if err != nil {
 		return nil, err
 	}
-	if applicationPlans != nil && len(applicationPlans) > 0 {
+	if len(applicationPlans) > 0 {
 		product.Spec.ApplicationPlans = applicationPlans
 	}
 
@@ -166,7 +164,7 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 	// current implementation assumes same system name for backend and product
 	backendSystemName := p.desiredSystemName()
 	product.Spec.BackendUsages = map[string]capabilitiesv1beta1.BackendUsageSpec{
-		backendSystemName: capabilitiesv1beta1.BackendUsageSpec{
+		backendSystemName: {
 			Path: "/",
 		},
 	}
@@ -233,7 +231,7 @@ func (p *OpenAPIProductReconciler) desiredSystemName() string {
 
 func (p *OpenAPIProductReconciler) desiredObjName() string {
 	// DNS1123 Label compliant name. Due to UIDs are 36 characters of length this
-	// means that the maximum prefix lenght that can be provided is of 26
+	// means that the maximum prefix length that can be provided is of 26
 	// characters. If the generated name is not DNS1123 compliant an error is
 	// returned
 	// Maybe truncate?
@@ -507,7 +505,6 @@ func (p *OpenAPIProductReconciler) desiredPrivateAPISecurity() *capabilitiesv1be
 }
 
 func (p *OpenAPIProductReconciler) desiredOIDCAuthentication(secReq *helper.ExtendedSecurityRequirement) *capabilitiesv1beta1.AuthenticationSpec {
-
 	if p.openapiCR.Spec.OIDC == nil {
 		return nil
 	}

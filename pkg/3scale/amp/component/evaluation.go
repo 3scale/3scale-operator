@@ -6,8 +6,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-type Evaluation struct {
-}
+type Evaluation struct{}
 
 func NewEvaluation() *Evaluation {
 	return &Evaluation{}

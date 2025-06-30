@@ -75,7 +75,8 @@ func TestMemcachedOptionsProvider(t *testing.T) {
 		expectedOptionsFactory func() *component.MemcachedOptions
 	}{
 		{"Default", basicApimanager, defaultMemcachedOptions},
-		{"WithoutResourceRequirements",
+		{
+			"WithoutResourceRequirements",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
@@ -87,7 +88,8 @@ func TestMemcachedOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithAffinity",
+		{
+			"WithAffinity",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.System.MemcachedAffinity = testMemcachedAffinity()
@@ -99,7 +101,8 @@ func TestMemcachedOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithTolerations",
+		{
+			"WithTolerations",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.System.MemcachedTolerations = testMemcachedTolerations()
@@ -111,7 +114,8 @@ func TestMemcachedOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithSystemMemcachedCustomResourceRequirements",
+		{
+			"WithSystemMemcachedCustomResourceRequirements",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.System.MemcachedResources = testSystemMemcachedCustomResourceRequirements()
@@ -123,7 +127,8 @@ func TestMemcachedOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithSystemMemcachedCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
+		{
+			"WithSystemMemcachedCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue

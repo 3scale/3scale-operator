@@ -91,7 +91,6 @@ func init() {
 }
 
 func (a *ApplicationAuthStatus) Equals(other *ApplicationAuthStatus, logger logr.Logger) bool {
-
 	// Marshalling sorts by condition type
 	currentMarshaledJSON, _ := a.Conditions.MarshalJSON()
 	otherMarshaledJSON, _ := other.Conditions.MarshalJSON()

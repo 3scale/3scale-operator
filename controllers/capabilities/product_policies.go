@@ -15,7 +15,7 @@ import (
 func (t *ProductThreescaleReconciler) syncPolicies(_ interface{}) error {
 	existing, err := t.productEntity.Policies()
 	if err != nil {
-		return fmt.Errorf("Error sync product [%s] policies: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("error sync product [%s] policies: %w", t.resource.Spec.SystemName, err)
 	}
 
 	desired, err := t.convertResourcePolicies()
@@ -31,7 +31,7 @@ func (t *ProductThreescaleReconciler) syncPolicies(_ interface{}) error {
 		t.logger.V(1).Info("syncPolicies", "policies not equal", diff)
 		err = t.productEntity.UpdatePolicies(desired)
 		if err != nil {
-			return fmt.Errorf("Error sync product [%s] policies: %w", t.resource.Spec.SystemName, err)
+			return fmt.Errorf("error sync product [%s] policies: %w", t.resource.Spec.SystemName, err)
 		}
 	}
 
@@ -68,7 +68,7 @@ func (t *ProductThreescaleReconciler) convertPolicyConfiguration(crdPolicy capab
 	if string(crdPolicy.Configuration.Raw) != capabilitiesv1beta1.ProductPolicyConfigurationDefault {
 		// CRD validation ensures no error happens
 		// "configuration` type is object
-		//properties:
+		// properties:
 		//  configuration:
 		//    description: Configuration defines the policy configuration
 		//    type: object

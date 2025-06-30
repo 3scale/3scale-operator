@@ -11,8 +11,7 @@ func init() {
 	PrometheusRuleFactories = append(PrometheusRuleFactories, NewKubeStateMetricsPrometheusRuleFactory)
 }
 
-type KubeStateMetricsPrometheusRuleFactory struct {
-}
+type KubeStateMetricsPrometheusRuleFactory struct{}
 
 func NewKubeStateMetricsPrometheusRuleFactory() PrometheusRuleFactory {
 	return &KubeStateMetricsPrometheusRuleFactory{}

@@ -24,6 +24,10 @@ import (
 	"time"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/controllers/subscription/csvlocator"
+	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	operatorConditions "github.com/operator-framework/api/pkg/operators/v2"
 	corev1 "k8s.io/api/core/v1"
@@ -35,12 +39,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"github.com/3scale/3scale-operator/controllers/subscription/csvlocator"
-	"github.com/3scale/3scale-operator/pkg/helper"
-
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/version"
 )
 
 // SubscriptionReconciler reconciles 3scale operator subscription object
@@ -92,7 +90,7 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	// Retrieve the latestInstallPlan to read the CSV configMap
 	latestInstallPlan := &operatorsv1alpha1.InstallPlan{}
-	err = wait.Poll(time.Second*5, time.Minute*3, func() (done bool, err error) {
+	err = wait.PollUntilContextTimeout(ctx, time.Second*5, time.Minute*3, true, func(ctx context.Context) (done bool, err error) {
 		if subscription.Status.InstallPlanRef == nil {
 			logger.Info("ReconcileSubscription", "InstallPlanRef from Subscription is nil, trying again...", fmt.Errorf("subscription doesn't contain install plan reference"))
 			return false, nil
@@ -180,7 +178,6 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		}
 		return nil
 	})
-
 	if err != nil {
 		logger.Info("ReconcileSubscription", "Failed to create or update requirements config map", err)
 		return ctrl.Result{}, err
@@ -361,7 +358,6 @@ func (r *SubscriptionReconciler) retrieveBlockingOperatorUpgradeBlockingConditio
 						return &opCondition, err
 					}
 				}
-
 			}
 		}
 	}
@@ -394,7 +390,7 @@ func (r *SubscriptionReconciler) returnAPIManagersList() (*appsv1alpha1.APIManag
 	opts := []client.ListOption{}
 
 	// Support namespace scope or cluster scoped
-	var watchNamespaceEnvVar = "WATCH_NAMESPACE"
+	watchNamespaceEnvVar := "WATCH_NAMESPACE"
 
 	ns, found := os.LookupEnv(watchNamespaceEnvVar)
 	if !found {
@@ -407,7 +403,6 @@ func (r *SubscriptionReconciler) returnAPIManagersList() (*appsv1alpha1.APIManag
 
 	err := r.Client().List(context.Background(), apimanagerList, opts...)
 	if err != nil {
-
 		return apimanagerList, fmt.Errorf("error listing APIManagers: %s", err)
 	}
 

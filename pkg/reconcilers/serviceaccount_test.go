@@ -10,19 +10,19 @@ import (
 
 func TestServiceAccountImagePullPolicyMutator(t *testing.T) {
 	existingImagePullSecrets := []v1.LocalObjectReference{
-		v1.LocalObjectReference{Name: "imagepullsecret3"},
-		v1.LocalObjectReference{Name: "imagepullsecret4"},
-		v1.LocalObjectReference{Name: "myserviceaccount-dockercfg-XXXXX"},
-		v1.LocalObjectReference{Name: "imagepullsecret7"},
-		v1.LocalObjectReference{Name: "myserviceaccount-token-XXXXX"},
+		{Name: "imagepullsecret3"},
+		{Name: "imagepullsecret4"},
+		{Name: "myserviceaccount-dockercfg-XXXXX"},
+		{Name: "imagepullsecret7"},
+		{Name: "myserviceaccount-token-XXXXX"},
 	}
 	existing := serviceAccountTestFactory(existingImagePullSecrets)
 
 	desiredImagePullSecrets := []v1.LocalObjectReference{
-		v1.LocalObjectReference{Name: "imagepullsecret4"},
-		v1.LocalObjectReference{Name: "newimagepullsecret"},
-		v1.LocalObjectReference{Name: "anotherpullsecret"},
-		v1.LocalObjectReference{Name: "imagepullsecret3"},
+		{Name: "imagepullsecret4"},
+		{Name: "newimagepullsecret"},
+		{Name: "anotherpullsecret"},
+		{Name: "imagepullsecret3"},
 	}
 	desired := serviceAccountTestFactory(desiredImagePullSecrets)
 
@@ -36,12 +36,12 @@ func TestServiceAccountImagePullPolicyMutator(t *testing.T) {
 	}
 
 	newExistingImagePullSecrets := []v1.LocalObjectReference{
-		v1.LocalObjectReference{Name: "anotherpullsecret"},
-		v1.LocalObjectReference{Name: "imagepullsecret3"},
-		v1.LocalObjectReference{Name: "imagepullsecret4"},
-		v1.LocalObjectReference{Name: "myserviceaccount-dockercfg-XXXXX"},
-		v1.LocalObjectReference{Name: "myserviceaccount-token-XXXXX"},
-		v1.LocalObjectReference{Name: "newimagepullsecret"},
+		{Name: "anotherpullsecret"},
+		{Name: "imagepullsecret3"},
+		{Name: "imagepullsecret4"},
+		{Name: "myserviceaccount-dockercfg-XXXXX"},
+		{Name: "myserviceaccount-token-XXXXX"},
+		{Name: "newimagepullsecret"},
 	}
 	newExisting := serviceAccountTestFactory(newExistingImagePullSecrets)
 
@@ -62,15 +62,15 @@ func serviceAccountTestFactory(imagePullSecrets []v1.LocalObjectReference) *v1.S
 
 func TestServiceAccountImagePullPolicyMutatorImagePullPoliciesAreOrderIndependent(t *testing.T) {
 	existingImagePullSecrets := []v1.LocalObjectReference{
-		v1.LocalObjectReference{Name: "imagepullsecret4"},
-		v1.LocalObjectReference{Name: "imagepullsecret3"},
+		{Name: "imagepullsecret4"},
+		{Name: "imagepullsecret3"},
 	}
 	existing := serviceAccountTestFactory(existingImagePullSecrets)
 	originalExisting := existing.DeepCopy()
 
 	desiredImagePullSecrets := []v1.LocalObjectReference{
-		v1.LocalObjectReference{Name: "imagepullsecret3"},
-		v1.LocalObjectReference{Name: "imagepullsecret4"},
+		{Name: "imagepullsecret3"},
+		{Name: "imagepullsecret4"},
 	}
 	desired := serviceAccountTestFactory(desiredImagePullSecrets)
 
@@ -90,17 +90,17 @@ func TestServiceAccountImagePullPolicyMutatorImagePullPoliciesAreOrderIndependen
 
 func TestServiceAccountImagePullPolicyMutatorK8sAddedSecretsArePreserved(t *testing.T) {
 	existingImagePullSecrets := []v1.LocalObjectReference{
-		v1.LocalObjectReference{Name: "imagepullsecret4"},
-		v1.LocalObjectReference{Name: "imagepullsecret3"},
-		v1.LocalObjectReference{Name: "myserviceaccount-token-XXXXX"},
-		v1.LocalObjectReference{Name: "myserviceaccount-dockercfg-XXXXX"},
+		{Name: "imagepullsecret4"},
+		{Name: "imagepullsecret3"},
+		{Name: "myserviceaccount-token-XXXXX"},
+		{Name: "myserviceaccount-dockercfg-XXXXX"},
 	}
 	existing := serviceAccountTestFactory(existingImagePullSecrets)
 
 	desiredImagePullSecrets := []v1.LocalObjectReference{
-		v1.LocalObjectReference{Name: "imagepullsecret9"},
-		v1.LocalObjectReference{Name: "imagepullsecret8"},
-		v1.LocalObjectReference{Name: "imagepullsecret4"},
+		{Name: "imagepullsecret9"},
+		{Name: "imagepullsecret8"},
+		{Name: "imagepullsecret4"},
 	}
 	desired := serviceAccountTestFactory(desiredImagePullSecrets)
 
@@ -114,11 +114,11 @@ func TestServiceAccountImagePullPolicyMutatorK8sAddedSecretsArePreserved(t *test
 	}
 
 	newExistingImagePullSecrets := []v1.LocalObjectReference{
-		v1.LocalObjectReference{Name: "imagepullsecret4"},
-		v1.LocalObjectReference{Name: "imagepullsecret8"},
-		v1.LocalObjectReference{Name: "imagepullsecret9"},
-		v1.LocalObjectReference{Name: "myserviceaccount-dockercfg-XXXXX"},
-		v1.LocalObjectReference{Name: "myserviceaccount-token-XXXXX"},
+		{Name: "imagepullsecret4"},
+		{Name: "imagepullsecret8"},
+		{Name: "imagepullsecret9"},
+		{Name: "myserviceaccount-dockercfg-XXXXX"},
+		{Name: "myserviceaccount-token-XXXXX"},
 	}
 	newExisting := serviceAccountTestFactory(newExistingImagePullSecrets)
 

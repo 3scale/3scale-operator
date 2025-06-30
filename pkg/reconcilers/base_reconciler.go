@@ -50,7 +50,8 @@ type BaseReconciler struct {
 var _ reconcile.Reconciler = &BaseReconciler{}
 
 func NewBaseReconciler(ctx context.Context, client client.Client, scheme *runtime.Scheme, apiClientReader client.Reader,
-	logger logr.Logger, discoveryClient discovery.DiscoveryInterface, recorder record.EventRecorder) *BaseReconciler {
+	logger logr.Logger, discoveryClient discovery.DiscoveryInterface, recorder record.EventRecorder,
+) *BaseReconciler {
 	return &BaseReconciler{
 		client:          client,
 		scheme:          scheme,

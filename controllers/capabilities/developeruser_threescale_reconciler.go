@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -140,7 +139,7 @@ func (s *DeveloperUserThreescaleReconciler) retrieveUserID() (int64, error) {
 			// If the userID annotation is found, convert it to int64
 			userIdConvertedFromString, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
-				return 0, errors.New(fmt.Sprintf("failed to convert userID annotation value %s to int64", value))
+				return 0, fmt.Errorf("failed to convert userID annotation value %s to int64", value)
 			}
 
 			userId = userIdConvertedFromString

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
-
 	"github.com/go-logr/logr"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -103,8 +102,8 @@ func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, d
 				}
 			}
 
-			if &apicast.Options.ProductionOpentelemetry != nil && apicast.Options.ProductionOpentelemetry.Enabled {
-				if &apicast.Options.ProductionOpentelemetry.Secret != nil && apicast.Options.ProductionOpentelemetry.Secret.Name != "" {
+			if apicast.Options.ProductionOpentelemetry.Enabled {
+				if apicast.Options.ProductionOpentelemetry.Secret != nil && apicast.Options.ProductionOpentelemetry.Secret.Name != "" {
 					telemetryConfigSecret := &corev1.Secret{}
 					telemetryConfigSecretKey := k8sclient.ObjectKey{
 						Name:      apicast.Options.ProductionOpentelemetry.Secret.Name,
@@ -118,7 +117,6 @@ func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, d
 						annotationKey := fmt.Sprintf("%s%s", OpenTelemetrySecretResverAnnotationPrefix, telemetryConfigSecret.Name)
 						annotations[annotationKey] = telemetryConfigSecret.ResourceVersion
 					}
-
 				}
 			}
 
@@ -156,8 +154,8 @@ func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, d
 				}
 			}
 
-			if &apicast.Options.StagingOpentelemetry != nil && apicast.Options.StagingOpentelemetry.Enabled {
-				if &apicast.Options.StagingOpentelemetry.Secret != nil && apicast.Options.StagingOpentelemetry.Secret.Name != "" {
+			if apicast.Options.StagingOpentelemetry.Enabled {
+				if apicast.Options.StagingOpentelemetry.Secret != nil && apicast.Options.StagingOpentelemetry.Secret.Name != "" {
 					telemetryConfigSecret := &corev1.Secret{}
 					telemetryConfigSecretKey := k8sclient.ObjectKey{
 						Name:      apicast.Options.StagingOpentelemetry.Secret.Name,
@@ -218,7 +216,7 @@ func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, d
 			return nil, err
 		}
 		if helper.IsSecretWatchedBy3scale(systemRedisSecret) {
-			annotationKey := fmt.Sprintf("%s", SystemRedisSecretResverAnnotation)
+			annotationKey := SystemRedisSecretResverAnnotation
 			annotations[annotationKey] = systemRedisSecret.ResourceVersion
 		}
 
@@ -266,7 +264,7 @@ func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, d
 			return nil, err
 		}
 		if helper.IsSecretWatchedBy3scale(backendRedisSecret) {
-			annotationKey := fmt.Sprintf("%s", BackendRedisSecretResverAnnotation)
+			annotationKey := BackendRedisSecretResverAnnotation
 			annotations[annotationKey] = backendRedisSecret.ResourceVersion
 		}
 

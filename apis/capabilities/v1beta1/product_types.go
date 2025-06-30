@@ -65,23 +65,18 @@ const (
 	ProductPolicyConfigurationDefault = `{}`
 )
 
-var (
-	// apicastPolicy refers to the main functionality of APIcast to work with the 3scale API manager
-	// Needs to exist in the policy chain
-	apicastPolicy = PolicyConfig{
-		Name:    "apicast",
-		Version: "builtin",
-		Configuration: runtime.RawExtension{
-			Raw: []byte(ProductPolicyConfigurationDefault),
-		},
-		Enabled: true,
-	}
-)
+// apicastPolicy refers to the main functionality of APIcast to work with the 3scale API manager
+// Needs to exist in the policy chain
+var apicastPolicy = PolicyConfig{
+	Name:    "apicast",
+	Version: "builtin",
+	Configuration: runtime.RawExtension{
+		Raw: []byte(ProductPolicyConfigurationDefault),
+	},
+	Enabled: true,
+}
 
-var (
-	//
-	productSystemNameRegexp = regexp.MustCompile("[^a-zA-Z0-9]+")
-)
+var productSystemNameRegexp = regexp.MustCompile("[^a-zA-Z0-9]+")
 
 // MetricMethodRefSpec defines method or metric reference
 // Metric or method can optionally belong to used backends
@@ -1232,7 +1227,7 @@ func (product *Product) SetDefaults(logger logr.Logger) bool {
 		updated = true
 	}
 
-	// Configuration must have default value to maintain backwards compatability if overwritten with older CRD
+	// Configuration must have default value to maintain backwards compatibility if overwritten with older CRD
 	// where field is required
 	// Using required field and kubebuilder default was not possible due to not being able to have an empty object
 	// in CRD manifest
@@ -1288,23 +1283,23 @@ func (product *Product) Validate() field.ErrorList {
 		}
 	}
 
-	metricFirendlyNameMap := map[string]interface{}{}
+	metricFriendlyNameMap := map[string]interface{}{}
 	// Check metric names are unique for all metric and methods
 	for systemName, metricSpec := range product.Spec.Metrics {
-		if _, ok := metricFirendlyNameMap[metricSpec.Name]; ok {
+		if _, ok := metricFriendlyNameMap[metricSpec.Name]; ok {
 			metricIdxFldPath := metricsFldPath.Key(systemName)
 			errors = append(errors, field.Invalid(metricIdxFldPath, metricSpec, "metric name not unique."))
 		} else {
-			metricFirendlyNameMap[systemName] = nil
+			metricFriendlyNameMap[systemName] = nil
 		}
 	}
 	// Check method names are unique for all metric and methods
 	for systemName, methodSpec := range product.Spec.Methods {
-		if _, ok := metricFirendlyNameMap[methodSpec.Name]; ok {
+		if _, ok := metricFriendlyNameMap[methodSpec.Name]; ok {
 			methodIdxFldPath := methodsFldPath.Key(systemName)
 			errors = append(errors, field.Invalid(methodIdxFldPath, methodSpec, "method name not unique."))
 		} else {
-			metricFirendlyNameMap[systemName] = nil
+			metricFriendlyNameMap[systemName] = nil
 		}
 	}
 
@@ -1367,7 +1362,10 @@ func (product *Product) Validate() field.ErrorList {
 		for idx, ruleSpec := range planSpec.PricingRules {
 			if ruleSpec.From > ruleSpec.To {
 				ruleFldPath := rulesFldPath.Index(idx)
-				bytes, _ := json.Marshal(ruleSpec)
+				bytes, err := json.Marshal(ruleSpec)
+				if err != nil {
+					errors = append(errors, field.InternalError(ruleFldPath, err))
+				}
 				errors = append(errors, field.Invalid(ruleFldPath, string(bytes), "'To' value cannot be less than your 'From' value."))
 			}
 		}
@@ -1380,7 +1378,10 @@ func (product *Product) Validate() field.ErrorList {
 		overlappedIndex := detectOverlappingPricingRuleRanges(planSpec.PricingRules)
 		if overlappedIndex >= 0 {
 			ruleFldPath := rulesFldPath.Index(overlappedIndex)
-			bytes, _ := json.Marshal(planSpec.PricingRules[overlappedIndex])
+			bytes, err := json.Marshal(planSpec.PricingRules[overlappedIndex])
+			if err != nil {
+				errors = append(errors, field.InternalError(ruleFldPath, err))
+			}
 			errors = append(errors, field.Invalid(ruleFldPath, string(bytes), "'From' value cannot be less than 'To' values of current rules for the same metric."))
 		}
 	}

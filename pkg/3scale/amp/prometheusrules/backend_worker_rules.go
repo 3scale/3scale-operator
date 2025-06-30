@@ -11,8 +11,7 @@ func init() {
 	PrometheusRuleFactories = append(PrometheusRuleFactories, NewBackendWorkerPrometheusRuleFactory)
 }
 
-type BackendWorkerPrometheusRuleFactory struct {
-}
+type BackendWorkerPrometheusRuleFactory struct{}
 
 func NewBackendWorkerPrometheusRuleFactory() PrometheusRuleFactory {
 	return &BackendWorkerPrometheusRuleFactory{}

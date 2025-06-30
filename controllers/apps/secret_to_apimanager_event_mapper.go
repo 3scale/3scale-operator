@@ -28,7 +28,6 @@ func apimanagerSecretLabelKey(uid string) string {
 }
 
 func (s *SecretToApimanagerEventMapper) Map(ctx context.Context, obj client.Object) []reconcile.Request {
-
 	apimanagerList := &appsv1alpha1.APIManagerList{}
 
 	// filter by Secret UID

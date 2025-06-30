@@ -39,7 +39,7 @@ func TestValidateProductHitsMetric(t *testing.T) {
 		Spec: ProductSpec{
 			Name: productName,
 			Metrics: map[string]MetricSpec{
-				"hits": MetricSpec{
+				"hits": {
 					Name:        "Hits",
 					Unit:        "hit",
 					Description: "Number of API hits",
@@ -75,7 +75,7 @@ func TestValidateProductNotUniqueLimitPeriods(t *testing.T) {
 	product := defaultTestingProduct()
 
 	product.Spec.ApplicationPlans = map[string]ApplicationPlanSpec{
-		"plan01": ApplicationPlanSpec{
+		"plan01": {
 			Limits: []LimitSpec{
 				{
 					Period: "year",
@@ -105,7 +105,7 @@ func TestValidateProductPlanLimitUnkonwnRef(t *testing.T) {
 	product := defaultTestingProduct()
 
 	product.Spec.ApplicationPlans = map[string]ApplicationPlanSpec{
-		"plan01": ApplicationPlanSpec{
+		"plan01": {
 			Limits: []LimitSpec{
 				{
 					Period: "year",
@@ -128,7 +128,7 @@ func TestValidateProductPlanPricingRuleUnkonwnRef(t *testing.T) {
 	product := defaultTestingProduct()
 
 	product.Spec.ApplicationPlans = map[string]ApplicationPlanSpec{
-		"plan01": ApplicationPlanSpec{
+		"plan01": {
 			PricingRules: []PricingRuleSpec{
 				{
 					From: 0,
@@ -151,7 +151,7 @@ func TestValidateProductPlanPricingRuleInvalidRange(t *testing.T) {
 	product := defaultTestingProduct()
 
 	product.Spec.ApplicationPlans = map[string]ApplicationPlanSpec{
-		"plan01": ApplicationPlanSpec{
+		"plan01": {
 			PricingRules: []PricingRuleSpec{
 				{
 					From: 10,
@@ -174,7 +174,7 @@ func TestValidateProductPlanPricingRuleOverlappingRange(t *testing.T) {
 	product := defaultTestingProduct()
 
 	product.Spec.ApplicationPlans = map[string]ApplicationPlanSpec{
-		"plan01": ApplicationPlanSpec{
+		"plan01": {
 			PricingRules: []PricingRuleSpec{
 				{
 					From: 15,
@@ -219,7 +219,7 @@ func TestValidateProductHappyPath(t *testing.T) {
 	}
 
 	product.Spec.ApplicationPlans = map[string]ApplicationPlanSpec{
-		"plan01": ApplicationPlanSpec{
+		"plan01": {
 			Limits: []LimitSpec{
 				{
 					Period: "year",

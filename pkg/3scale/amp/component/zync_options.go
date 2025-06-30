@@ -92,7 +92,7 @@ func DefaultZyncDatabaseURL(password string) string {
 }
 
 func DefaultZyncSslEmpty() string {
-	return fmt.Sprintf("")
+	return ""
 }
 
 func DefaultZyncContainerResourceRequirements() v1.ResourceRequirements {

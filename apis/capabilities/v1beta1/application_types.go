@@ -40,22 +40,22 @@ type ApplicationSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	//AccountCRName name of account custom resource under which the application will be created
+	// AccountCRName name of account custom resource under which the application will be created
 	AccountCR *corev1.LocalObjectReference `json:"accountCR"`
 
-	//ProductCRName of product custom resource from which the application plan will be used
+	// ProductCRName of product custom resource from which the application plan will be used
 	ProductCR *corev1.LocalObjectReference `json:"productCR"`
 
-	//ApplicationPlanName name of application plan that the application will use
+	// ApplicationPlanName name of application plan that the application will use
 	ApplicationPlanName string `json:"applicationPlanName"`
 
-	//Name identifies the application uniquely within the account
+	// Name identifies the application uniquely within the account
 	Name string `json:"name"`
 
-	//Description human-readable text of the application
+	// Description human-readable text of the application
 	Description string `json:"description"`
 
-	//Suspend application if true suspends application, if false resumes application.
+	// Suspend application if true suspends application, if false resumes application.
 	//+optional
 	Suspend bool `json:"suspend,omitempty"`
 }

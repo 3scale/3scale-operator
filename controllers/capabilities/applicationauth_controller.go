@@ -22,6 +22,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"time"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -34,8 +37,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strconv"
-	"time"
 )
 
 // ApplicationAuthReconciler reconciles a ApplicationAuth object
@@ -60,7 +61,7 @@ const (
 
 func (r *ApplicationAuthReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-	//_ = r.Log.WithValues("applicationauth", req.NamespacedName)
+	// _ = r.Log.WithValues("applicationauth", req.NamespacedName)
 	reqLogger := r.Logger().WithValues("applicationauth", req.NamespacedName)
 	reqLogger.Info("Reconcile Application Authentication", "Operator version", version.Version)
 
@@ -143,7 +144,7 @@ func (r *ApplicationAuthReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, applicationAuth, err)
 			reqLogger.Info("Application CR not found. Ignoring since object must have been deleted")
 			statusResult, statusErr := statusReconciler.Reconcile()
-			//Reconcile status first as the reconcilerError might need to be updated to the status section of the CR before requeueing
+			// Reconcile status first as the reconcilerError might need to be updated to the status section of the CR before requeueing
 			if statusErr != nil {
 				return ctrl.Result{}, statusErr
 			}
@@ -181,7 +182,7 @@ func (r *ApplicationAuthReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, applicationAuth, err)
 			reqLogger.Info("ApplicationAuth secret not found. Ignoring since object must have been deleted")
 			statusResult, statusErr := statusReconciler.Reconcile()
-			//Reconcile status first as the reconcilerError might need to be updated to the status section of the CR before requeueing
+			// Reconcile status first as the reconcilerError might need to be updated to the status section of the CR before requeueing
 			if statusErr != nil {
 				return ctrl.Result{}, statusErr
 			}
@@ -211,7 +212,6 @@ func (r *ApplicationAuthReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			if reconcileErr != nil {
 				return helper.ReconcileErrorHandler(reconcileErr, reqLogger), nil
 			}
-
 		}
 	}
 	// final return
@@ -231,7 +231,8 @@ func (r *ApplicationAuthReconciler) applicationAuthReconciler(
 	application *capabilitiesv1beta1.Application,
 	product *capabilitiesv1beta1.Product,
 	authSecret AuthSecret,
-	threescaleClient *threescaleapi.ThreeScaleClient) (*ApplicationAuthStatusReconciler, error) {
+	threescaleClient *threescaleapi.ThreeScaleClient,
+) (*ApplicationAuthStatusReconciler, error) {
 	// generate sha base of timestamp
 	timestamp := time.Now().Unix()
 	// Write the timestamp string and encode to hash
@@ -284,11 +285,15 @@ func (r *ApplicationAuthReconciler) applicationAuthReconciler(
 				return statusReconciler, err
 			}
 			authSecret.ApplicationID = foundApplication.ApplicationId
-			foundApplicationKeys, err := threescaleClient.ApplicationKeys(*developerAccount.Status.ID, *application.Status.ID)
+			var foundApplicationKeys []threescaleapi.ApplicationKey
+			foundApplicationKeys, err = threescaleClient.ApplicationKeys(*developerAccount.Status.ID, *application.Status.ID)
+			if err != nil {
+				statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, applicationAuth, err)
+				return statusReconciler, err
+			}
 			lastKey := len(foundApplicationKeys) - 1
 			authSecret.ApplicationKey = fmt.Sprint(foundApplicationKeys[lastKey].Value)
 		}
-
 	}
 
 	// get the current values and update the secret

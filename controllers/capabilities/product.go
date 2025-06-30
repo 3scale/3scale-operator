@@ -41,7 +41,7 @@ func (t *ProductThreescaleReconciler) syncProduct(_ interface{}) error {
 	if len(params) > 0 {
 		err := t.productEntity.Update(params)
 		if err != nil {
-			return fmt.Errorf("Error sync product [%s;%d]: %w", t.resource.Spec.SystemName, t.productEntity.ID(), err)
+			return fmt.Errorf("error sync product [%s;%d]: %w", t.resource.Spec.SystemName, t.productEntity.ID(), err)
 		}
 	}
 

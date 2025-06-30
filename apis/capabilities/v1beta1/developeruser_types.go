@@ -181,13 +181,13 @@ func (s *DeveloperUser) IsAdmin() bool {
 	return s.Spec.Role != nil && *s.Spec.Role == "admin"
 }
 
-func (a *DeveloperUser) Validate() field.ErrorList {
+func (s *DeveloperUser) Validate() field.ErrorList {
 	errors := field.ErrorList{}
 
 	// Email validation
 	emailFldPath := field.NewPath("spec").Child("email")
-	if !helper.IsEmailValid(a.Spec.Email) {
-		errors = append(errors, field.Invalid(emailFldPath, a.Spec.Email, "Email address not valid"))
+	if !helper.IsEmailValid(s.Spec.Email) {
+		errors = append(errors, field.Invalid(emailFldPath, s.Spec.Email, "Email address not valid"))
 	}
 
 	return errors

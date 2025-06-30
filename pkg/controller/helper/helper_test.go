@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"path/filepath"
 	"reflect"
@@ -78,7 +78,7 @@ func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 // NewTestClient returns *http.Client with Transport replaced to avoid making real calls
 func NewTestClient(fn RoundTripFunc) *http.Client {
 	return &http.Client{
-		Transport: RoundTripFunc(fn),
+		Transport: fn,
 	}
 }
 
@@ -135,11 +135,14 @@ func GetMethodsMetricsRoundTripFunc(req *http.Request) *http.Response {
 		respObject = methodList
 	}
 
-	responseBodyBytes, _ := json.Marshal(respObject)
+	responseBodyBytes, err := json.Marshal(respObject)
+	if err != nil {
+		return nil
+	}
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
-		Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+		Body:       io.NopCloser(bytes.NewBuffer(responseBodyBytes)),
 		Header:     make(http.Header),
 	}
 }

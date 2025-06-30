@@ -114,15 +114,15 @@ func TestProductList(t *testing.T) {
 func TestFindProductBySystemName(t *testing.T) {
 	ns := "somenamespace"
 	productList := []capabilitiesv1beta1.Product{
-		capabilitiesv1beta1.Product{
+		{
 			ObjectMeta: metav1.ObjectMeta{Name: "A", Namespace: ns},
 			Spec:       capabilitiesv1beta1.ProductSpec{SystemName: "A"},
 		},
-		capabilitiesv1beta1.Product{
+		{
 			ObjectMeta: metav1.ObjectMeta{Name: "B", Namespace: ns},
 			Spec:       capabilitiesv1beta1.ProductSpec{SystemName: "B"},
 		},
-		capabilitiesv1beta1.Product{
+		{
 			ObjectMeta: metav1.ObjectMeta{Name: "C", Namespace: ns},
 			Spec:       capabilitiesv1beta1.ProductSpec{SystemName: "C"},
 		},

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
@@ -38,7 +39,7 @@ func (s *ApplicationStatusReconciler) Reconcile() (reconcile.Result, error) {
 	newStatus := s.calculateStatus()
 
 	// Need to extract the application CR's applicationID annotation value to compare with the new .status
-	annotationId, _ := s.applicationResource.Annotations[applicationIdAnnotation]
+	annotationId := s.applicationResource.Annotations[applicationIdAnnotation]
 
 	equalStatus := s.applicationResource.Status.Equals(annotationId, newStatus, s.logger)
 	s.logger.V(1).Info("Status", "status is different", !equalStatus)
@@ -66,7 +67,7 @@ func (s *ApplicationStatusReconciler) Reconcile() (reconcile.Result, error) {
 			return reconcile.Result{Requeue: true}, nil
 		}
 
-		return reconcile.Result{}, fmt.Errorf("Failed to update status: %w", updateErr)
+		return reconcile.Result{}, fmt.Errorf("failed to update status: %w", updateErr)
 	}
 	return reconcile.Result{}, nil
 }

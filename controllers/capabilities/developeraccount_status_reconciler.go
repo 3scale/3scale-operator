@@ -38,10 +38,7 @@ func NewDeveloperAccountStatusReconciler(b *reconcilers.BaseReconciler, resource
 func (s *DeveloperAccountStatusReconciler) Reconcile() (reconcile.Result, error) {
 	s.logger.V(1).Info("START")
 
-	newStatus, err := s.calculateStatus()
-	if err != nil {
-		return reconcile.Result{}, err
-	}
+	newStatus := s.calculateStatus()
 
 	equalStatus := s.resource.Status.Equals(newStatus, s.logger)
 	s.logger.V(1).Info("Status", "status is different", !equalStatus)
@@ -69,12 +66,12 @@ func (s *DeveloperAccountStatusReconciler) Reconcile() (reconcile.Result, error)
 			return reconcile.Result{Requeue: true}, nil
 		}
 
-		return reconcile.Result{}, fmt.Errorf("Failed to update status: %w", updateErr)
+		return reconcile.Result{}, fmt.Errorf("failed to update status: %w", updateErr)
 	}
 	return reconcile.Result{}, nil
 }
 
-func (s *DeveloperAccountStatusReconciler) calculateStatus() (*capabilitiesv1beta1.DeveloperAccountStatus, error) {
+func (s *DeveloperAccountStatusReconciler) calculateStatus() *capabilitiesv1beta1.DeveloperAccountStatus {
 	// Initialize with existing data for data coming from 3scale
 	// just in case in this reconciliation loop something goes wrong and avoid replacing right data with nil
 	newStatus := &capabilitiesv1beta1.DeveloperAccountStatus{
@@ -101,7 +98,7 @@ func (s *DeveloperAccountStatusReconciler) calculateStatus() (*capabilitiesv1bet
 	newStatus.Conditions.SetCondition(s.waitingCondition())
 	newStatus.Conditions.SetCondition(s.failedCondition())
 
-	return newStatus, nil
+	return newStatus
 }
 
 func (s *DeveloperAccountStatusReconciler) readyCondition() common.Condition {

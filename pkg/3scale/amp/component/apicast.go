@@ -12,7 +12,6 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-
 	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
@@ -506,7 +505,7 @@ func (apicast *Apicast) ProductionPodDisruptionBudget() *policyv1.PodDisruptionB
 }
 
 func (apicast *Apicast) productionVolumeMounts() []v1.VolumeMount {
-	var volumeMounts []v1.VolumeMount
+	volumeMounts := []v1.VolumeMount{}
 
 	for _, customPolicy := range apicast.Options.ProductionCustomPolicies {
 		volumeMounts = append(volumeMounts, v1.VolumeMount{
@@ -551,7 +550,7 @@ func (apicast *Apicast) productionVolumeMounts() []v1.VolumeMount {
 }
 
 func (apicast *Apicast) stagingVolumeMounts() []v1.VolumeMount {
-	var volumeMounts []v1.VolumeMount
+	volumeMounts := []v1.VolumeMount{}
 
 	for _, customPolicy := range apicast.Options.StagingCustomPolicies {
 		volumeMounts = append(volumeMounts, v1.VolumeMount{
@@ -612,7 +611,7 @@ func customEnvAnnotationValue(secret *v1.Secret) string {
 }
 
 func (apicast *Apicast) productionVolumes() []v1.Volume {
-	var volumes []v1.Volume
+	volumes := []v1.Volume{}
 
 	for _, customPolicy := range apicast.Options.ProductionCustomPolicies {
 		volumes = append(volumes, v1.Volume{
@@ -632,7 +631,7 @@ func (apicast *Apicast) productionVolumes() []v1.Volume {
 				Secret: &v1.SecretVolumeSource{
 					SecretName: *apicast.Options.ProductionTracingConfig.TracingConfigSecretName,
 					Items: []v1.KeyToPath{
-						v1.KeyToPath{
+						{
 							Key:  APIcastTracingConfigSecretKey,
 							Path: apicast.Options.ProductionTracingConfig.VolumeName(),
 						},
@@ -680,7 +679,7 @@ func (apicast *Apicast) productionVolumes() []v1.Volume {
 }
 
 func (apicast *Apicast) stagingVolumes() []v1.Volume {
-	var volumes []v1.Volume
+	volumes := []v1.Volume{}
 
 	for _, customPolicy := range apicast.Options.StagingCustomPolicies {
 		volumes = append(volumes, v1.Volume{
@@ -700,7 +699,7 @@ func (apicast *Apicast) stagingVolumes() []v1.Volume {
 				Secret: &v1.SecretVolumeSource{
 					SecretName: *apicast.Options.StagingTracingConfig.TracingConfigSecretName,
 					Items: []v1.KeyToPath{
-						v1.KeyToPath{
+						{
 							Key:  APIcastTracingConfigSecretKey,
 							Path: apicast.Options.StagingTracingConfig.VolumeName(),
 						},
@@ -787,9 +786,9 @@ func (apicast *Apicast) stagingDeploymentAnnotations() map[string]string {
 
 func (apicast *Apicast) productionContainerPorts() []v1.ContainerPort {
 	ports := []v1.ContainerPort{
-		v1.ContainerPort{ContainerPort: 8080, Protocol: v1.ProtocolTCP},
-		v1.ContainerPort{ContainerPort: 8090, Protocol: v1.ProtocolTCP},
-		v1.ContainerPort{ContainerPort: 9421, Protocol: v1.ProtocolTCP, Name: "metrics"},
+		{ContainerPort: 8080, Protocol: v1.ProtocolTCP},
+		{ContainerPort: 8090, Protocol: v1.ProtocolTCP},
+		{ContainerPort: 9421, Protocol: v1.ProtocolTCP, Name: "metrics"},
 	}
 
 	if apicast.Options.ProductionHTTPSPort != nil {
@@ -802,9 +801,9 @@ func (apicast *Apicast) productionContainerPorts() []v1.ContainerPort {
 
 func (apicast *Apicast) productionServicePorts() []v1.ServicePort {
 	ports := []v1.ServicePort{
-		v1.ServicePort{Name: "gateway", Protocol: v1.ProtocolTCP, Port: 8080, TargetPort: intstr.FromInt32(8080)},
-		v1.ServicePort{Name: "management", Protocol: v1.ProtocolTCP, Port: 8090, TargetPort: intstr.FromInt32(8090)},
-		v1.ServicePort{Name: "metrics", Protocol: v1.ProtocolTCP, Port: 9421, TargetPort: intstr.FromInt32(9421)},
+		{Name: "gateway", Protocol: v1.ProtocolTCP, Port: 8080, TargetPort: intstr.FromInt32(8080)},
+		{Name: "management", Protocol: v1.ProtocolTCP, Port: 8090, TargetPort: intstr.FromInt32(8090)},
+		{Name: "metrics", Protocol: v1.ProtocolTCP, Port: 9421, TargetPort: intstr.FromInt32(9421)},
 	}
 
 	if apicast.Options.ProductionHTTPSPort != nil {
@@ -818,9 +817,9 @@ func (apicast *Apicast) productionServicePorts() []v1.ServicePort {
 
 func (apicast *Apicast) stagingContainerPorts() []v1.ContainerPort {
 	ports := []v1.ContainerPort{
-		v1.ContainerPort{ContainerPort: 8080, Protocol: v1.ProtocolTCP},
-		v1.ContainerPort{ContainerPort: 8090, Protocol: v1.ProtocolTCP},
-		v1.ContainerPort{ContainerPort: 9421, Protocol: v1.ProtocolTCP, Name: "metrics"},
+		{ContainerPort: 8080, Protocol: v1.ProtocolTCP},
+		{ContainerPort: 8090, Protocol: v1.ProtocolTCP},
+		{ContainerPort: 9421, Protocol: v1.ProtocolTCP, Name: "metrics"},
 	}
 
 	if apicast.Options.StagingHTTPSPort != nil {
@@ -833,9 +832,9 @@ func (apicast *Apicast) stagingContainerPorts() []v1.ContainerPort {
 
 func (apicast *Apicast) stagingServicePorts() []v1.ServicePort {
 	ports := []v1.ServicePort{
-		v1.ServicePort{Name: "gateway", Protocol: v1.ProtocolTCP, Port: 8080, TargetPort: intstr.FromInt32(8080)},
-		v1.ServicePort{Name: "management", Protocol: v1.ProtocolTCP, Port: 8090, TargetPort: intstr.FromInt32(8090)},
-		v1.ServicePort{Name: "metrics", Protocol: v1.ProtocolTCP, Port: 9421, TargetPort: intstr.FromInt32(9421)},
+		{Name: "gateway", Protocol: v1.ProtocolTCP, Port: 8080, TargetPort: intstr.FromInt32(8080)},
+		{Name: "management", Protocol: v1.ProtocolTCP, Port: 8090, TargetPort: intstr.FromInt32(8090)},
+		{Name: "metrics", Protocol: v1.ProtocolTCP, Port: 9421, TargetPort: intstr.FromInt32(9421)},
 	}
 
 	if apicast.Options.StagingHTTPSPort != nil {
@@ -915,7 +914,6 @@ func ApicastEnvVolumeNamesFromAnnotations(annotations map[string]string) []strin
 // APIcast environment hash
 // When any of the fields used to compute the hash change, the hash will change and the apicast deployment will rollout
 func (apicast *Apicast) envConfigMapHash() string {
-
 	h := fnv.New32a()
 	h.Write([]byte(apicast.Options.ManagementAPI))
 	h.Write([]byte(apicast.Options.OpenSSLVerify))

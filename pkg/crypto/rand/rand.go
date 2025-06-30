@@ -5,11 +5,13 @@ import (
 	"time"
 )
 
-const lowercaseAlphabetCharset = "abcdefghijklmnopqrstuvwxyz"
-const uppercaseAlphabetCharset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-const numericCharset = "0123456789"
-const alphanumericCharset = lowercaseAlphabetCharset + uppercaseAlphabetCharset + numericCharset
-const hexadecimalCharset = numericCharset + "ABCDEF"
+const (
+	lowercaseAlphabetCharset = "abcdefghijklmnopqrstuvwxyz"
+	uppercaseAlphabetCharset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	numericCharset           = "0123456789"
+	alphanumericCharset      = lowercaseAlphabetCharset + uppercaseAlphabetCharset + numericCharset
+	hexadecimalCharset       = numericCharset + "ABCDEF"
+)
 
 var randomGenerator *rand.Rand = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 

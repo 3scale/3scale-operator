@@ -65,7 +65,6 @@ func verifyMySQLVersion(cfg *DatabaseConfig, requiredVersion string) (bool, erro
 
 	if cfg.TLS != nil && cfg.TLS.Enabled {
 		tlsConfig, err := LoadCerts(cfg.TLS)
-
 		if err != nil {
 			return false, err
 		}
@@ -134,30 +133,24 @@ func verifyPostgresVersion(cfg *DatabaseConfig, requiredVersion string) (bool, e
 }
 
 func retrievePostgresVersion(stdout string) (string, error) {
-	currentPostgresVersion := ""
 	pattern := `PostgreSQL (\d+(\.\d+)*)`
 	re := regexp.MustCompile(pattern)
 	match := re.FindStringSubmatch(stdout)
 	if len(match) > 1 {
-		currentPostgresVersion = match[1]
+		return match[1], nil
 	} else {
 		return "", fmt.Errorf("postgres version not found in stdout")
 	}
-
-	return currentPostgresVersion, nil
 }
 
 func retrieveMysqlVersion(stdout string) (string, error) {
-	currentMysqlVersion := ""
 	pattern := `[0-9]+\.[0-9]+\.[0-9]+`
 	re := regexp.MustCompile(pattern)
 	match := re.FindStringSubmatch(stdout)
 	if len(match) > 0 {
 		// The version number is captured by the first group
-		currentMysqlVersion = match[0]
+		return match[0], nil
 	} else {
 		return "", fmt.Errorf("mysql version not found in stdout")
 	}
-
-	return currentMysqlVersion, nil
 }

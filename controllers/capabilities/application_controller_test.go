@@ -2,15 +2,16 @@ package controllers
 
 import (
 	"bytes"
+	"io"
+	"net/http"
+	"reflect"
+	"testing"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-porta-go-client/client"
-	"io/ioutil"
 	"k8s.io/apimachinery/pkg/types"
-	"net/http"
-	"reflect"
 	controllerruntime "sigs.k8s.io/controller-runtime"
-	"testing"
 )
 
 func mockHttpClientApplication(listAapplicationPlanByProductJson *client.ApplicationPlanJSONList, applicationJson *client.Application) *http.Client {
@@ -21,7 +22,7 @@ func mockHttpClientApplication(listAapplicationPlanByProductJson *client.Applica
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(listAapplicationPlanByProductJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(listAapplicationPlanByProductJson))),
 			}
 		}
 		// Get Application
@@ -29,7 +30,7 @@ func mockHttpClientApplication(listAapplicationPlanByProductJson *client.Applica
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(listAapplicationPlanByProductJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(listAapplicationPlanByProductJson))),
 			}
 		}
 		// create application
@@ -42,30 +43,30 @@ func mockHttpClientApplication(listAapplicationPlanByProductJson *client.Applica
 			return &http.Response{
 				StatusCode: http.StatusCreated,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(mockResponse))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(mockResponse))),
 			}
 		}
-		//ApplicationResume
+		// ApplicationResume
 		if req.Method == "PUT" && req.URL.Path == "/admin/api/accounts/3/applications/0/resume.json" {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
 			}
 		}
-		//ApplicationSuspend
+		// ApplicationSuspend
 		if req.Method == "PUT" && req.URL.Path == "/admin/api/accounts/3/applications/3/suspend.json" {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
 			}
 		}
 		if req.Method == "PUT" && req.URL.Path == "/admin/api/accounts/3/applications/3.json" {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
 			}
 		}
 		// delete application
@@ -73,7 +74,7 @@ func mockHttpClientApplication(listAapplicationPlanByProductJson *client.Applica
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
 			}
 		}
 		// ChangeApplicationPlan(*t.accountResource.Status.ID, *t.applicationResource.Status.ID, planID)
@@ -81,7 +82,7 @@ func mockHttpClientApplication(listAapplicationPlanByProductJson *client.Applica
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
+				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
 			}
 		}
 		return nil
@@ -134,8 +135,7 @@ func getApplicationJson(state string) *client.Application {
 }
 
 func TestApplicationReconciler_applicationReconciler(t *testing.T) {
-
-	//admin portal
+	// admin portal
 	ap, _ := client.NewAdminPortalFromStr("https://3scale-admin.test.3scale.net")
 	type fields struct {
 		BaseReconciler *reconcilers.BaseReconciler
@@ -260,7 +260,7 @@ func TestApplicationReconciler_applicationReconciler(t *testing.T) {
 }
 
 func TestApplicationReconciler_removeApplicationFrom3scale(t *testing.T) {
-	//admin portal
+	// admin portal
 	ap, _ := client.NewAdminPortalFromStr("https://3scale-admin.test.3scale.net")
 	type fields struct {
 		BaseReconciler *reconcilers.BaseReconciler

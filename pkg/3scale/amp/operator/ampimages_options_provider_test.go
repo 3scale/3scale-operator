@@ -40,8 +40,8 @@ func defaultAmpImageOptions() *component.AmpImagesOptions {
 
 func testAmpImagesCustomImagePullSecrets() []v1.LocalObjectReference {
 	return []v1.LocalObjectReference{
-		v1.LocalObjectReference{Name: "mysecret1"},
-		v1.LocalObjectReference{Name: "mysecret5"},
+		{Name: "mysecret1"},
+		{Name: "mysecret5"},
 	}
 }
 

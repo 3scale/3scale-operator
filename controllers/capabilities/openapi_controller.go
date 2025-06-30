@@ -20,18 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"net/url"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"time"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
@@ -40,6 +29,17 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 	"github.com/getkin/kin-openapi/openapi3"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 const (
@@ -96,7 +96,7 @@ func (r *OpenAPIReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if openapiCR.SetDefaults(reqLogger) {
 		err := r.Client().Update(r.Context(), openapiCR)
 		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed setting openapi defaults: %w", err)
+			return ctrl.Result{}, fmt.Errorf("failed setting openapi defaults: %w", err)
 		}
 
 		reqLogger.Info("resource defaults updated. Requeueing.")
@@ -107,10 +107,10 @@ func (r *OpenAPIReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	statusResult, statusUpdateErr := statusReconciler.Reconcile()
 	if statusUpdateErr != nil {
 		if reconcileErr != nil {
-			return ctrl.Result{}, fmt.Errorf("Failed to reconcile openapi: %v. Failed to update openapi status: %w", reconcileErr, statusUpdateErr)
+			return ctrl.Result{}, fmt.Errorf("failed to reconcile openapi: %v. Failed to update openapi status: %w", reconcileErr, statusUpdateErr)
 		}
 
-		return ctrl.Result{}, fmt.Errorf("Failed to update openapi status: %w", statusUpdateErr)
+		return ctrl.Result{}, fmt.Errorf("failed to update openapi status: %w", statusUpdateErr)
 	}
 
 	if statusResult.Requeue {
@@ -146,7 +146,7 @@ func (r *OpenAPIReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	})
 	if err != nil {
-		return nil
+		return err
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -477,7 +477,6 @@ func (r *OpenAPIReconciler) validateOASExtensions(openapiObj *openapi3.T) error 
 				extensionErrors = append(extensionErrors, field.Required(metricsExtensionPath, fmt.Sprintf("metric %s is missing a unit", metricKey)))
 			}
 		}
-
 	}
 
 	// Validate policies
