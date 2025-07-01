@@ -1,52 +1,119 @@
 domain: 3scale.net
-layout: go.kubebuilder.io/v2
+layout: go.kubebuilder.io/v3
 multigroup: true
 projectName: 3scale-operator
 repo: github.com/3scale/3scale-operator
 resources:
-- group: apps
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: 3scale.net
+  group: apps
   kind: APIManager
   version: v1alpha1
-- group: apps
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: 3scale.net
+  group: apps
   kind: APIManagerBackup
   version: v1alpha1
-- group: apps
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: 3scale.net
+  group: apps
   kind: APIManagerRestore
   version: v1alpha1
-- group: capabilities
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: Tenant
   version: v1alpha1
-- group: capabilities
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: Backend
   version: v1beta1
-- group: capabilities
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: Product
   version: v1beta1
-- group: capabilities
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: OpenAPI
   version: v1beta1
-- group: capabilities
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: ActiveDoc
   version: v1beta1
-- group: capabilities
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: CustomPolicyDefinition
   version: v1beta1
-- group: capabilities
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: DeveloperAccount
   version: v1beta1
-- group: capabilities
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: DeveloperUser
   version: v1beta1
-- group: capabilities
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: ProxyConfigPromote
   version: v1beta1
-- group: capabilities
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: Application
   version: v1beta1
-- group: capabilities
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: ApplicationAuth
   version: v1beta1
-version: 3-alpha
-plugins:
-  manifests.sdk.operatorframework.io/v2: {}
-  scorecard.sdk.operatorframework.io/v2: {}
+version: "3"

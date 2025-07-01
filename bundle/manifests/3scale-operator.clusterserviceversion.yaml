@@ -244,8 +244,8 @@ metadata:
     description: 3scale Operator to provision 3scale and publish/manage API
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     operators.openshift.io/valid-subscription: '["Red Hat Integration", "Red Hat 3scale API Management"]'
-    operators.operatorframework.io/builder: operator-sdk-v1.3.2
-    operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
+    operators.operatorframework.io/builder: operator-sdk-v1.5.0+git
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/3scale/3scale-operator
     rht_backend_redis_requirements: 7.0.0
     rht_mysql_requirements: 8.0.0
@@ -537,8 +537,8 @@ spec:
             spec:
               containers:
               - args:
-                - --metrics-addr=0.0.0.0:8080
-                - --enable-leader-election
+                - --metrics-bind-address=0.0.0.0:8080
+                - --leader-elect
                 command:
                 - /manager
                 env:
@@ -563,10 +563,22 @@ spec:
                 - name: RELATED_IMAGE_SYSTEM_SEARCHD
                   value: quay.io/3scale/searchd:latest
                 image: quay.io/3scale/3scale-operator:master
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: 8081
+                  initialDelaySeconds: 15
+                  periodSeconds: 20
                 name: manager
                 ports:
                 - containerPort: 8080
                   name: metrics
+                readinessProbe:
+                  httpGet:
+                    path: /readyz
+                    port: 8081
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
                 resources:
                   limits:
                     cpu: 100m
@@ -574,6 +586,8 @@ spec:
                   requests:
                     cpu: 100m
                     memory: 300Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
               serviceAccountName: 3scale-operator
               terminationGracePeriodSeconds: 10
       permissions:
@@ -592,14 +606,6 @@ spec:
           - update
           - patch
           - delete
-        - apiGroups:
-          - ""
-          resources:
-          - configmaps/status
-          verbs:
-          - get
-          - update
-          - patch
         - apiGroups:
           - ""
           resources:
