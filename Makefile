@@ -1,4 +1,8 @@
-SHELL := /bin/bash
+# Setting SHELL to bash allows bash commands to be executed by recipes.
+# This is a requirement for 'setup-envtest.sh' in the test target.
+# Options are set to exit when a recipe line exits non-zero or a piped command fails.
+SHELL = /usr/bin/env bash -o pipefail
+.SHELLFLAGS = -ec
 # Current Operator version
 VERSION ?= 0.0.1
 # Current Threescale version
@@ -168,7 +172,7 @@ kustomize: $(KUSTOMIZE)
 OPERATOR_SDK = $(PROJECT_PATH)/bin/operator-sdk
 # Note: release file patterns changed after v1.2.0
 # More info https://sdk.operatorframework.io/docs/installation/
-OPERATOR_SDK_VERSION=v1.6.4
+OPERATOR_SDK_VERSION=v1.7.2
 $(OPERATOR_SDK):
 	curl -sSL https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$(OS)_$(ARCH) -o $(OPERATOR_SDK)
 	chmod +x $(OPERATOR_SDK)

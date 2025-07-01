@@ -54,7 +54,7 @@ commands:
       - run:
           name: Install operator-sdk
           command: |
-            export OPERATOR_SDK_RELEASE_VERSION=v1.6.4
+            export OPERATOR_SDK_RELEASE_VERSION=v1.7.2
             curl -JL https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_RELEASE_VERSION}/operator-sdk_linux_amd64 -o operator-sdk
             chmod +x operator-sdk && sudo cp operator-sdk /usr/local/bin/operator-sdk && rm operator-sdk
 

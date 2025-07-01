@@ -6,10 +6,8 @@ metadata:
 rules:
 - apiGroups:
   - ""
-  - coordination.k8s.io
   resources:
   - configmaps
-  - leases
   verbs:
   - get
   - list
@@ -18,6 +16,10 @@ rules:
   - update
   - patch
   - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
 - apiGroups:
   - ""
   resources:

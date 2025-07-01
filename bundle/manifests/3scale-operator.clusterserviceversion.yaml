@@ -244,7 +244,7 @@ metadata:
     description: 3scale Operator to provision 3scale and publish/manage API
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     operators.openshift.io/valid-subscription: '["Red Hat Integration", "Red Hat 3scale API Management"]'
-    operators.operatorframework.io/builder: operator-sdk-v1.6.1+git
+    operators.operatorframework.io/builder: operator-sdk-v1.7.1+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/3scale/3scale-operator
     rht_backend_redis_requirements: 7.0.0
@@ -594,10 +594,8 @@ spec:
       - rules:
         - apiGroups:
           - ""
-          - coordination.k8s.io
           resources:
           - configmaps
-          - leases
           verbs:
           - get
           - list
@@ -606,6 +604,11 @@ spec:
           - update
           - patch
           - delete
+        - apiGroups:
+          - coordination.k8s.io
+          resources:
+          - leases
+          verbs: null
         - apiGroups:
           - ""
           resources:
