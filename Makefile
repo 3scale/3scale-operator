@@ -3,8 +3,13 @@ SHELL := /bin/bash
 VERSION ?= 0.0.1
 # Current Threescale version
 THREESCALE_VERSION ?= 2.16
+# Address of the container registry
+REGISTRY = quay.io
+# Organization in container resgistry
+ORG ?= 3scale
 # Default bundle image tag
-BUNDLE_IMG ?= controller-bundle:$(VERSION)
+IMAGE_TAG_BASE ?= $(REGISTRY)/$(ORG)/3scale-operator
+BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 # Options for 'bundle-build'
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
@@ -163,7 +168,7 @@ kustomize: $(KUSTOMIZE)
 OPERATOR_SDK = $(PROJECT_PATH)/bin/operator-sdk
 # Note: release file patterns changed after v1.2.0
 # More info https://sdk.operatorframework.io/docs/installation/
-OPERATOR_SDK_VERSION=v1.5.2
+OPERATOR_SDK_VERSION=v1.6.4
 $(OPERATOR_SDK):
 	curl -sSL https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$(OS)_$(ARCH) -o $(OPERATOR_SDK)
 	chmod +x $(OPERATOR_SDK)
@@ -292,6 +297,31 @@ $(YQ):
 .PHONY: yq
 yq: $(YQ)
 
+.PHONY: opm
+OPM = ./bin/opm
+opm:
+ifeq (,$(wildcard $(OPM)))
+ifeq (,$(shell which opm 2>/dev/null))
+	@{ \
+	set -e ;\
+	mkdir -p $(dir $(OPM)) ;\
+	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.19.1/$(OS)-$(ARCH)-opm ;\
+	chmod +x $(OPM) ;\
+	}
+else 
+OPM = $(shell which opm)
+endif
+endif
+BUNDLE_IMGS ?= $(BUNDLE_IMG) 
+CATALOG_IMG ?= $(IMAGE_TAG_BASE)-catalog:v$(VERSION) ifneq ($(origin CATALOG_BASE_IMG), undefined) FROM_INDEX_OPT := --from-index $(CATALOG_BASE_IMG) endif 
+.PHONY: catalog-build
+catalog-build: opm
+	$(OPM) index add --container-tool docker --mode semver --tag $(CATALOG_IMG) --bundles $(BUNDLE_IMGS) $(FROM_INDEX_OPT)
+
+.PHONY: catalog-push
+catalog-push: ## Push the catalog image.
+	$(MAKE) docker-push IMG=$(CATALOG_IMG)
+
 download:
 	@echo Download go.mod dependencies
 	@$(GO) mod download
@@ -370,3 +400,4 @@ endef
 
 # Include last to avoid changing MAKEFILE_LIST used above
 include $(PROJECT_PATH)/make/*.mk
+
