@@ -24,37 +24,27 @@ metadata:
     operatorframework.io/arch.amd64: supported
     operatorframework.io/arch.ppc64le: supported
     operatorframework.io/arch.s390x: supported
-  name: 3scale-operator.vX.Y.Z
+  name: 3scale-operator.v0.0.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - description: ActiveDoc is the Schema for the activedocs API
+      displayName: Active Doc
+      kind: ActiveDoc
+      name: activedocs.capabilities.3scale.net
+      version: v1beta1
+    - description: APIManagerBackup represents an APIManager backup
+      displayName: APIManagerBackup
+      kind: APIManagerBackup
+      name: apimanagerbackups.apps.3scale.net
+      version: v1alpha1
     - description: APIManagerRestore represents an APIManager restore
       displayName: APIManagerRestore
       kind: APIManagerRestore
       name: apimanagerrestores.apps.3scale.net
       version: v1alpha1
-    - description: Tenant is the Schema for the tenants API
-      displayName: Tenant
-      kind: Tenant
-      name: tenants.capabilities.3scale.net
-      version: v1alpha1
-    - description: Backend is the Schema for the backends API
-      displayName: 3scale Backend
-      kind: Backend
-      name: backends.capabilities.3scale.net
-      version: v1beta1
-    - description: Product is the Schema for the products API
-      displayName: 3scale Product
-      kind: Product
-      name: products.capabilities.3scale.net
-      version: v1beta1
-    - description: OpenAPI is the Schema for the openapis API
-      displayName: Open API
-      kind: OpenAPI
-      name: openapis.capabilities.3scale.net
-      version: v1beta1
     - description: APIManager is the Schema for the apimanagers API
       displayName: APIManager
       kind: APIManager
@@ -88,15 +78,20 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:podStatuses
       version: v1alpha1
-    - description: APIManagerBackup represents an APIManager backup
-      displayName: APIManagerBackup
-      kind: APIManagerBackup
-      name: apimanagerbackups.apps.3scale.net
-      version: v1alpha1
-    - description: ActiveDoc is the Schema for the activedocs API
-      displayName: Active Doc
-      kind: ActiveDoc
-      name: activedocs.capabilities.3scale.net
+    - description: ApplicationAuth is the Schema for the applicationauths API
+      displayName: Application Auth
+      kind: ApplicationAuth
+      name: applicationauths.capabilities.3scale.net
+      version: v1beta1
+    - description: Application is the Schema for the applications API
+      displayName: Application
+      kind: Application
+      name: applications.capabilities.3scale.net
+      version: v1beta1
+    - description: Backend is the Schema for the backends API
+      displayName: 3scale Backend
+      kind: Backend
+      name: backends.capabilities.3scale.net
       version: v1beta1
     - description: CustomPolicyDefinition is the Schema for the custompolicydefinitions API
       displayName: Custom Policy Definition
@@ -113,21 +108,26 @@ spec:
       kind: DeveloperUser
       name: developerusers.capabilities.3scale.net
       version: v1beta1
+    - description: OpenAPI is the Schema for the openapis API
+      displayName: Open API
+      kind: OpenAPI
+      name: openapis.capabilities.3scale.net
+      version: v1beta1
+    - description: Product is the Schema for the products API
+      displayName: 3scale Product
+      kind: Product
+      name: products.capabilities.3scale.net
+      version: v1beta1
     - description: ProxyConfigPromote is the Schema for the proxyconfigpromotes API
       displayName: Proxy Config Promote
       kind: ProxyConfigPromote
       name: proxyconfigpromotes.capabilities.3scale.net
       version: v1beta1
-    - description: Application is the Schema for the applications API
-      displayName: Application
-      kind: Application
-      name: applications.capabilities.3scale.net
-      version: v1beta1
-    - description: ApplicationAuth is the Schema for the applicationauths API
-      displayName: Application Auth
-      kind: ApplicationAuth
-      name: applicationauths.capabilities.3scale.net
-      version: v1beta1
+    - description: Tenant is the Schema for the tenants API
+      displayName: Tenant
+      kind: Tenant
+      name: tenants.capabilities.3scale.net
+      version: v1alpha1
   description: |
     The 3scale Operator creates and maintains the Red Hat 3scale API Management on [OpenShift](https://www.openshift.com/) in various deployment configurations.
 

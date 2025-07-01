@@ -14,8 +14,8 @@ BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
 endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
-OS := $(shell uname | awk '{print tolower($$0)}' | sed -e s/linux/linux-gnu/ )
-ARCH := $(shell uname -m)
+OS = $(shell go env GOOS)
+ARCH = $(shell go env GOARCH)
 
 # Image URL to use all building/pushing image targets
 IMG ?= quay.io/3scale/3scale-operator:master
@@ -163,9 +163,9 @@ kustomize: $(KUSTOMIZE)
 OPERATOR_SDK = $(PROJECT_PATH)/bin/operator-sdk
 # Note: release file patterns changed after v1.2.0
 # More info https://sdk.operatorframework.io/docs/installation/
-OPERATOR_SDK_VERSION=v1.2.0
+OPERATOR_SDK_VERSION=v1.3.2
 $(OPERATOR_SDK):
-	curl -sSL https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk-${OPERATOR_SDK_VERSION}-$(ARCH)-${OS} -o $(OPERATOR_SDK)
+	curl -sSL https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$(OS)_$(ARCH) -o $(OPERATOR_SDK)
 	chmod +x $(OPERATOR_SDK)
 
 .PHONY: operator-sdk
