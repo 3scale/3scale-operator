@@ -136,6 +136,9 @@ spec:
                   SystemName identifies uniquely the backend within the account provider
                   Default value will be sanitized Name
                 type: string
+                x-kubernetes-validations:
+                - message: SystemName is immutable
+                  rule: self == oldSelf
             required:
             - name
             - privateBaseURL

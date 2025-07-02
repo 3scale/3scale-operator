@@ -29,8 +29,6 @@ ARCH = $(shell go env GOARCH)
 # Image URL to use all building/pushing image targets
 IMG ?= quay.io/3scale/3scale-operator:master
 
-CRD_OPTIONS ?= "crd:crdVersions=v1"
-
 GO ?= go
 KUBECTL ?= kubectl
 DOCKER ?= docker
@@ -64,14 +62,17 @@ PROMETHEUS_RULES_TARGETS = $(foreach pr,$(PROMETHEUS_RULES),$(PROJECT_PATH)/doc/
 PROMETHEUS_RULES_DEPS = $(shell find $(PROJECT_PATH)/pkg/3scale/amp/component -name '*.go')
 PROMETHEUS_RULES_NAMESPACE ?= "__NAMESPACE__"
 
+.PHONY: all
 all: manager
 
 # Run all tests
+.PHONY: test
 test: test-unit test-e2e test-crds test-manifests-version
 
 # Run unit tests
 TEST_UNIT_PKGS = $(shell $(GO) list ./... | grep -E 'github.com/3scale/3scale-operator/pkg|github.com/3scale/3scale-operator/apis|github.com/3scale/3scale-operator/test/unitcontrollers|github.com/3scale/3scale-operator/controllers/capabilities')
 TEST_UNIT_COVERPKGS = $(shell $(GO) list ./... | grep -v github.com/3scale/3scale-operator/test | tr "\n" ",") # Exclude test directories as coverpkg does not accept only-tests packages
+.PHONY: test-unit
 test-unit: clean-cov generate fmt vet manifests
 	mkdir -p "$(PROJECT_PATH)/_output"
 	$(GO) test  -v $(TEST_UNIT_PKGS) -covermode=count -coverprofile $(PROJECT_PATH)/_output/unit.cov -coverpkg=$(TEST_UNIT_COVERPKGS)
@@ -80,11 +81,13 @@ $(PROJECT_PATH)/_output/unit.cov: test-unit
 
 # Run CRD tests
 TEST_CRD_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/crds')
+.PHONY: test-crds
 test-crds: generate fmt vet manifests
 	$(GO) test -v $(TEST_CRD_PKGS)
 
 TEST_MANIFESTS_VERSION_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/manifests-version')
 ## test-manifests-version: Run manifest version checks
+.PHONY: test-manifests-version
 test-manifests-version:
 	$(GO) test -v $(TEST_MANIFESTS_VERSION_PKGS)
 
@@ -92,6 +95,7 @@ test-manifests-version:
 TEST_E2E_PKGS_APPS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/controllers/apps')
 TEST_E2E_PKGS_CAPABILITIES = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/controllers/capabilities')
 ENVTEST_ASSETS_DIR=$(PROJECT_PATH)/testbin
+.PHONY: test-e2e
 test-e2e: generate fmt vet manifests
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f $(ENVTEST_ASSETS_DIR)/setup-envtest.sh || curl -sSLo $(ENVTEST_ASSETS_DIR)/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.0/hack/setup-envtest.sh
@@ -100,10 +104,12 @@ test-e2e: generate fmt vet manifests
 
 
 # Build manager binary
+.PHONY: manager
 manager: generate fmt vet
 	$(GO) build -o bin/manager main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
+.PHONY: run
 run: export WATCH_NAMESPACE=$(LOCAL_RUN_NAMESPACE)
 run: export THREESCALE_DEBUG=1
 run: export PREFLIGHT_CHECKS_BYPASS=true
@@ -172,7 +178,7 @@ kustomize: $(KUSTOMIZE)
 OPERATOR_SDK = $(PROJECT_PATH)/bin/operator-sdk
 # Note: release file patterns changed after v1.2.0
 # More info https://sdk.operatorframework.io/docs/installation/
-OPERATOR_SDK_VERSION=v1.11.0
+OPERATOR_SDK_VERSION=v1.20.1
 $(OPERATOR_SDK):
 	curl -sSL https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$(OS)_$(ARCH) -o $(OPERATOR_SDK)
 	chmod +x $(OPERATOR_SDK)
@@ -187,28 +193,44 @@ $(GO_BINDATA):
 .PHONY: go-bindata
 go-bindata: $(GO_BINDATA)
 
+##@ Deployment
+
+ifndef ignore-not-found
+  ignore-not-found = false
+endif
+
 # Install CRDs into a cluster
+.PHONY: install
 install: manifests $(KUSTOMIZE)
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) create -f - || $(KUSTOMIZE) build config/crd | $(KUBECTL) replace -f -
 
 # Uninstall CRDs from a cluster
+.PHONY: uninstall
 uninstall: manifests $(KUSTOMIZE)
-	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete -f -
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
+.PHONY: deploy
 deploy: manifests $(KUSTOMIZE)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 
+.PHONY: undeploy
+undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
+	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
+
 # Generate manifests e.g. CRD, RBAC etc.
+.PHONY: manifests
 manifests: $(CONTROLLER_GEN)
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 # Run go fmt against code
+.PHONY: fmt
 fmt:
 	$(GO) fmt ./...
 
 # Run go vet against code
+.PHONY: vet
 vet:
 	$(GO) vet ./...
 
@@ -326,6 +348,7 @@ catalog-build: opm
 catalog-push: ## Push the catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
 
+.PHONY: download
 download:
 	@echo Download go.mod dependencies
 	@$(GO) mod download
@@ -339,6 +362,7 @@ endif
 	license_finder report --decisions-file=$(DEPENDENCY_DECISION_FILE) --quiet --format=xml > licenses.xml
 
 ## licenses-check: Check license compliance of dependencies
+.PHONY: licenses-check
 licenses-check:
 ifndef LICENSEFINDERBINARY
 	$(error "license-finder is not available please install: gem install license_finder --version 5.7.1")
