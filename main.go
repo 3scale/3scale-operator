@@ -27,8 +27,8 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/api/apps/v1alpha1"
 	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/api/capabilities/v1alpha1"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/api/capabilities/v1beta1"
-	appscontroller "github.com/3scale/3scale-operator/controllers/apps"
-	capabilitiescontroller "github.com/3scale/3scale-operator/controllers/capabilities"
+	appscontroller "github.com/3scale/3scale-operator/internal/controller/apps"
+	capabilitiescontroller "github.com/3scale/3scale-operator/internal/controller/capabilities"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 	"github.com/getkin/kin-openapi/openapi3"
@@ -56,7 +56,7 @@ import (
 	controllerruntimemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	subcontroller "github.com/3scale/3scale-operator/controllers/subscription"
+	subcontroller "github.com/3scale/3scale-operator/internal/controller/subscription"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	operatorsv2 "github.com/operator-framework/api/pkg/operators/v2"
 	// +kubebuilder:scaffold:imports

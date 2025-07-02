@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/api/apps/v1alpha1"
-	subController "github.com/3scale/3scale-operator/controllers/subscription"
+	subController "github.com/3scale/3scale-operator/internal/controller/subscription"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
