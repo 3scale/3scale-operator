@@ -42,7 +42,8 @@ spec:
             description: ApplicationSpec defines the desired state of Application
             properties:
               accountCR:
-                description: AccountCRName name of account custom resource under which the application will be created
+                description: AccountCRName name of account custom resource under which
+                  the application will be created
                 properties:
                   name:
                     description: |-
@@ -53,7 +54,8 @@ spec:
                 type: object
                 x-kubernetes-map-type: atomic
               applicationPlanName:
-                description: ApplicationPlanName name of application plan that the application will use
+                description: ApplicationPlanName name of application plan that the
+                  application will use
                 type: string
               description:
                 description: Description human-readable text of the application
@@ -62,7 +64,8 @@ spec:
                 description: Name identifies the application uniquely within the account
                 type: string
               productCR:
-                description: ProductCRName of product custom resource from which the application plan will be used
+                description: ProductCRName of product custom resource from which the
+                  application plan will be used
                 properties:
                   name:
                     description: |-
@@ -73,7 +76,8 @@ spec:
                 type: object
                 x-kubernetes-map-type: atomic
               suspend:
-                description: Suspend application if true suspends application, if false resumes application.
+                description: Suspend application if true suspends application, if
+                  false resumes application.
                 type: boolean
             required:
             - accountCR
@@ -135,7 +139,8 @@ spec:
                   type: object
                 type: array
               observedGeneration:
-                description: ObservedGeneration reflects the generation of the most recently observed Application Spec.
+                description: ObservedGeneration reflects the generation of the most
+                  recently observed Application Spec.
                 format: int64
                 type: integer
               providerAccountHost:

@@ -46,7 +46,8 @@ spec:
                 type: string
               mappingRules:
                 items:
-                  description: MappingRuleSpec defines the desired state of Product's MappingRule
+                  description: MappingRuleSpec defines the desired state of Product's
+                    MappingRule
                   properties:
                     httpMethod:
                       enum:
@@ -192,7 +193,8 @@ spec:
                   type: object
                 type: array
               observedGeneration:
-                description: ObservedGeneration reflects the generation of the most recently observed Backend Spec.
+                description: ObservedGeneration reflects the generation of the most
+                  recently observed Backend Spec.
                 format: int64
                 type: integer
               providerAccountHost:

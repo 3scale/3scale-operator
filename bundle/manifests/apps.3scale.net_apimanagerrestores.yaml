@@ -93,7 +93,8 @@ spec:
                 description: Set to true when backup has been completed
                 type: boolean
               completionTime:
-                description: Restore completion time. It is represented in RFC3339 form and is in UTC.
+                description: Restore completion time. It is represented in RFC3339
+                  form and is in UTC.
                 format: date-time
                 type: string
               mainStepsCompleted:
@@ -103,7 +104,8 @@ spec:
                   post-backup tasks are pending (cleanup, ...)
                 type: boolean
               startTime:
-                description: Restore start time. It is represented in RFC3339 form and is in UTC.
+                description: Restore start time. It is represented in RFC3339 form
+                  and is in UTC.
                 format: date-time
                 type: string
             type: object

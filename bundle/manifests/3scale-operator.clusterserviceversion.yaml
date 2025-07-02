@@ -243,8 +243,9 @@ metadata:
     createdAt: "2019-05-30T22:40:00Z"
     description: 3scale Operator to provision 3scale and publish/manage API
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
-    operators.openshift.io/valid-subscription: '["Red Hat Integration", "Red Hat 3scale API Management"]'
-    operators.operatorframework.io/builder: operator-sdk-v1.7.1+git
+    operators.openshift.io/valid-subscription: '["Red Hat Integration", "Red Hat 3scale
+      API Management"]'
+    operators.operatorframework.io/builder: operator-sdk-v1.10.0+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/3scale/3scale-operator
     rht_backend_redis_requirements: 7.0.0
@@ -326,7 +327,8 @@ spec:
       kind: Backend
       name: backends.capabilities.3scale.net
       version: v1beta1
-    - description: CustomPolicyDefinition is the Schema for the custompolicydefinitions API
+    - description: CustomPolicyDefinition is the Schema for the custompolicydefinitions
+        API
       displayName: Custom Policy Definition
       kind: CustomPolicyDefinition
       name: custompolicydefinitions.capabilities.3scale.net
@@ -581,7 +583,7 @@ spec:
                   periodSeconds: 10
                 resources:
                   limits:
-                    cpu: 100m
+                    cpu: 200m
                     memory: 300Mi
                   requests:
                     cpu: 100m
