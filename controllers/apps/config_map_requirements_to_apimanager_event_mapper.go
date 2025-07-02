@@ -3,7 +3,7 @@ package controllers
 import (
 	"context"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1alpha1 "github.com/3scale/3scale-operator/api/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/types"

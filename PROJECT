@@ -1,5 +1,6 @@
 domain: 3scale.net
-layout: go.kubebuilder.io/v3
+layout:
+- go.kubebuilder.io/v4
 multigroup: true
 projectName: 3scale-operator
 repo: github.com/3scale/3scale-operator

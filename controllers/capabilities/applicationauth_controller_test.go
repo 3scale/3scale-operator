@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"testing"
 
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/api/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	corev1 "k8s.io/api/core/v1"

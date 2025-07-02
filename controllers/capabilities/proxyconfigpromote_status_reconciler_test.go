@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	appsv1alpha1 "github.com/3scale/3scale-operator/api/apps/v1alpha1"
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/api/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/go-logr/logr"

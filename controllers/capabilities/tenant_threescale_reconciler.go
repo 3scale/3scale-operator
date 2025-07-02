@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strconv"
 
-	apiv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
+	apiv1alpha1 "github.com/3scale/3scale-operator/api/capabilities/v1alpha1"
 	apispkghelper "github.com/3scale/3scale-operator/pkg/apispkg/helper"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"

@@ -240,13 +240,13 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/3scale/3scale-operator:master
-    createdAt: "2025-07-02T06:08:06Z"
+    createdAt: "2025-07-03T04:46:00Z"
     description: 3scale Operator to provision 3scale and publish/manage API
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     operators.openshift.io/valid-subscription: '["Red Hat Integration", "Red Hat 3scale
       API Management"]'
     operators.operatorframework.io/builder: operator-sdk-v1.36.1
-    operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
     repository: https://github.com/3scale/3scale-operator
     rht_backend_redis_requirements: 7.0.0
     rht_mysql_requirements: 8.0.0

@@ -3,7 +3,7 @@ package controllers
 import (
 	"fmt"
 
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/api/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"

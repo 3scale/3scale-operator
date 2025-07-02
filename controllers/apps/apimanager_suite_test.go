@@ -33,9 +33,9 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	appsv1alpha1 "github.com/3scale/3scale-operator/api/apps/v1alpha1"
+	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/api/capabilities/v1alpha1"
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/api/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"

@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
+	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/api/capabilities/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"

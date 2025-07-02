@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	apps "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	apps "github.com/3scale/3scale-operator/api/apps/v1alpha1"
+	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/api/capabilities/v1alpha1"
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/api/capabilities/v1beta1"
 	"github.com/RHsyseng/operator-utils/pkg/validation"
 	"sigs.k8s.io/yaml"
 
