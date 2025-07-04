@@ -2,8 +2,9 @@ package component
 
 import (
 	"context"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -308,16 +309,19 @@ func (backend *Backend) ListenerDeployment(ctx context.Context, k8sclient client
 						{
 							Name:         BackendListenerName,
 							Image:        containerImage,
-							Args:         []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"},
+							Args:         backend.backendListenerRunArgs(),
 							Ports:        backend.listenerPorts(),
 							Env:          backend.buildBackendListenerEnv(),
 							Resources:    backend.Options.ListenerResourceRequirements,
 							VolumeMounts: backend.backendContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{TCPSocket: &v1.TCPSocketAction{
-									Port: intstr.IntOrString{
-										Type:   intstr.Int,
-										IntVal: 3000}},
+								ProbeHandler: v1.ProbeHandler{
+									TCPSocket: &v1.TCPSocketAction{
+										Port: intstr.IntOrString{
+											Type:   intstr.Int,
+											IntVal: 3000,
+										},
+									},
 								},
 								InitialDelaySeconds: 30,
 								TimeoutSeconds:      0,
@@ -326,11 +330,14 @@ func (backend *Backend) ListenerDeployment(ctx context.Context, k8sclient client
 								FailureThreshold:    0,
 							},
 							ReadinessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
-									Path: "/status",
-									Port: intstr.IntOrString{
-										Type:   intstr.Int,
-										IntVal: 3000}},
+								ProbeHandler: v1.ProbeHandler{
+									HTTPGet: &v1.HTTPGetAction{
+										Path: "/status",
+										Port: intstr.IntOrString{
+											Type:   intstr.Int,
+											IntVal: 3000,
+										},
+									},
 								},
 								InitialDelaySeconds: 30,
 								TimeoutSeconds:      5,
@@ -398,7 +405,8 @@ func (backend *Backend) ListenerRoute() *routev1.Route {
 			},
 			TLS: &routev1.TLSConfig{
 				Termination:                   routev1.TLSTerminationEdge,
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
+				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow,
+			},
 		},
 	}
 }
@@ -463,6 +471,16 @@ func (backend *Backend) buildBackendWorkerEnv() []v1.EnvVar {
 		)
 	}
 
+	if backend.Options.RedisAsyncEnabled {
+		result = append(result,
+			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "1"),
+		)
+	} else {
+		result = append(result,
+			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "0"),
+		)
+	}
+
 	return result
 }
 
@@ -485,6 +503,17 @@ func (backend *Backend) buildBackendListenerEnv() []v1.EnvVar {
 		result = append(result,
 			v1.EnvVar{Name: "CONFIG_LISTENER_PROMETHEUS_METRICS_PORT", Value: BackendListenerMetricsPortStr},
 			v1.EnvVar{Name: "CONFIG_LISTENER_PROMETHEUS_METRICS_ENABLED", Value: "true"},
+		)
+	}
+
+	if backend.Options.RedisAsyncEnabled {
+		result = append(result,
+			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "1"),
+			helper.EnvVarFromValue("LISTENER_WORKERS", "1"),
+		)
+	} else {
+		result = append(result,
+			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "0"),
 		)
 	}
 
@@ -614,6 +643,7 @@ func (backend *Backend) BackendRedisTLSEnvVars() []v1.EnvVar {
 		helper.EnvVarFromValue("CONFIG_REDIS_SSL", "1"),
 	}
 }
+
 func (backend *Backend) QueuesRedisTLSEnvVars() []v1.EnvVar {
 	return []v1.EnvVar{
 		helper.EnvVarFromValue("CONFIG_QUEUES_CA_FILE", ConfigQueuesCaFilePath),
@@ -677,6 +707,16 @@ func (backend *Backend) backendVolumes() []v1.Volume {
 		res = append(res, backendRedisTlsVolume)
 	}
 	return res
+}
+
+func (backend *Backend) backendListenerRunArgs() []string {
+	var args []string
+	if backend.Options.RedisAsyncEnabled {
+		args = []string{"bin/3scale_backend", "-s", "falcon", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"}
+	} else {
+		args = []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"}
+	}
+	return args
 }
 
 func (backend *Backend) backendContainerVolumeMounts() []v1.VolumeMount {
