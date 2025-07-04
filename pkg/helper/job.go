@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	k8sappsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -17,7 +16,7 @@ import (
 )
 
 const (
-	SystemAppGenerationAnnotation = "system-app-deployment-generation"
+	SystemAppRevisionAnnotation = "system-app-deployment-generation"
 )
 
 // UIDBasedJobName returns a Job name that is compromised of the provided prefix,
@@ -39,21 +38,31 @@ func UIDBasedJobName(prefix string, uid types.UID) (string, error) {
 	return jobName, err
 }
 
-// HasJobCompleted checks if the provided Job has completed
-func HasJobCompleted(jName string, jNamespace string, client k8sclient.Client) bool {
-	job := &batchv1.Job{}
-	err := client.Get(context.TODO(), k8sclient.ObjectKey{
-		Namespace: jNamespace,
-		Name:      jName,
-	}, job)
+func lookupJob(ctx context.Context, job k8sclient.Object, client k8sclient.Client) (*batchv1.Job, error) {
+	lookupKey := types.NamespacedName{
+		Name:      job.GetName(),
+		Namespace: job.GetNamespace(),
+	}
 
+	lookup := &batchv1.Job{}
+
+	if err := client.Get(ctx, lookupKey, lookup); err != nil {
+		return nil, err
+	}
+
+	return lookup, nil
+}
+
+// HasJobCompleted checks if the provided Job has completed
+func HasJobCompleted(ctx context.Context, job k8sclient.Object, client k8sclient.Client) bool {
+	lookup, err := lookupJob(ctx, job, client)
 	// Return false on error
 	if err != nil {
 		return false
 	}
 
 	// Check if Job has completed
-	jobConditions := job.Status.Conditions
+	jobConditions := lookup.Status.Conditions
 	for _, condition := range jobConditions {
 		if condition.Type == batchv1.JobComplete && condition.Status == corev1.ConditionTrue {
 			return true
@@ -63,8 +72,8 @@ func HasJobCompleted(jName string, jNamespace string, client k8sclient.Client) b
 	return false
 }
 
-// HasAppGenerationChanged returns true if the system-app Deployment's generation doesn't match the Job's annotation tracking it
-func HasAppGenerationChanged(jName string, dName string, namespace string, client k8sclient.Client) (bool, error) {
+// HasAppRevisionChanged returns true if the system-app Deployment's revision doesn't match the Job's annotation tracking it
+func HasAppRevisionChanged(jName string, revision int64, namespace string, client k8sclient.Client) (bool, error) {
 	job := &batchv1.Job{}
 	err := client.Get(context.TODO(), k8sclient.ObjectKey{
 		Namespace: namespace,
@@ -79,42 +88,28 @@ func HasAppGenerationChanged(jName string, dName string, namespace string, clien
 		return false, nil
 	}
 
-	deployment := &k8sappsv1.Deployment{}
-	err = client.Get(context.TODO(), k8sclient.ObjectKey{
-		Namespace: namespace,
-		Name:      dName,
-	}, deployment)
-	// Return error if can't get Deployment
-	if err != nil && !k8serr.IsNotFound(err) {
-		return false, fmt.Errorf("error getting deployment %s: %w", deployment.Name, err)
-	}
-	// Return false if the Deployment doesn't exist yet
-	if k8serr.IsNotFound(err) {
-		return false, nil
-	}
-
-	// Parse the Job's observed Deployment generation from its annotations
-	var trackedGeneration int64 = 1
+	// Parse the Job's observed Deployment revision from its annotations
+	var trackedRevision int64 = 1
 	if job.Annotations != nil {
 		for key, val := range job.Annotations {
-			if key == SystemAppGenerationAnnotation {
-				trackedGeneration, err = strconv.ParseInt(val, 10, 64)
+			if key == SystemAppRevisionAnnotation {
+				trackedRevision, err = strconv.ParseInt(val, 10, 64)
 				if err != nil {
-					return false, fmt.Errorf("failed to parse system-app Deployment's generation from job %s annotations: %w", job.Name, err)
+					return false, fmt.Errorf("failed to parse system-app Deployment's revision from job %s annotations: %w", job.Name, err)
 				}
 			}
 		}
 	}
 
 	// Return true if the Deployment's version doesn't match the version tracked in the Job's annotation
-	if trackedGeneration != deployment.ObjectMeta.Generation {
+	if trackedRevision != revision {
 		return true, nil
 	}
 
 	return false, nil
 }
 
-func DeleteJob(jName string, jNamespace string, client k8sclient.Client) error {
+func DeleteJob(ctx context.Context, jName string, jNamespace string, client k8sclient.Client) error {
 	job := &batchv1.Job{}
 	err := client.Get(context.TODO(), k8sclient.ObjectKey{
 		Namespace: jNamespace,
@@ -130,7 +125,7 @@ func DeleteJob(jName string, jNamespace string, client k8sclient.Client) error {
 	}
 
 	// Return error if Job is currently running
-	if !HasJobCompleted(job.Name, job.Namespace, client) {
+	if !HasJobCompleted(ctx, job, client) {
 		return fmt.Errorf("won't delete job %s because it's still running", job.Name)
 	}
 
@@ -148,4 +143,18 @@ func DeleteJob(jName string, jNamespace string, client k8sclient.Client) error {
 	}
 
 	return nil
+}
+
+func JobExists(ctx context.Context, job k8sclient.Object, client k8sclient.Client) (bool, error) {
+	_, err := lookupJob(ctx, job, client)
+
+	if err == nil {
+		return true, nil
+	}
+
+	if k8serr.IsNotFound(err) {
+		return false, nil
+	}
+
+	return false, err
 }

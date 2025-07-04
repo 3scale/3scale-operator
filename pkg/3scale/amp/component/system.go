@@ -555,15 +555,15 @@ func (system *System) appPodVolumes() []v1.Volume {
 					Name: "system",
 				},
 				Items: []v1.KeyToPath{
-					v1.KeyToPath{
+					{
 						Key:  "zync.yml",
 						Path: "zync.yml",
 					},
-					v1.KeyToPath{
+					{
 						Key:  "rolling_updates.yml",
 						Path: "rolling_updates.yml",
 					},
-					v1.KeyToPath{
+					{
 						Key:  "service_discovery.yml",
 						Path: "service_discovery.yml",
 					},
@@ -663,7 +663,7 @@ func (system *System) appPodVolumes() []v1.Volume {
 			VolumeSource: v1.VolumeSource{
 				Projected: &v1.ProjectedVolumeSource{
 					Sources: []v1.VolumeProjection{
-						v1.VolumeProjection{
+						{
 							ServiceAccountToken: &v1.ServiceAccountTokenProjection{
 								Audience:          system.Options.S3FileStorageOptions.STSAudience,
 								ExpirationSeconds: &[]int64{3600}[0],
@@ -884,7 +884,7 @@ func (system *System) AppDeployment(ctx context.Context, k8sclient client.Client
 	}, nil
 }
 
-func (system *System) AppPreHookJob(containerImage string, currentSystemAppGeneration int64) *batchv1.Job {
+func (system *System) AppPreHookJob(containerImage string, namespace string, currentSystemAppRevision int64) *batchv1.Job {
 	var completions int32 = 1
 
 	return &batchv1.Job{
@@ -893,10 +893,11 @@ func (system *System) AppPreHookJob(containerImage string, currentSystemAppGener
 			Kind:       "Job",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   SystemAppPreHookJobName,
-			Labels: system.Options.CommonAppLabels,
+			Name:      SystemAppPreHookJobName,
+			Namespace: namespace,
+			Labels:    system.Options.CommonAppLabels,
 			Annotations: map[string]string{
-				helper.SystemAppGenerationAnnotation: strconv.FormatInt(currentSystemAppGeneration, 10),
+				helper.SystemAppRevisionAnnotation: strconv.FormatInt(currentSystemAppRevision, 10),
 			},
 		},
 		Spec: batchv1.JobSpec{
@@ -925,7 +926,7 @@ func (system *System) AppPreHookJob(containerImage string, currentSystemAppGener
 	}
 }
 
-func (system *System) AppPostHookJob(containerImage string, currentSystemAppGeneration int64) *batchv1.Job {
+func (system *System) AppPostHookJob(containerImage string, namespace string, currentSystemAppRevision int64) *batchv1.Job {
 	var completions int32 = 1
 
 	return &batchv1.Job{
@@ -934,10 +935,11 @@ func (system *System) AppPostHookJob(containerImage string, currentSystemAppGene
 			Kind:       "Job",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   SystemAppPostHookJobName,
-			Labels: system.Options.CommonAppLabels,
+			Name:      SystemAppPostHookJobName,
+			Namespace: namespace,
+			Labels:    system.Options.CommonAppLabels,
 			Annotations: map[string]string{
-				helper.SystemAppGenerationAnnotation: strconv.FormatInt(currentSystemAppGeneration, 10),
+				helper.SystemAppRevisionAnnotation: strconv.FormatInt(currentSystemAppRevision, 10),
 			},
 		},
 		Spec: batchv1.JobSpec{
@@ -983,7 +985,8 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 	systemTmpVolume := v1.Volume{
 		Name: "system-tmp",
 		VolumeSource: v1.VolumeSource{EmptyDir: &v1.EmptyDirVolumeSource{
-			Medium: v1.StorageMediumMemory}},
+			Medium: v1.StorageMediumMemory,
+		}},
 	}
 
 	res = append(res, systemTmpVolume)
@@ -993,24 +996,26 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 
 	systemConfigVolume := v1.Volume{
 		Name: "system-config",
-		VolumeSource: v1.VolumeSource{ConfigMap: &v1.ConfigMapVolumeSource{
-			LocalObjectReference: v1.LocalObjectReference{
-				Name: "system",
-			},
-			Items: []v1.KeyToPath{
-				v1.KeyToPath{
-					Key:  "zync.yml",
-					Path: "zync.yml",
-				}, v1.KeyToPath{
-					Key:  "rolling_updates.yml",
-					Path: "rolling_updates.yml",
+		VolumeSource: v1.VolumeSource{
+			ConfigMap: &v1.ConfigMapVolumeSource{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: "system",
 				},
-				v1.KeyToPath{
-					Key:  "service_discovery.yml",
-					Path: "service_discovery.yml",
+				Items: []v1.KeyToPath{
+					{
+						Key:  "zync.yml",
+						Path: "zync.yml",
+					},
+					{
+						Key:  "rolling_updates.yml",
+						Path: "rolling_updates.yml",
+					},
+					{
+						Key:  "service_discovery.yml",
+						Path: "service_discovery.yml",
+					},
 				},
 			},
-		},
 		},
 	}
 
@@ -1055,7 +1060,7 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 			VolumeSource: v1.VolumeSource{
 				Projected: &v1.ProjectedVolumeSource{
 					Sources: []v1.VolumeProjection{
-						v1.VolumeProjection{
+						{
 							ServiceAccountToken: &v1.ServiceAccountTokenProjection{
 								Audience:          system.Options.S3FileStorageOptions.STSAudience,
 								ExpirationSeconds: &[]int64{3600}[0],
@@ -1211,6 +1216,7 @@ func (system *System) systemConfigVolumeMount() v1.VolumeMount {
 		MountPath: "/opt/system-extra-configs",
 	}
 }
+
 func (system *System) systemTlsVolumeMount() v1.VolumeMount {
 	return v1.VolumeMount{
 		Name:      "writable-tls",
@@ -1332,7 +1338,7 @@ func (system *System) ProviderService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "http",
 					Protocol:   v1.ProtocolTCP,
 					Port:       3000,
@@ -1356,7 +1362,7 @@ func (system *System) MasterService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "http",
 					Protocol:   v1.ProtocolTCP,
 					Port:       3000,
@@ -1380,7 +1386,7 @@ func (system *System) DeveloperService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "http",
 					Protocol:   v1.ProtocolTCP,
 					Port:       3000,
@@ -1404,7 +1410,7 @@ func (system *System) MemcachedService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "memcache",
 					Protocol:   v1.ProtocolTCP,
 					Port:       11211,
@@ -1732,6 +1738,7 @@ func (system *System) systemRedisTlsVolumeMount() v1.VolumeMount {
 		MountPath: "/tls/system-redis",
 	}
 }
+
 func (system *System) backendRedisTlsVolumeMount() v1.VolumeMount {
 	return v1.VolumeMount{
 		Name:      "backend-redis-tls",
