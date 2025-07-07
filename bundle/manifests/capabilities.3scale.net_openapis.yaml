@@ -42,10 +42,12 @@ spec:
             description: OpenAPISpec defines the desired state of OpenAPI
             properties:
               oidc:
-                description: OIDCSpec defines the desired configuration of OpenID Connect Authentication
+                description: OIDCSpec defines the desired configuration of OpenID
+                  Connect Authentication
                 properties:
                   authenticationFlow:
-                    description: AuthenticationFlow specifies OAuth2.0 authorization grant type
+                    description: AuthenticationFlow specifies OAuth2.0 authorization
+                      grant type
                     properties:
                       directAccessGrantsEnabled:
                         type: boolean
@@ -74,46 +76,59 @@ spec:
                     - authorization
                     type: string
                   gatewayResponse:
-                    description: GatewayResponseSpec defines the desired gateway response configuration
+                    description: GatewayResponseSpec defines the desired gateway response
+                      configuration
                     properties:
                       errorAuthFailed:
-                        description: ErrorAuthFailed specifies the response body when authentication fails
+                        description: ErrorAuthFailed specifies the response body when
+                          authentication fails
                         type: string
                       errorAuthMissing:
-                        description: ErrorAuthMissing specifies the response body when authentication is missing
+                        description: ErrorAuthMissing specifies the response body
+                          when authentication is missing
                         type: string
                       errorHeadersAuthFailed:
-                        description: ErrorHeadersAuthFailed specifies the Content-Type header when authentication fails
+                        description: ErrorHeadersAuthFailed specifies the Content-Type
+                          header when authentication fails
                         type: string
                       errorHeadersAuthMissing:
-                        description: ErrorHeadersAuthMissing specifies the Content-Type header when authentication is missing
+                        description: ErrorHeadersAuthMissing specifies the Content-Type
+                          header when authentication is missing
                         type: string
                       errorHeadersLimitsExceeded:
-                        description: ErrorHeadersLimitsExceeded specifies the Content-Type header when usage limit exceeded
+                        description: ErrorHeadersLimitsExceeded specifies the Content-Type
+                          header when usage limit exceeded
                         type: string
                       errorHeadersNoMatch:
-                        description: ErrorHeadersNoMatch specifies the Content-Type header when no match error
+                        description: ErrorHeadersNoMatch specifies the Content-Type
+                          header when no match error
                         type: string
                       errorLimitsExceeded:
-                        description: ErrorLimitsExceeded specifies the response body when usage limit exceeded
+                        description: ErrorLimitsExceeded specifies the response body
+                          when usage limit exceeded
                         type: string
                       errorNoMatch:
-                        description: ErrorNoMatch specifies the response body when no match error
+                        description: ErrorNoMatch specifies the response body when
+                          no match error
                         type: string
                       errorStatusAuthFailed:
-                        description: ErrorStatusAuthFailed specifies the response code when authentication fails
+                        description: ErrorStatusAuthFailed specifies the response
+                          code when authentication fails
                         format: int32
                         type: integer
                       errorStatusAuthMissing:
-                        description: ErrorStatusAuthMissing specifies the response code when authentication is missing
+                        description: ErrorStatusAuthMissing specifies the response
+                          code when authentication is missing
                         format: int32
                         type: integer
                       errorStatusLimitsExceeded:
-                        description: ErrorStatusLimitsExceeded specifies the response code when usage limit exceeded
+                        description: ErrorStatusLimitsExceeded specifies the response
+                          code when usage limit exceeded
                         format: int32
                         type: integer
                       errorStatusNoMatch:
-                        description: ErrorStatusNoMatch specifies the response code when no match error
+                        description: ErrorStatusNoMatch specifies the response code
+                          when no match error
                         format: int32
                         type: integer
                     type: object
@@ -121,13 +136,16 @@ spec:
                     description: Issuer is the OIDC issuer
                     type: string
                   issuerEndpointRef:
-                    description: IssuerEndpointRef  is the reference to OIDC issuer Secret that contains IssuerEndpoint
+                    description: IssuerEndpointRef  is the reference to OIDC issuer
+                      Secret that contains IssuerEndpoint
                     properties:
                       name:
-                        description: name is unique within a namespace to reference a secret resource.
+                        description: name is unique within a namespace to reference
+                          a secret resource.
                         type: string
                       namespace:
-                        description: namespace defines the space within which the secret name must be unique.
+                        description: namespace defines the space within which the
+                          secret name must be unique.
                         type: string
                     type: object
                     x-kubernetes-map-type: atomic
@@ -138,19 +156,25 @@ spec:
                     - rest
                     type: string
                   jwtClaimWithClientID:
-                    description: JwtClaimWithClientID is the JSON Web Token (JWT) Claim with ClientID that contains the clientID. Defaults to 'azp'.
+                    description: JwtClaimWithClientID is the JSON Web Token (JWT)
+                      Claim with ClientID that contains the clientID. Defaults to
+                      'azp'.
                     type: string
                   jwtClaimWithClientIDType:
-                    description: JwtClaimWithClientIDType sets to process the ClientID Token Claim value as a string or as a liquid template.
+                    description: JwtClaimWithClientIDType sets to process the ClientID
+                      Token Claim value as a string or as a liquid template.
                     enum:
                     - plain
                     - liquid
                     type: string
                   security:
-                    description: SecuritySpec defines the desired state of Authentication Security
+                    description: SecuritySpec defines the desired state of Authentication
+                      Security
                     properties:
                       hostHeader:
-                        description: HostHeader Lets you define a custom Host request header. This is needed if your API backend only accepts traffic from a specific host.
+                        description: HostHeader Lets you define a custom Host request
+                          header. This is needed if your API backend only accepts
+                          traffic from a specific host.
                         type: string
                       secretToken:
                         description: |-
@@ -171,7 +195,8 @@ spec:
                   - url
                 properties:
                   secretRef:
-                    description: SecretRef refers to the secret object that contains the OpenAPI Document
+                    description: SecretRef refers to the secret object that contains
+                      the OpenAPI Document
                     properties:
                       apiVersion:
                         description: API version of the referent.
@@ -220,13 +245,16 @@ spec:
                     type: string
                 type: object
               prefixMatching:
-                description: PrefixMatching Use prefix matching instead of strict matching on mapping rules derived from openapi operations
+                description: PrefixMatching Use prefix matching instead of strict
+                  matching on mapping rules derived from openapi operations
                 type: boolean
               privateAPIHostHeader:
-                description: PrivateAPIHostHeader Custom host header sent by the API gateway to the private API
+                description: PrivateAPIHostHeader Custom host header sent by the API
+                  gateway to the private API
                 type: string
               privateAPISecretToken:
-                description: PrivateAPISecretToken Custom secret token sent by the API gateway to the private API
+                description: PrivateAPISecretToken Custom secret token sent by the
+                  API gateway to the private API
                 type: string
               privateBaseURL:
                 description: PrivateBaseURL Custom private base URL
@@ -260,7 +288,8 @@ spec:
             description: OpenAPIStatus defines the observed state of OpenAPI
             properties:
               backendResourceNames:
-                description: BackendResourceNames contains a list of references to the managed 3scale backends
+                description: BackendResourceNames contains a list of references to
+                  the managed 3scale backends
                 items:
                   description: |-
                     LocalObjectReference contains enough information to let you locate the
@@ -322,7 +351,8 @@ spec:
                   type: object
                 type: array
               observedGeneration:
-                description: ObservedGeneration reflects the generation of the most recently observed Backend Spec.
+                description: ObservedGeneration reflects the generation of the most
+                  recently observed Backend Spec.
                 format: int64
                 type: integer
               productResourceName:
@@ -337,7 +367,8 @@ spec:
                 type: object
                 x-kubernetes-map-type: atomic
               providerAccountHost:
-                description: ProviderAccountHost contains the 3scale account's provider URL
+                description: ProviderAccountHost contains the 3scale account's provider
+                  URL
                 type: string
             type: object
         type: object

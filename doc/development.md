@@ -254,9 +254,9 @@ license_finder approval add github.com/golang/glog --decisions-file=doc/dependen
 
 ## Adding new watched secrets
 After adding a new secret to the APIManager CRD make sure to also update the following files if you want the 3scale-operator to watch the new secret:
-1. [apis/apps/v1alpha1/apimanager_types.go](../apis/apps/v1alpha1/apimanager_types.go)
+1. [api/apps/v1alpha1/apimanager_types.go](../api/apps/v1alpha1/apimanager_types.go)
     - Add a new `GetXYZSecretRef()` function that returns the secret ref
-2. [apis/apps/v1alpha1/apimanager_types.go](../apis/apps/v1alpha1/apimanager_types.go)
+2. [api/apps/v1alpha1/apimanager_types.go](../api/apps/v1alpha1/apimanager_types.go)
     - Update the `Get3scaleSecretRefs()` to call the new `GetXYZSecretRef()` function from step 1
 3. [pkg/3scale/amp/operator/apicast_reconciler.go](../pkg/3scale/amp/operator/apicast_reconciler.go)
     - Add the new secret to the `getSecretUIDs()` function

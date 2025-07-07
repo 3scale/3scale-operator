@@ -12,12 +12,12 @@ The following example shows an extension to configure custom policies and applic
 
 ```yaml
 x-3scale-product:
-  metrics:  ## map[string]github.com/3scale/3scale-operator/apis/capabilities/v1beta1.MetricSpec
+  metrics:  ## map[string]github.com/3scale/3scale-operator/api/capabilities/v1beta1.MetricSpec
     metric01:  ## This system name needs to be unique across all methods AND metrics
       friendlyName: "My Metric 01"
       unit: "hits"
       description: "This is a custom metric"
-  policies:  ## []github.com/3scale/3scale-operator/apis/capabilities/v1beta1.PolicyConfig
+  policies:  ## []github.com/3scale/3scale-operator/api/capabilities/v1beta1.PolicyConfig
     - name: "myPolicy1"
       version: "0.1"
       enabled: true
@@ -30,20 +30,20 @@ x-3scale-product:
       configurationRef:
         name: "my-config-policy-secret"
         namespace: "my-3scale-namespace"
-  applicationPlans:  ## map[string]github.com/3scale/3scale-operator/apis/capabilities/v1beta1.ApplicationPlanSpec
+  applicationPlans:  ## map[string]github.com/3scale/3scale-operator/api/capabilities/v1beta1.ApplicationPlanSpec
     plan01:
       name: "My Plan 01"
       appsRequireApproval: false
       trialPeriod: 3
       setupFee: "3.00"
       costMonth: "2.00"
-      pricingRules:  ## []github.com/3scale/3scale-operator/apis/capabilities/v1beta1.PricingRuleSpec
+      pricingRules:  ## []github.com/3scale/3scale-operator/api/capabilities/v1beta1.PricingRuleSpec
         - from: 1
           to: 100
           pricePerUnit: "0.05"
           metricMethodRef:
             systemName: "metric01"
-      limits:  ## []github.com/3scale/3scale-operator/apis/capabilities/v1beta1.LimitSpec
+      limits:  ## []github.com/3scale/3scale-operator/api/capabilities/v1beta1.LimitSpec
         - period: "week"
           value: 100
           metricMethodRef:

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1alpha1 "github.com/3scale/3scale-operator/api/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	appsv1 "github.com/openshift/api/apps/v1"

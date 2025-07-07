@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-logr/logr"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1alpha1 "github.com/3scale/3scale-operator/api/apps/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
