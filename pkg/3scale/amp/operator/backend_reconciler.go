@@ -321,7 +321,7 @@ func backendDeploymentInitContainerVolumeMountsMutator(desired, existing *k8sapp
 		"backend-redis-tls",
 		"queues-redis-tls",
 	}
-	return reconcilers.WeakDeploymentVolumesMutator(desired, existing, volumeMountNames)
+	return reconcilers.WeakDeploymentInitContainerVolumeMountsMutator(desired, existing, volumeMountNames)
 }
 
 func backendDeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
@@ -329,5 +329,5 @@ func backendDeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.
 		"backend-redis-tls",
 		"queues-redis-tls",
 	}
-	return reconcilers.WeakDeploymentVolumesMutator(desired, existing, volumeMountNames)
+	return reconcilers.WeakDeploymentContainerVolumeMountsMutator(desired, existing, volumeMountNames)
 }

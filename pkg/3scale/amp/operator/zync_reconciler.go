@@ -442,5 +442,5 @@ func zyncDeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.Dep
 	volumeNames := []string{
 		"writable-tls",
 	}
-	return reconcilers.WeakDeploymentInitContainerVolumeMountsMutator(desired, existing, volumeNames)
+	return reconcilers.WeakDeploymentContainerVolumeMountsMutator(desired, existing, volumeNames)
 }
