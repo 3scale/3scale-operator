@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-
 	rbacv1 "k8s.io/api/rbac/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func RoleRuleMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func RoleRuleMutator(existingObj, desiredObj client.Object) (bool, error) {
 	existing, ok := existingObj.(*rbacv1.Role)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *rbacv1.Role", existingObj)

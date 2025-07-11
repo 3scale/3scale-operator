@@ -6,11 +6,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/3scale/3scale-operator/pkg/common"
 	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ServiceAccountImagePullPolicyMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func ServiceAccountImagePullPolicyMutator(existingObj, desiredObj client.Object) (bool, error) {
 	existing, ok := existingObj.(*v1.ServiceAccount)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *v1.ServiceAccount", existingObj)

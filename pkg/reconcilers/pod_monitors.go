@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/3scale/3scale-operator/pkg/common"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func GenericPodMonitorMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func GenericPodMonitorMutator(existingObj, desiredObj client.Object) (bool, error) {
 	existing, ok := existingObj.(*monitoringv1.PodMonitor)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *monitoringv1.PodMonitor", existingObj)

@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-
+	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -132,7 +131,7 @@ func TestBaseReconcilerUpdateNeeded(t *testing.T) {
 		},
 	}
 
-	customMutator := func(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+	customMutator := func(existingObj, desiredObj client.Object) (bool, error) {
 		existing, ok := existingObj.(*v1.ConfigMap)
 		if !ok {
 			return false, fmt.Errorf("%T is not a *v1.ConfigMap", existingObj)
@@ -219,7 +218,7 @@ func TestBaseReconcilerDelete(t *testing.T) {
 			"somekey": "somevalue",
 		},
 	}
-	common.TagObjectToDelete(desired)
+	helper.TagObjectToDelete(desired)
 
 	err = baseReconciler.ReconcileResource(&v1.ConfigMap{}, desired, CreateOnlyMutator)
 	if err != nil {

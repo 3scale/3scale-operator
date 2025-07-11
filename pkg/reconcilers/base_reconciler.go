@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	"github.com/go-logr/logr"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
@@ -26,13 +26,13 @@ import (
 var log = logf.Log.WithName("reconcilers")
 
 // MutateFn is a function which mutates the existing object into it's desired state.
-type MutateFn func(existing, desired common.KubernetesObject) (bool, error)
+type MutateFn func(existing, desired client.Object) (bool, error)
 
-func CreateOnlyMutator(existing, desired common.KubernetesObject) (bool, error) {
+func CreateOnlyMutator(existing, desired client.Object) (bool, error) {
 	return false, nil
 }
 
-func DeleteOnlyMutator(existing, desired common.KubernetesObject) (bool, error) {
+func DeleteOnlyMutator(existing, desired client.Object) (bool, error) {
 	return false, nil
 }
 
@@ -111,7 +111,7 @@ func (b *BaseReconciler) EventRecorder() record.EventRecorder {
 // desired: Object representing the desired state
 //
 // It returns an error.
-func (b *BaseReconciler) ReconcileResource(obj, desired common.KubernetesObject, mutateFn MutateFn) error {
+func (b *BaseReconciler) ReconcileResource(obj, desired client.Object, mutateFn MutateFn) error {
 	key := client.ObjectKeyFromObject(desired)
 
 	if err := b.Client().Get(b.ctx, key, obj); err != nil {
@@ -120,7 +120,7 @@ func (b *BaseReconciler) ReconcileResource(obj, desired common.KubernetesObject,
 		}
 
 		// Not found
-		if !common.IsObjectTaggedToDelete(desired) {
+		if !helper.IsObjectTaggedToDelete(desired) {
 			return b.CreateResource(desired)
 		}
 
@@ -129,8 +129,8 @@ func (b *BaseReconciler) ReconcileResource(obj, desired common.KubernetesObject,
 	}
 
 	// item found successfully
-	if common.IsObjectTaggedToDelete(desired) {
-		deletePropagationPolicy := common.GetDeletePropagationPolicyAnnotation(desired)
+	if helper.IsObjectTaggedToDelete(desired) {
+		deletePropagationPolicy := helper.GetDeletePropagationPolicyAnnotation(desired)
 		if deletePropagationPolicy == nil {
 			return b.DeleteResource(desired)
 		}
@@ -149,27 +149,27 @@ func (b *BaseReconciler) ReconcileResource(obj, desired common.KubernetesObject,
 	return nil
 }
 
-func (b *BaseReconciler) GetResource(objKey types.NamespacedName, obj common.KubernetesObject) error {
+func (b *BaseReconciler) GetResource(objKey types.NamespacedName, obj client.Object) error {
 	b.Logger().Info(fmt.Sprintf("Get object '%s/%s'", strings.Replace(fmt.Sprintf("%T", obj), "*", "", 1), objKey.Name))
 	return b.Client().Get(context.TODO(), objKey, obj)
 }
 
-func (b *BaseReconciler) CreateResource(obj common.KubernetesObject) error {
+func (b *BaseReconciler) CreateResource(obj client.Object) error {
 	b.Logger().Info(fmt.Sprintf("Created object '%s/%s'", strings.Replace(fmt.Sprintf("%T", obj), "*", "", 1), obj.GetName()))
 	return b.Client().Create(b.ctx, obj)
 }
 
-func (b *BaseReconciler) UpdateResource(obj common.KubernetesObject) error {
+func (b *BaseReconciler) UpdateResource(obj client.Object) error {
 	b.Logger().Info(fmt.Sprintf("Updated object '%s/%s'", strings.Replace(fmt.Sprintf("%T", obj), "*", "", 1), obj.GetName()))
 	return b.Client().Update(b.ctx, obj)
 }
 
-func (b *BaseReconciler) DeleteResource(obj common.KubernetesObject, options ...client.DeleteOption) error {
+func (b *BaseReconciler) DeleteResource(obj client.Object, options ...client.DeleteOption) error {
 	b.Logger().Info(fmt.Sprintf("Delete object '%s/%s'", strings.Replace(fmt.Sprintf("%T", obj), "*", "", 1), obj.GetName()))
 	return b.Client().Delete(context.TODO(), obj, options...)
 }
 
-func (b *BaseReconciler) UpdateResourceStatus(obj common.KubernetesObject) error {
+func (b *BaseReconciler) UpdateResourceStatus(obj client.Object) error {
 	b.Logger().Info(fmt.Sprintf("Updated status of object '%s/%s'", strings.Replace(fmt.Sprintf("%T", obj), "*", "", 1), obj.GetName()))
 	return b.Client().Status().Update(context.TODO(), obj)
 }
@@ -216,7 +216,7 @@ func (b *BaseReconciler) HasPodMonitors() (bool, error) {
 }
 
 // SetOwnerReference sets owner as a Controller OwnerReference on owned
-func (b *BaseReconciler) SetControllerOwnerReference(owner, obj common.KubernetesObject) error {
+func (b *BaseReconciler) SetControllerOwnerReference(owner, obj client.Object) error {
 	err := controllerutil.SetControllerReference(owner, obj, b.Scheme())
 	if err != nil {
 		b.Logger().Error(err, "Error setting OwnerReference on object",
@@ -231,7 +231,7 @@ func (b *BaseReconciler) SetControllerOwnerReference(owner, obj common.Kubernete
 // EnsureOwnerReference sets owner as a Controller OwnerReference on owned
 // returns boolean to notify when the object has been updated
 // Resource ownerReference isn't set if the resource is already owned by another controller
-func (b *BaseReconciler) EnsureOwnerReference(owner, obj common.KubernetesObject) (bool, error) {
+func (b *BaseReconciler) EnsureOwnerReference(owner, obj client.Object) (bool, error) {
 	changed := false
 
 	originalSize := len(obj.GetOwnerReferences())
@@ -278,7 +278,7 @@ func resourceExists(dc discovery.DiscoveryInterface, groupVersion, kind string) 
 }
 
 // HasOwnerReference checks if the given owner is already present in the object's OwnerReferences.
-func (b *BaseReconciler) HasOwnerReference(owner, obj common.KubernetesObject) bool {
+func (b *BaseReconciler) HasOwnerReference(owner, obj client.Object) bool {
 	for _, ref := range obj.GetOwnerReferences() {
 		if ref.UID == owner.GetUID() {
 			return true

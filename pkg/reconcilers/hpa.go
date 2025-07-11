@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/3scale/3scale-operator/pkg/common"
 	hpa "k8s.io/api/autoscaling/v2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func GenericHPAMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func GenericHPAMutator(existingObj, desiredObj client.Object) (bool, error) {
 	existing, ok := existingObj.(*hpa.HorizontalPodAutoscaler)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *v2.HorizontalPodAutoscaler", existingObj)
