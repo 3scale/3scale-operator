@@ -8,7 +8,6 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/pkg/upgrade"
@@ -21,7 +20,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func ApicastEnvCMMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func ApicastEnvCMMutator(existingObj, desiredObj client.Object) (bool, error) {
 	existing, ok := existingObj.(*v1.ConfigMap)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *v1.ConfigMap", existingObj)

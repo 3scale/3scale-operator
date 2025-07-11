@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	grafanav1beta1 "github.com/grafana-operator/grafana-operator/v5/api/v1beta1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func GenericGrafanaDashboardsMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func GenericGrafanaDashboardsMutator(existingObj, desiredObj client.Object) (bool, error) {
 	var existingSpec, desiredSpec interface{}
 	var existingType, desiredType string
 

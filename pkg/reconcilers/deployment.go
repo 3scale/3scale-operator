@@ -46,7 +46,7 @@ type ImageTrigger struct {
 type DMutateFn func(desired, existing *k8sappsv1.Deployment) (bool, error)
 
 func DeploymentMutator(opts ...DMutateFn) MutateFn {
-	return func(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+	return func(existingObj, desiredObj client.Object) (bool, error) {
 		existing, ok := existingObj.(*k8sappsv1.Deployment)
 		if !ok {
 			return false, fmt.Errorf("%T is not a *k8sappsv1.Deployment", existingObj)

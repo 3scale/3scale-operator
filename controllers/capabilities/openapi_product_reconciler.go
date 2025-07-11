@@ -20,6 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // LastSlashRegexp matches the last slash
@@ -185,7 +186,7 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 	return product, nil
 }
 
-func (p *OpenAPIProductReconciler) productMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func (p *OpenAPIProductReconciler) productMutator(existingObj, desiredObj client.Object) (bool, error) {
 	existing, ok := existingObj.(*capabilitiesv1beta1.Product)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *capabilitiesv1beta1.Product", existingObj)

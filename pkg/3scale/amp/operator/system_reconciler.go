@@ -441,7 +441,7 @@ func (r *SystemReconciler) systemZyncEnvVarMutator(desired, existing *k8sappsv1.
 
 // systemConfigMapMutator creates facilitates the creation of the ConfigMap on the first reconcile loop
 // It also will update the endpoint in case zync is enabled|disabled while preserving all other values in the .data
-func systemConfigMapMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func systemConfigMapMutator(existingObj, desiredObj k8sclient.Object) (bool, error) {
 	existing, ok := existingObj.(*corev1.ConfigMap)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *v1.ConfigMap", existingObj)

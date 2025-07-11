@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-
 	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // DefaultsOnlySecretMutator is useful for secrets pre-created by the user and when not all the fields are created.
 // Fields referenced from deployments must exist,
 // so defaults only reconciliation makes sure they exist with default values when user does doe pre-create them
-func DefaultsOnlySecretMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func DefaultsOnlySecretMutator(existingObj, desiredObj client.Object) (bool, error) {
 	existing, ok := existingObj.(*v1.Secret)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *v1.Secret", existingObj)
@@ -42,7 +41,7 @@ func DefaultsOnlySecretMutator(existingObj, desiredObj common.KubernetesObject) 
 type SecretMutateFn func(desired, existing *v1.Secret) bool
 
 func DeploymentSecretMutator(opts ...SecretMutateFn) MutateFn {
-	return func(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+	return func(existingObj, desiredObj client.Object) (bool, error) {
 		existing, ok := existingObj.(*v1.Secret)
 		if !ok {
 			return false, fmt.Errorf("%T is not a *v1.Secret", existingObj)

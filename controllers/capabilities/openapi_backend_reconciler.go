@@ -14,6 +14,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/google/go-cmp/cmp"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-logr/logr"
@@ -141,7 +142,7 @@ func (p *OpenAPIBackendReconciler) desired() (*capabilitiesv1beta1.Backend, erro
 	return backend, nil
 }
 
-func (p *OpenAPIBackendReconciler) backendMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func (p *OpenAPIBackendReconciler) backendMutator(existingObj, desiredObj client.Object) (bool, error) {
 	existing, ok := existingObj.(*capabilitiesv1beta1.Backend)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *capabilitiesv1beta1.Backend", existingObj)

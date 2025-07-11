@@ -3,10 +3,10 @@ package helper
 import (
 	"fmt"
 
-	"github.com/3scale/3scale-operator/pkg/common"
 	consolev1 "github.com/openshift/api/console/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ConsoleLinkText is the text of the consoleLink shown on the webconsole
@@ -16,7 +16,7 @@ const ConsoleLinkText = "APIManager - 3scale"
 const ConsoleLinkMasterNamePrefix = "system-master-link"
 
 // GenericConsoleLinkMutator performs the reconciliation for consolelink objects
-func GenericConsoleLinkMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func GenericConsoleLinkMutator(existingObj, desiredObj client.Object) (bool, error) {
 	existing, ok := existingObj.(*consolev1.ConsoleLink)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *consolev1.ConsoleLink", existingObj)

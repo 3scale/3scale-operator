@@ -11,6 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	kubeclock "k8s.io/utils/clock"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -188,7 +189,7 @@ func (r *APIManagerBackupLogicReconciler) reconcileBackupDestinationPVC() error 
 	return err
 }
 
-func (r *APIManagerBackupLogicReconciler) setOwnerReference(obj common.KubernetesObject) error {
+func (r *APIManagerBackupLogicReconciler) setOwnerReference(obj client.Object) error {
 	err := controllerutil.SetControllerReference(r.cr, obj, r.BaseReconciler.Scheme())
 	if err != nil {
 		r.Logger().Error(err, "Error setting OwnerReference on object",

@@ -12,6 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -172,7 +173,7 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreFromPVCSource() (reco
 	return res, err
 }
 
-func (r *APIManagerRestoreLogicReconciler) setOwnerReference(obj common.KubernetesObject) error {
+func (r *APIManagerRestoreLogicReconciler) setOwnerReference(obj client.Object) error {
 	err := controllerutil.SetControllerReference(r.cr, obj, r.BaseReconciler.Scheme())
 	if err != nil {
 		r.Logger().Error(err, "Error setting OwnerReference on object",

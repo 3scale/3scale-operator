@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type BaseAPIManagerLogicReconciler struct {
@@ -237,7 +238,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePodMonitor(desired *monitoringv
 	return r.ReconcileResource(&monitoringv1.PodMonitor{}, desired, mutateFn)
 }
 
-func (r *BaseAPIManagerLogicReconciler) ReconcileResource(obj, desired common.KubernetesObject, mutatefn reconcilers.MutateFn) error {
+func (r *BaseAPIManagerLogicReconciler) ReconcileResource(obj, desired client.Object, mutatefn reconcilers.MutateFn) error {
 	desired.SetNamespace(r.apiManager.GetNamespace())
 
 	// Secrets are managed by users so they do not get APIManager-based
@@ -258,7 +259,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileResource(obj, desired common.Ku
 // APIManagerMutator wraps mutator into APIManger mutator
 // All resources managed by APIManager are processed by this wrapped mutator
 func (r *BaseAPIManagerLogicReconciler) APIManagerMutator(mutateFn reconcilers.MutateFn) reconcilers.MutateFn {
-	return func(existing, desired common.KubernetesObject) (bool, error) {
+	return func(existing, desired client.Object) (bool, error) {
 		// Metadata
 		updated := helper.EnsureObjectMeta(existing, desired)
 

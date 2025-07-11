@@ -132,7 +132,7 @@ func TestBaseReconcilerUpdateNeeded(t *testing.T) {
 		},
 	}
 
-	customMutator := func(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+	customMutator := func(existingObj, desiredObj client.Object) (bool, error) {
 		existing, ok := existingObj.(*v1.ConfigMap)
 		if !ok {
 			return false, fmt.Errorf("%T is not a *v1.ConfigMap", existingObj)
