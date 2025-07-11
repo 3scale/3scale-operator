@@ -5,7 +5,6 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/go-logr/logr"
@@ -55,7 +54,7 @@ func (r *BaseAPIManagerLogicReconciler) NamespacedNameWithAPIManagerNamespace(ob
 
 func (r *BaseAPIManagerLogicReconciler) ReconcilePodDisruptionBudget(desired *policyv1.PodDisruptionBudget, mutatefn reconcilers.MutateFn) error {
 	if !r.apiManager.IsPDBEnabled() {
-		common.TagObjectToDelete(desired)
+		helper.TagObjectToDelete(desired)
 	}
 	return r.ReconcileResource(&policyv1.PodDisruptionBudget{}, desired, mutatefn)
 }
@@ -115,7 +114,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileGrafanaDashboards(
 	case *grafanav1beta1.GrafanaDashboard:
 		if dashboardsAvailable && *r.crdAvailabilityCache.grafanaDashboardCRDV5Available {
 			if !r.apiManager.IsMonitoringEnabled() {
-				common.TagObjectToDelete(d)
+				helper.TagObjectToDelete(d)
 			}
 			return r.ReconcileResource(d, d, mutateFn)
 		}
@@ -123,7 +122,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileGrafanaDashboards(
 	case *grafanav1alpha1.GrafanaDashboard:
 		if dashboardsAvailable && *r.crdAvailabilityCache.grafanaDashboardCRDV4Available {
 			if !r.apiManager.IsMonitoringEnabled() {
-				common.TagObjectToDelete(d)
+				helper.TagObjectToDelete(d)
 			}
 			return r.ReconcileResource(d, d, mutateFn)
 		}
@@ -169,7 +168,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePrometheusRules(desired *monito
 	}
 
 	if !r.apiManager.IsPrometheusRulesEnabled() {
-		common.TagObjectToDelete(desired)
+		helper.TagObjectToDelete(desired)
 	}
 	return r.ReconcileResource(&monitoringv1.PrometheusRule{}, desired, mutateFn)
 }
@@ -190,7 +189,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileServiceMonitor(desired *monitor
 	}
 
 	if !r.apiManager.IsMonitoringEnabled() {
-		common.TagObjectToDelete(desired)
+		helper.TagObjectToDelete(desired)
 	}
 	return r.ReconcileResource(&monitoringv1.ServiceMonitor{}, desired, mutateFn)
 }
@@ -233,7 +232,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePodMonitor(desired *monitoringv
 	}
 
 	if !r.apiManager.IsMonitoringEnabled() {
-		common.TagObjectToDelete(desired)
+		helper.TagObjectToDelete(desired)
 	}
 	return r.ReconcileResource(&monitoringv1.PodMonitor{}, desired, mutateFn)
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	"github.com/go-logr/logr"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
@@ -120,7 +120,7 @@ func (b *BaseReconciler) ReconcileResource(obj, desired client.Object, mutateFn 
 		}
 
 		// Not found
-		if !common.IsObjectTaggedToDelete(desired) {
+		if !helper.IsObjectTaggedToDelete(desired) {
 			return b.CreateResource(desired)
 		}
 
@@ -129,8 +129,8 @@ func (b *BaseReconciler) ReconcileResource(obj, desired client.Object, mutateFn 
 	}
 
 	// item found successfully
-	if common.IsObjectTaggedToDelete(desired) {
-		deletePropagationPolicy := common.GetDeletePropagationPolicyAnnotation(desired)
+	if helper.IsObjectTaggedToDelete(desired) {
+		deletePropagationPolicy := helper.GetDeletePropagationPolicyAnnotation(desired)
 		if deletePropagationPolicy == nil {
 			return b.DeleteResource(desired)
 		}

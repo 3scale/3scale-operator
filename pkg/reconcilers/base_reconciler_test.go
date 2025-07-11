@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-
+	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -219,7 +218,7 @@ func TestBaseReconcilerDelete(t *testing.T) {
 			"somekey": "somevalue",
 		},
 	}
-	common.TagObjectToDelete(desired)
+	helper.TagObjectToDelete(desired)
 
 	err = baseReconciler.ReconcileResource(&v1.ConfigMap{}, desired, CreateOnlyMutator)
 	if err != nil {

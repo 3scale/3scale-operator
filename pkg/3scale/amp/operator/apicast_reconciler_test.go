@@ -28,7 +28,7 @@ import (
 	"github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 )
 
@@ -629,8 +629,8 @@ func TestApicastServicePortMutator(t *testing.T) {
 		},
 	}
 
-	productionServiceKey := common.ObjectKey(existingProductionService)
-	stagingServiceKey := common.ObjectKey(existingStagingService)
+	productionServiceKey := helper.ObjectKey(existingProductionService)
+	stagingServiceKey := helper.ObjectKey(existingStagingService)
 
 	cases := []struct {
 		testName           string

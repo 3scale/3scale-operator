@@ -13,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
@@ -114,7 +113,7 @@ func DeploymentAffinityMutator(desired, existing *k8sappsv1.Deployment) (bool, e
 
 	if !reflect.DeepEqual(existing.Spec.Template.Spec.Affinity, desired.Spec.Template.Spec.Affinity) {
 		diff := cmp.Diff(existing.Spec.Template.Spec.Affinity, desired.Spec.Template.Spec.Affinity)
-		log.Info(fmt.Sprintf("%s spec.template.spec.Affinity has changed: %s", common.ObjectInfo(desired), diff))
+		log.Info(fmt.Sprintf("%s spec.template.spec.Affinity has changed: %s", helper.ObjectInfo(desired), diff))
 		existing.Spec.Template.Spec.Affinity = desired.Spec.Template.Spec.Affinity
 		updated = true
 	}
@@ -127,7 +126,7 @@ func DeploymentTolerationsMutator(desired, existing *k8sappsv1.Deployment) (bool
 
 	if !reflect.DeepEqual(existing.Spec.Template.Spec.Tolerations, desired.Spec.Template.Spec.Tolerations) {
 		diff := cmp.Diff(existing.Spec.Template.Spec.Tolerations, desired.Spec.Template.Spec.Tolerations)
-		log.Info(fmt.Sprintf("%s spec.template.spec.Tolerations has changed: %s", common.ObjectInfo(desired), diff))
+		log.Info(fmt.Sprintf("%s spec.template.spec.Tolerations has changed: %s", helper.ObjectInfo(desired), diff))
 		existing.Spec.Template.Spec.Tolerations = desired.Spec.Template.Spec.Tolerations
 		updated = true
 	}
@@ -136,7 +135,7 @@ func DeploymentTolerationsMutator(desired, existing *k8sappsv1.Deployment) (bool
 }
 
 func DeploymentContainerResourcesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
-	desiredName := common.ObjectInfo(desired)
+	desiredName := helper.ObjectInfo(desired)
 	update := false
 
 	if len(desired.Spec.Template.Spec.Containers) != 1 {
@@ -255,7 +254,7 @@ func DeploymentTopologySpreadConstraintsMutator(desired, existing *k8sappsv1.Dep
 
 	if !reflect.DeepEqual(existing.Spec.Template.Spec.TopologySpreadConstraints, desired.Spec.Template.Spec.TopologySpreadConstraints) {
 		diff := cmp.Diff(existing.Spec.Template.Spec.TopologySpreadConstraints, desired.Spec.Template.Spec.TopologySpreadConstraints)
-		log.Info(fmt.Sprintf("%s spec.template.spec.TopologySpreadConstraints has changed: %s", common.ObjectInfo(desired), diff))
+		log.Info(fmt.Sprintf("%s spec.template.spec.TopologySpreadConstraints has changed: %s", helper.ObjectInfo(desired), diff))
 		existing.Spec.Template.Spec.TopologySpreadConstraints = desired.Spec.Template.Spec.TopologySpreadConstraints
 		updated = true
 	}

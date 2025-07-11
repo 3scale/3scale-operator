@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
-	"github.com/3scale/3scale-operator/pkg/common"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -212,7 +211,7 @@ func (p *OpenAPIProductReconciler) productMutator(existingObj, desiredObj client
 	// maybe compare only "managed" fields
 	if !reflect.DeepEqual(existing.Spec, desired.Spec) {
 		diff := cmp.Diff(existing.Spec, desired.Spec)
-		p.Logger().Info(fmt.Sprintf("%s spec has changed: %s", common.ObjectInfo(desired), diff))
+		p.Logger().Info(fmt.Sprintf("%s spec has changed: %s", helper.ObjectInfo(desired), diff))
 		existing.Spec = desired.Spec
 		updated = true
 	}

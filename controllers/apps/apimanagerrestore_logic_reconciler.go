@@ -4,6 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/backup"
+	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/restore"
 	"github.com/go-logr/logr"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -15,14 +21,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/backup"
-	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/pkg/restore"
 )
 
 type APIManagerRestoreLogicReconciler struct {
@@ -422,13 +420,13 @@ func (r *APIManagerRestoreLogicReconciler) reconcileAPIManagerBackupSharedInSecr
 		return reconcile.Result{}, err
 	}
 	if desiredSecret != nil {
-		common.TagObjectToDelete(desiredSecret)
+		helper.TagObjectToDelete(desiredSecret)
 		err = r.ReconcileResource(&v1.Secret{}, desiredSecret, reconcilers.CreateOnlyMutator)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 
-		err = r.GetResource(common.ObjectKey(desiredSecret), existingSecret)
+		err = r.GetResource(helper.ObjectKey(desiredSecret), existingSecret)
 		if err != nil && !errors.IsNotFound(err) {
 			return reconcile.Result{}, err
 		}
@@ -522,7 +520,7 @@ func (r *APIManagerRestoreLogicReconciler) reconcileJobsCleanup() (reconcile.Res
 			continue
 		}
 		existingJobFound = true
-		common.TagToObjectDeleteWithPropagationPolicy(job, metav1.DeletePropagationForeground)
+		helper.TagToObjectDeleteWithPropagationPolicy(job, metav1.DeletePropagationForeground)
 		err = r.ReconcileResource(&batchv1.Job{}, job, reconcilers.CreateOnlyMutator)
 		if err != nil {
 			return reconcile.Result{}, err
