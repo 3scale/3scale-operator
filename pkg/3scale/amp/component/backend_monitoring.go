@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/3scale/3scale-operator/pkg/assets"
+	"github.com/3scale/3scale-operator/pkg/common"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	grafanav1beta1 "github.com/grafana-operator/grafana-operator/v5/api/v1beta1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -192,7 +193,7 @@ func (backend *Backend) monitoringLabels() map[string]string {
 		labels[key] = value
 	}
 
-	labels["monitoring-key"] = MonitoringKey
+	labels["monitoring-key"] = common.MonitoringKey
 	return labels
 }
 

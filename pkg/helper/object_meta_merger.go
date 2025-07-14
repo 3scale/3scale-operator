@@ -1,12 +1,12 @@
 package helper
 
-import "sigs.k8s.io/controller-runtime/pkg/client"
+import "github.com/3scale/3scale-operator/pkg/common"
 
 // From
 // https://github.com/openshift/library-go/blob/master/pkg/operator/resource/resourcemerge/object_merger.go
 
 // EnsureObjectMeta ensure Labels, Annotations
-func EnsureObjectMeta(existing, desired client.Object) bool {
+func EnsureObjectMeta(existing, desired common.KubernetesObject) bool {
 	updated := false
 
 	existingLabels := existing.GetLabels()

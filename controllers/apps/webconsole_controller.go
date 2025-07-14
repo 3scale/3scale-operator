@@ -20,16 +20,19 @@ import (
 	"context"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/api/errors"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 	"github.com/go-logr/logr"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	consolev1 "github.com/openshift/api/console/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // WebConsoleReconciler reconciles a WebConsole object
@@ -95,7 +98,7 @@ func (r *WebConsoleReconciler) reconcileMasterLink(request reconcile.Request, lo
 				Name: helper.GetMasterConsoleLinkName(request.Namespace),
 			},
 		}
-		helper.TagObjectToDelete(desired)
+		common.TagObjectToDelete(desired)
 		err := r.ReconcileResource(&consolev1.ConsoleLink{}, desired, reconcilers.CreateOnlyMutator)
 		return err
 	}

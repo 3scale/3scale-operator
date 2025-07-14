@@ -3,10 +3,6 @@ package controllers
 import (
 	"time"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/backup"
-	"github.com/3scale/3scale-operator/pkg/helper"
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/go-logr/logr"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -15,9 +11,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	kubeclock "k8s.io/utils/clock"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/backup"
+	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 )
 
 var apimanagerbackupClock kubeclock.Clock = &kubeclock.RealClock{}
@@ -188,7 +188,7 @@ func (r *APIManagerBackupLogicReconciler) reconcileBackupDestinationPVC() error 
 	return err
 }
 
-func (r *APIManagerBackupLogicReconciler) setOwnerReference(obj client.Object) error {
+func (r *APIManagerBackupLogicReconciler) setOwnerReference(obj common.KubernetesObject) error {
 	err := controllerutil.SetControllerReference(r.cr, obj, r.BaseReconciler.Scheme())
 	if err != nil {
 		r.Logger().Error(err, "Error setting OwnerReference on object",
@@ -343,7 +343,7 @@ func (r *APIManagerBackupLogicReconciler) reconcileJobsCleanup() (reconcile.Resu
 			continue
 		}
 		existingJobFound = true
-		helper.TagToObjectDeleteWithPropagationPolicy(job, metav1.DeletePropagationForeground)
+		common.TagToObjectDeleteWithPropagationPolicy(job, metav1.DeletePropagationForeground)
 		err = r.ReconcileResource(&batchv1.Job{}, job, reconcilers.CreateOnlyMutator)
 		if err != nil {
 			return reconcile.Result{}, err

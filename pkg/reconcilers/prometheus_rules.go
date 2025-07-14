@@ -1,12 +1,13 @@
 package reconcilers
 
 import (
+	"github.com/3scale/3scale-operator/pkg/common"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // RemovePrometheusRulesMutator removes the 'ThreeScaleApicastRequestTime' alert
-func RemovePrometheusRulesMutator(existing, desired client.Object) (bool, error) {
+func RemovePrometheusRulesMutator(existing, desired common.KubernetesObject) (bool, error) {
 	existingPrometheusRule := existing.(*monitoringv1.PrometheusRule)
 	removed := false
 	updatedRules := []monitoringv1.Rule{}

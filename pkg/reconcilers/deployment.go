@@ -13,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
@@ -45,7 +46,7 @@ type ImageTrigger struct {
 type DMutateFn func(desired, existing *k8sappsv1.Deployment) (bool, error)
 
 func DeploymentMutator(opts ...DMutateFn) MutateFn {
-	return func(existingObj, desiredObj client.Object) (bool, error) {
+	return func(existingObj, desiredObj common.KubernetesObject) (bool, error) {
 		existing, ok := existingObj.(*k8sappsv1.Deployment)
 		if !ok {
 			return false, fmt.Errorf("%T is not a *k8sappsv1.Deployment", existingObj)
@@ -113,7 +114,7 @@ func DeploymentAffinityMutator(desired, existing *k8sappsv1.Deployment) (bool, e
 
 	if !reflect.DeepEqual(existing.Spec.Template.Spec.Affinity, desired.Spec.Template.Spec.Affinity) {
 		diff := cmp.Diff(existing.Spec.Template.Spec.Affinity, desired.Spec.Template.Spec.Affinity)
-		log.Info(fmt.Sprintf("%s spec.template.spec.Affinity has changed: %s", helper.ObjectInfo(desired), diff))
+		log.Info(fmt.Sprintf("%s spec.template.spec.Affinity has changed: %s", common.ObjectInfo(desired), diff))
 		existing.Spec.Template.Spec.Affinity = desired.Spec.Template.Spec.Affinity
 		updated = true
 	}
@@ -126,7 +127,7 @@ func DeploymentTolerationsMutator(desired, existing *k8sappsv1.Deployment) (bool
 
 	if !reflect.DeepEqual(existing.Spec.Template.Spec.Tolerations, desired.Spec.Template.Spec.Tolerations) {
 		diff := cmp.Diff(existing.Spec.Template.Spec.Tolerations, desired.Spec.Template.Spec.Tolerations)
-		log.Info(fmt.Sprintf("%s spec.template.spec.Tolerations has changed: %s", helper.ObjectInfo(desired), diff))
+		log.Info(fmt.Sprintf("%s spec.template.spec.Tolerations has changed: %s", common.ObjectInfo(desired), diff))
 		existing.Spec.Template.Spec.Tolerations = desired.Spec.Template.Spec.Tolerations
 		updated = true
 	}
@@ -135,7 +136,7 @@ func DeploymentTolerationsMutator(desired, existing *k8sappsv1.Deployment) (bool
 }
 
 func DeploymentContainerResourcesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
-	desiredName := helper.ObjectInfo(desired)
+	desiredName := common.ObjectInfo(desired)
 	update := false
 
 	if len(desired.Spec.Template.Spec.Containers) != 1 {
@@ -254,7 +255,7 @@ func DeploymentTopologySpreadConstraintsMutator(desired, existing *k8sappsv1.Dep
 
 	if !reflect.DeepEqual(existing.Spec.Template.Spec.TopologySpreadConstraints, desired.Spec.Template.Spec.TopologySpreadConstraints) {
 		diff := cmp.Diff(existing.Spec.Template.Spec.TopologySpreadConstraints, desired.Spec.Template.Spec.TopologySpreadConstraints)
-		log.Info(fmt.Sprintf("%s spec.template.spec.TopologySpreadConstraints has changed: %s", helper.ObjectInfo(desired), diff))
+		log.Info(fmt.Sprintf("%s spec.template.spec.TopologySpreadConstraints has changed: %s", common.ObjectInfo(desired), diff))
 		existing.Spec.Template.Spec.TopologySpreadConstraints = desired.Spec.Template.Spec.TopologySpreadConstraints
 		updated = true
 	}

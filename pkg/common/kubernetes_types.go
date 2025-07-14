@@ -1,11 +1,11 @@
-package helper
+package common
 
 import (
 	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -13,15 +13,20 @@ const (
 	DeletePropagationPolicyTagAnnotation = "apps.3scale.net/delete-propagation-policy"
 )
 
-func ObjectInfo(obj client.Object) string {
+type KubernetesObject interface {
+	metav1.Object
+	runtime.Object
+}
+
+func ObjectInfo(obj KubernetesObject) string {
 	return fmt.Sprintf("%s/%s", obj.GetObjectKind().GroupVersionKind().Kind, obj.GetName())
 }
 
-func ObjectKey(obj client.Object) types.NamespacedName {
+func ObjectKey(obj KubernetesObject) types.NamespacedName {
 	return types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}
 }
 
-func TagObjectToDelete(obj client.Object) {
+func TagObjectToDelete(obj KubernetesObject) {
 	// Add custom annotation
 	annotations := obj.GetAnnotations()
 	if annotations == nil {
@@ -31,7 +36,7 @@ func TagObjectToDelete(obj client.Object) {
 	annotations[DeleteTagAnnotation] = "true"
 }
 
-func TagToObjectDeleteWithPropagationPolicy(obj client.Object, deletionPropagationPolicy metav1.DeletionPropagation) {
+func TagToObjectDeleteWithPropagationPolicy(obj KubernetesObject, deletionPropagationPolicy metav1.DeletionPropagation) {
 	annotations := obj.GetAnnotations()
 	if annotations == nil {
 		annotations = make(map[string]string)
@@ -41,7 +46,7 @@ func TagToObjectDeleteWithPropagationPolicy(obj client.Object, deletionPropagati
 	annotations[DeletePropagationPolicyTagAnnotation] = string(deletionPropagationPolicy)
 }
 
-func IsObjectTaggedToDelete(obj client.Object) bool {
+func IsObjectTaggedToDelete(obj KubernetesObject) bool {
 	annotations := obj.GetAnnotations()
 	if annotations == nil {
 		return false
@@ -51,7 +56,7 @@ func IsObjectTaggedToDelete(obj client.Object) bool {
 	return ok && annotation == "true"
 }
 
-func GetDeletePropagationPolicyAnnotation(obj client.Object) *metav1.DeletionPropagation {
+func GetDeletePropagationPolicyAnnotation(obj KubernetesObject) *metav1.DeletionPropagation {
 	annotations := obj.GetAnnotations()
 	if annotations == nil {
 		return nil

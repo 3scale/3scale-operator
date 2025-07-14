@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/3scale/3scale-operator/pkg/assets"
+	"github.com/3scale/3scale-operator/pkg/common"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	grafanav1beta1 "github.com/grafana-operator/grafana-operator/v5/api/v1beta1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -34,11 +35,6 @@ const (
 	ThreescaleSystemApp5XXRequestsHighURL              = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/system_app_5xx_requests_high.adoc"
 )
 
-// Constants
-const (
-	MonitoringKey = "middleware"
-)
-
 func KubernetesResourcesByNamespaceGrafanaV5Dashboard(sumRate, ns, appLabel string) *grafanav1beta1.GrafanaDashboard {
 	data := &struct {
 		Namespace, SumRate string
@@ -49,7 +45,7 @@ func KubernetesResourcesByNamespaceGrafanaV5Dashboard(sumRate, ns, appLabel stri
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "kubernetes-resources-by-namespace",
 			Labels: map[string]string{
-				"monitoring-key": MonitoringKey,
+				"monitoring-key": common.MonitoringKey,
 				"app":            appLabel,
 			},
 		},
@@ -74,7 +70,7 @@ func KubernetesResourcesByNamespaceGrafanaV4Dashboard(sumRate, ns, appLabel stri
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "kubernetes-resources-by-namespace",
 			Labels: map[string]string{
-				"monitoring-key": MonitoringKey,
+				"monitoring-key": common.MonitoringKey,
 				"app":            appLabel,
 			},
 		},
@@ -94,7 +90,7 @@ func KubernetesResourcesByPodGrafanaV4Dashboard(sumRate, ns, appLabel string) *g
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "kubernetes-resources-by-pod",
 			Labels: map[string]string{
-				"monitoring-key": MonitoringKey,
+				"monitoring-key": common.MonitoringKey,
 				"app":            appLabel,
 			},
 		},
@@ -114,7 +110,7 @@ func KubernetesResourcesByPodGrafanaV5Dashboard(sumRate, ns, appLabel string) *g
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "kubernetes-resources-by-pod",
 			Labels: map[string]string{
-				"monitoring-key": MonitoringKey,
+				"monitoring-key": common.MonitoringKey,
 				"app":            appLabel,
 			},
 		},

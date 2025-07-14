@@ -8,11 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/helper"
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/pkg/upgrade"
+	"sigs.k8s.io/yaml"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	k8sappsv1 "k8s.io/api/apps/v1"
@@ -22,7 +19,13 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/yaml"
+
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 )
 
 type SystemReconciler struct {
@@ -394,7 +397,7 @@ func getSystemAppDeploymentRevision(namespace string, client k8sclient.Client) (
 }
 
 func (r *SystemReconciler) systemAppDeploymentResourceMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
-	desiredName := helper.ObjectInfo(desired)
+	desiredName := common.ObjectInfo(desired)
 	update := false
 
 	// Check containers
@@ -438,7 +441,7 @@ func (r *SystemReconciler) systemZyncEnvVarMutator(desired, existing *k8sappsv1.
 
 // systemConfigMapMutator creates facilitates the creation of the ConfigMap on the first reconcile loop
 // It also will update the endpoint in case zync is enabled|disabled while preserving all other values in the .data
-func systemConfigMapMutator(existingObj, desiredObj k8sclient.Object) (bool, error) {
+func systemConfigMapMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
 	existing, ok := existingObj.(*corev1.ConfigMap)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *v1.ConfigMap", existingObj)
