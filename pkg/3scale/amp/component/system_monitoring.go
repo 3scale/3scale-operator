@@ -11,7 +11,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/3scale/3scale-operator/pkg/assets"
-	"github.com/3scale/3scale-operator/pkg/common"
 )
 
 func (system *System) SystemSidekiqPodMonitor() *monitoringv1.PodMonitor {
@@ -193,7 +192,7 @@ func (system *System) monitoringLabels() map[string]string {
 		labels[key] = value
 	}
 
-	labels["monitoring-key"] = common.MonitoringKey
+	labels["monitoring-key"] = MonitoringKey
 	return labels
 }
 

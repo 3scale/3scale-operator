@@ -3,14 +3,14 @@ package reconcilers
 import (
 	"testing"
 
-	"github.com/3scale/3scale-operator/pkg/common"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestRemovePrometheusRulesMutator(t *testing.T) {
 	type args struct {
-		existing common.KubernetesObject
-		desired  common.KubernetesObject
+		existing client.Object
+		desired  client.Object
 	}
 	tests := []struct {
 		name    string

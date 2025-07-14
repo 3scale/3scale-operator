@@ -9,17 +9,16 @@ import (
 	"strings"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
-	"github.com/3scale/3scale-operator/pkg/common"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/google/go-cmp/cmp"
-
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-logr/logr"
+	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type OpenAPIBackendReconciler struct {
@@ -141,7 +140,7 @@ func (p *OpenAPIBackendReconciler) desired() (*capabilitiesv1beta1.Backend, erro
 	return backend, nil
 }
 
-func (p *OpenAPIBackendReconciler) backendMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func (p *OpenAPIBackendReconciler) backendMutator(existingObj, desiredObj client.Object) (bool, error) {
 	existing, ok := existingObj.(*capabilitiesv1beta1.Backend)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *capabilitiesv1beta1.Backend", existingObj)
@@ -167,7 +166,7 @@ func (p *OpenAPIBackendReconciler) backendMutator(existingObj, desiredObj common
 	// maybe compare only "managed" fields
 	if !reflect.DeepEqual(existing.Spec, desired.Spec) {
 		diff := cmp.Diff(existing.Spec, desired.Spec)
-		p.Logger().Info(fmt.Sprintf("%s spec has changed: %s", common.ObjectInfo(desired), diff))
+		p.Logger().Info(fmt.Sprintf("%s spec has changed: %s", helper.ObjectInfo(desired), diff))
 		existing.Spec = desired.Spec
 		updated = true
 	}
