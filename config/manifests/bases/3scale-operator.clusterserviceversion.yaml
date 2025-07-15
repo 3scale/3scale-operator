@@ -188,8 +188,8 @@ spec:
     name: Eguzki Astiz Lezaun
   - email: mstoklus@redhat.com
     name: Michal Stokluska
-  - email: aucunnin@redhat.com
-    name: Austin Cunningham
+  - email: atra@redhat.com
+    name: An Tran
   maturity: stable
   provider:
     name: Red Hat
