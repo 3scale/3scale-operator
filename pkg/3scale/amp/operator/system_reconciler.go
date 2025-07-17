@@ -12,7 +12,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/pkg/upgrade"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	k8sappsv1 "k8s.io/api/apps/v1"
@@ -247,15 +246,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		}
 	}
 
-	// 3scale 2.14 -> 2.15
-	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemAppDeploymentName, currentNameSpace, false, r.Client(), nil)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !isMigrated {
-		systemComponentsReady = false
-	}
-
 	// Sidekiq Deployment
 	sidekiqDeploymentMutators := []reconcilers.DMutateFn{
 		reconcilers.DeploymentContainerResourcesMutator,
@@ -290,15 +280,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	err = r.ReconcileDeployment(sidekiqDeployment, reconcilers.DeploymentMutator(sidekiqDeploymentMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
-	}
-
-	// 3scale 2.14 -> 2.15
-	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.SystemSidekiqName, currentNameSpace, false, r.Client(), nil)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !isMigrated {
-		systemComponentsReady = false
 	}
 
 	// SystemApp PDB

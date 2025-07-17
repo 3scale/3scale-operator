@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
-	appsv1 "github.com/openshift/api/apps/v1"
 	configv1 "github.com/openshift/api/config/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -77,11 +76,7 @@ func TestApicastReconciler(t *testing.T) {
 	objs := []runtime.Object{apimanager}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = imagev1.AddToScheme(s)
+	err := imagev1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -262,10 +257,6 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 	objs := []runtime.Object{apimanager, existingProdDeployment, p2Secret}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err = appsv1.AddToScheme(s)
-	if err != nil {
-		t.Fatal(err)
-	}
 	err = imagev1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
@@ -483,10 +474,6 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 	objs := []runtime.Object{apimanager, existingProdDeployment, existingTc1Secret, desiredTc1Secret}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err = appsv1.AddToScheme(s)
-	if err != nil {
-		t.Fatal(err)
-	}
 	err = imagev1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
@@ -738,9 +725,6 @@ func TestApicastServicePortMutator(t *testing.T) {
 			objs := []runtime.Object{tc.apim, existingStagingService, existingProductionService}
 			s := scheme.Scheme
 			s.AddKnownTypes(appsv1alpha1.GroupVersion, tc.apim)
-			if err := appsv1.AddToScheme(s); err != nil {
-				t.Fatal(err)
-			}
 			if err := imagev1.AddToScheme(s); err != nil {
 				t.Fatal(err)
 			}
@@ -803,10 +787,6 @@ func TestReplicaApicastReconciler(t *testing.T) {
 	s := scheme.Scheme
 
 	err := appsv1alpha1.AddToScheme(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -932,10 +912,6 @@ func TestReplicaApicastTelemtryReconciler(t *testing.T) {
 	s := scheme.Scheme
 
 	err := appsv1alpha1.AddToScheme(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
