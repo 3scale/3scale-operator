@@ -102,8 +102,6 @@ var _ = BeforeSuite(func() {
 	err = imagev1.Install(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
-	Expect(err).NotTo(HaveOccurred())
-
 	err = monitoringv1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
