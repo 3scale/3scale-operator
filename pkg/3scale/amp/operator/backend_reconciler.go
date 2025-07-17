@@ -5,7 +5,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/pkg/upgrade"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -55,15 +54,6 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// 3scale 2.14 -> 2.15
-	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.BackendCronName, r.apiManager.GetNamespace(), false, r.Client(), nil)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !isMigrated {
-		return reconcile.Result{Requeue: true}, nil
-	}
-
 	listenerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
 	listenerDeploymentMutator = append(listenerDeploymentMutator,
 		r.backendRedisAsyncReconciler,
@@ -86,15 +76,6 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	err = r.ReconcileDeployment(listenerDeployment, reconcilers.DeploymentMutator(listenerDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
-	}
-
-	// 3scale 2.14 -> 2.15
-	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.BackendListenerName, r.apiManager.GetNamespace(), false, r.Client(), nil)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !isMigrated {
-		return reconcile.Result{Requeue: true}, nil
 	}
 
 	serviceMutators := []reconcilers.MutateFn{
@@ -136,15 +117,6 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	err = r.ReconcileDeployment(workerDeployment, reconcilers.DeploymentMutator(workerDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
-	}
-
-	// 3scale 2.14 -> 2.15
-	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.BackendWorkerName, r.apiManager.GetNamespace(), false, r.Client(), nil)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !isMigrated {
-		return reconcile.Result{Requeue: true}, nil
 	}
 
 	// Environment ConfigMap

@@ -8,7 +8,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
-	appsv1 "github.com/openshift/api/apps/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,10 +40,6 @@ func TestBaseAPIManagerLogicReconcilerUpdateOwnerRef(t *testing.T) {
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager}
@@ -72,7 +67,7 @@ func TestBaseAPIManagerLogicReconcilerUpdateOwnerRef(t *testing.T) {
 		},
 	}
 
-	err = apimanagerLogicReconciler.ReconcileResource(&v1.ConfigMap{}, desiredConfigmap, reconcilers.CreateOnlyMutator)
+	err := apimanagerLogicReconciler.ReconcileResource(&v1.ConfigMap{}, desiredConfigmap, reconcilers.CreateOnlyMutator)
 	if err != nil {
 		t.Fatal(err)
 	}

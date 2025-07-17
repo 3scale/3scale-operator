@@ -7,7 +7,6 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
-	appsv1 "github.com/openshift/api/apps/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -26,12 +25,6 @@ func TestMemcachedDeploymentReconciler(t *testing.T) {
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
 	err := k8sappsv1.AddToScheme(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// 3scale 2.14 -> 2.15
-	err = appsv1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}

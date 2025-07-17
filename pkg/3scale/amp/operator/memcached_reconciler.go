@@ -4,7 +4,6 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/pkg/upgrade"
 
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -44,15 +43,6 @@ func (r *MemcachedReconciler) Reconcile() (reconcile.Result, error) {
 	err = r.ReconcileDeployment(memcached.Deployment(ampImages.Options.SystemMemcachedImage), mutator)
 	if err != nil {
 		return reconcile.Result{}, err
-	}
-
-	// 3scale 2.14 -> 2.15
-	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemMemcachedDeploymentName, r.apiManager.GetNamespace(), false, r.Client(), nil)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !isMigrated {
-		return reconcile.Result{Requeue: true}, nil
 	}
 
 	return reconcile.Result{}, nil

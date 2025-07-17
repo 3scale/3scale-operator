@@ -8,7 +8,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
-	appsv1 "github.com/openshift/api/apps/v1"
 	configv1 "github.com/openshift/api/config/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -72,11 +71,7 @@ func TestNewBackendReconciler(t *testing.T) {
 	objs := []runtime.Object{apimanager, backendRedisSecret}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := appsv1.Install(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = imagev1.Install(s)
+	err := imagev1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,12 +80,6 @@ func TestNewBackendReconciler(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = configv1.Install(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// 3scale 2.14 -> 2.15
-	err = appsv1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,10 +145,6 @@ func TestReplicaBackendReconciler(t *testing.T) {
 	s := scheme.Scheme
 
 	err := appsv1alpha1.AddToScheme(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = appsv1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}

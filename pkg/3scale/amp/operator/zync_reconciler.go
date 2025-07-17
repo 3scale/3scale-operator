@@ -5,7 +5,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/pkg/upgrade"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -89,15 +88,6 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// 3scale 2.14 -> 2.15
-	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.ZyncName, r.apiManager.GetNamespace(), false, r.Client(), nil)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !isMigrated {
-		return reconcile.Result{Requeue: true}, nil
-	}
-
 	// Zync Que Deployment
 	zyncQueMutators := []reconcilers.DMutateFn{
 		reconcilers.DeploymentContainerResourcesMutator,
@@ -127,15 +117,6 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// 3scale 2.14 -> 2.15
-	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.ZyncQueDeploymentName, r.apiManager.GetNamespace(), false, r.Client(), r.BaseReconciler.Scheme())
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !isMigrated {
-		return reconcile.Result{Requeue: true}, nil
-	}
-
 	serviceMutators := []reconcilers.MutateFn{
 		reconcilers.CreateOnlyMutator,
 		reconcilers.ServiceSelectorMutator,
@@ -163,15 +144,6 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		err = r.ReconcileDeployment(zync.DatabaseDeployment(ampImages.Options.ZyncDatabasePostgreSQLImage), zyncDBDMutator)
 		if err != nil {
 			return reconcile.Result{}, err
-		}
-
-		// 3scale 2.14 -> 2.15
-		isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.ZyncDatabaseDeploymentName, r.apiManager.GetNamespace(), false, r.Client(), nil)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		if !isMigrated {
-			return reconcile.Result{Requeue: true}, nil
 		}
 
 		// Zync DB Service
