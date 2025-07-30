@@ -7,7 +7,6 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
-	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
@@ -49,11 +48,7 @@ func TestAMPImagesReconciler(t *testing.T) {
 	objs := []runtime.Object{apimanager}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = imagev1.AddToScheme(s)
+	err := imagev1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
