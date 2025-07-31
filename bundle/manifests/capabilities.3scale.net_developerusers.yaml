@@ -42,7 +42,8 @@ spec:
             description: DeveloperUserSpec defines the desired state of DeveloperUser
             properties:
               developerAccountRef:
-                description: DeveloperAccountRef is the reference to the parent developer account
+                description: DeveloperAccountRef is the reference to the parent developer
+                  account
                 properties:
                   name:
                     description: |-
@@ -59,10 +60,12 @@ spec:
                 description: Password
                 properties:
                   name:
-                    description: name is unique within a namespace to reference a secret resource.
+                    description: name is unique within a namespace to reference a
+                      secret resource.
                     type: string
                   namespace:
-                    description: namespace defines the space within which the secret name must be unique.
+                    description: namespace defines the space within which the secret
+                      name must be unique.
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
@@ -84,7 +87,8 @@ spec:
                 - member
                 type: string
               suspended:
-                description: State defines the desired state. Defaults to "false", ie, active
+                description: State defines the desired state. Defaults to "false",
+                  ie, active
                 type: boolean
               username:
                 description: Username
@@ -153,7 +157,8 @@ spec:
               developerUserState:
                 type: string
               observedGeneration:
-                description: ObservedGeneration reflects the generation of the most recently observed Backend Spec.
+                description: ObservedGeneration reflects the generation of the most
+                  recently observed Backend Spec.
                 format: int64
                 type: integer
               providerAccountHost:

@@ -11,8 +11,8 @@ spec:
       containers:
       - name: manager
         args:
-        - "--metrics-addr=0.0.0.0:8080"
-        - "--enable-leader-election"
+        - "--metrics-bind-address=0.0.0.0:8080"
+        - "--leader-elect"
         ports:
         - containerPort: 8080
           name: metrics
