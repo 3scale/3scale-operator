@@ -248,12 +248,7 @@ func (r *ApplicationAuthReconciler) applicationAuthReconciler(
 	}
 	if authSecret.UserKey != "" {
 		params := make(map[string]string)
-		// this key "user_key" is configurable so will need to get the product to see if its the default or not
-		if product.Spec.AuthUserKey() == nil {
-			params["user_key"] = authSecret.UserKey
-		} else {
-			params[*product.Spec.AuthUserKey()] = authSecret.UserKey
-		}
+		params["user_key"] = authSecret.UserKey
 		// edge case if the operator is stopped before reconcile finished need to nil check application.Status.ID
 		if application.Status.ID != nil {
 			_, err := threescaleClient.UpdateApplication(*developerAccount.Status.ID, *application.Status.ID, params)
