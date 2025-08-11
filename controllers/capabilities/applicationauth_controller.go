@@ -60,8 +60,6 @@ const (
 // +kubebuilder:rbac:groups=capabilities.3scale.net,resources=applicationauths/status,verbs=get;update;patch
 
 func (r *ApplicationAuthReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
-	// _ = r.Log.WithValues("applicationauth", req.NamespacedName)
 	reqLogger := r.Logger().WithValues("applicationauth", req.NamespacedName)
 	reqLogger.Info("Reconcile Application Authentication", "Operator version", version.Version)
 
@@ -84,74 +82,43 @@ func (r *ApplicationAuthReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		}
 		reqLogger.V(1).Info(string(jsonData))
 	}
-	// get the application
-	application := &capabilitiesv1beta1.Application{}
 
 	// Retrieve application CR, on failed retrieval update status and requeue
+	application := &capabilitiesv1beta1.Application{}
 	err = r.Client().Get(r.Context(), types.NamespacedName{Name: applicationAuth.Spec.ApplicationCRName, Namespace: applicationAuth.Namespace}, application)
 	if err != nil {
 		// If the product CR is not found, update status and requeue
 		if errors.IsNotFound(err) {
-			statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, applicationAuth, err)
 			reqLogger.Info("Application CR not found. Ignoring since object must have been deleted")
-			statusResult, statusErr := statusReconciler.Reconcile()
-			// Reconcile status first as the reconcilerError might need to be updated to the status section of the CR before requeueing
-			if statusErr != nil {
-				return ctrl.Result{}, statusErr
-			}
-			if statusResult.Requeue {
-				reqLogger.Info("Reconciling status not finished. Requeueing.")
-				return statusResult, nil
-			}
+			return r.reconcileStatus(applicationAuth, err, reqLogger)
 		}
 
 		// If API call error, return err
 		return ctrl.Result{}, err
 	}
 
-	// get the product
+	// Retrieve DeveloperAccount CR, on failed retrieval update status and requeue
 	developerAccount := &capabilitiesv1beta1.DeveloperAccount{}
-
-	// Retrieve product CR, on failed retrieval update status and requeue
 	err = r.Client().Get(r.Context(), types.NamespacedName{Name: application.Spec.AccountCR.Name, Namespace: applicationAuth.Namespace}, developerAccount)
 	if err != nil {
 		// If the product CR is not found, update status and requeue
 		if errors.IsNotFound(err) {
-			statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, applicationAuth, err)
 			reqLogger.Info("DeveloperAccount CR not found. Ignoring since object must have been deleted")
-			statusResult, statusErr := statusReconciler.Reconcile()
-			// Reconcile status first as the reconcilerError might need to be updated to the status section of the CR before requeueing
-			if statusErr != nil {
-				return ctrl.Result{}, statusErr
-			}
-			if statusResult.Requeue {
-				reqLogger.Info("Reconciling status not finished. Requeueing.")
-				return statusResult, nil
-			}
+			return r.reconcileStatus(applicationAuth, err, reqLogger)
 		}
 
 		// If API call error, return err
 		return ctrl.Result{}, err
 	}
-	// get the application
-	product := &capabilitiesv1beta1.Product{}
 
-	// Retrieve application CR, on failed retrieval update status and requeue
+	// Retrieve Product CR, on failed retrieval update status and requeue
+	product := &capabilitiesv1beta1.Product{}
 	err = r.Client().Get(r.Context(), types.NamespacedName{Name: application.Spec.ProductCR.Name, Namespace: applicationAuth.Namespace}, product)
 	if err != nil {
 		// If the product CR is not found, update status and requeue
 		if errors.IsNotFound(err) {
-			statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, applicationAuth, err)
-			reqLogger.Info("Application CR not found. Ignoring since object must have been deleted")
-			statusResult, statusErr := statusReconciler.Reconcile()
-			// Reconcile status first as the reconcilerError might need to be updated to the status section of the CR before requeueing
-			if statusErr != nil {
-				return ctrl.Result{}, statusErr
-			}
-			if statusResult.Requeue {
-				reqLogger.Info("Reconciling status not finished. Requeueing.")
-				return statusResult, nil
-			}
+			reqLogger.Info("Product CR not found. Ignoring since object must have been deleted")
+			return r.reconcileStatus(applicationAuth, err, reqLogger)
 		}
 
 		// If API call error, return err
@@ -171,52 +138,29 @@ func (r *ApplicationAuthReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, err
 	}
 
-	// get the authSecret
-	authSecretObj := &corev1.Secret{}
-
 	// Retrieve auth secret, on failed retrieval update status and requeue
+	authSecretObj := &corev1.Secret{}
 	err = r.Client().Get(r.Context(), types.NamespacedName{Name: applicationAuth.Spec.AuthSecretRef.Name, Namespace: applicationAuth.Namespace}, authSecretObj)
 	if err != nil {
 		// If the product CR is not found, update status and requeue
 		if errors.IsNotFound(err) {
-			statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, applicationAuth, err)
 			reqLogger.Info("ApplicationAuth secret not found. Ignoring since object must have been deleted")
-			statusResult, statusErr := statusReconciler.Reconcile()
-			// Reconcile status first as the reconcilerError might need to be updated to the status section of the CR before requeueing
-			if statusErr != nil {
-				return ctrl.Result{}, statusErr
-			}
-			if statusResult.Requeue {
-				reqLogger.Info("Reconciling status not finished. Requeueing.")
-				return statusResult, nil
-			}
+			return r.reconcileStatus(applicationAuth, err, reqLogger)
 		}
 		return ctrl.Result{}, err
 	}
+
 	// populate authSecret struct
 	authSecret := authSecretReferenceSource(r.Client(), applicationAuth.Namespace, applicationAuth.Spec.AuthSecretRef, reqLogger)
-
 	if !applicationAuth.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ApplicationAuthReadyConditionType) {
-		statusReconciler, reconcileErr := r.applicationAuthReconciler(applicationAuth, developerAccount, application, product, *authSecret, threescaleAPIClient)
-		if statusReconciler != nil {
-			statusResult, statusErr := statusReconciler.Reconcile()
-
-			if statusErr != nil {
-				return ctrl.Result{}, statusErr
-			}
-			if statusResult.Requeue {
-				reqLogger.Info("Reconciling status not finished. Requeueing.")
-				return statusResult, nil
-			}
-			// If reconcile error but no status update required, requeue.
-			if reconcileErr != nil {
-				return helper.ReconcileErrorHandler(reconcileErr, reqLogger), nil
-			}
+		err := r.applicationAuthReconciler(applicationAuth, developerAccount, application, product, *authSecret, threescaleAPIClient)
+		if err != nil {
+			return r.reconcileStatus(applicationAuth, err, reqLogger)
 		}
 	}
 	// final return
 	reqLogger.Info("Successfully reconciled")
-	return ctrl.Result{}, nil
+	return r.reconcileStatus(applicationAuth, nil, reqLogger)
 }
 
 func (r *ApplicationAuthReconciler) SetupWithManager(mgr ctrl.Manager) error {
@@ -232,7 +176,7 @@ func (r *ApplicationAuthReconciler) applicationAuthReconciler(
 	product *capabilitiesv1beta1.Product,
 	authSecret AuthSecret,
 	threescaleClient *threescaleapi.ThreeScaleClient,
-) (*ApplicationAuthStatusReconciler, error) {
+) error {
 	// generate sha base of timestamp
 	timestamp := time.Now().Unix()
 	// Write the timestamp string and encode to hash
@@ -253,8 +197,7 @@ func (r *ApplicationAuthReconciler) applicationAuthReconciler(
 		if application.Status.ID != nil {
 			_, err := threescaleClient.UpdateApplication(*developerAccount.Status.ID, *application.Status.ID, params)
 			if err != nil {
-				statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, applicationAuth, err)
-				return statusReconciler, err
+				return err
 			}
 		}
 	}
@@ -264,8 +207,7 @@ func (r *ApplicationAuthReconciler) applicationAuthReconciler(
 		if application.Status.ID != nil {
 			foundApplication, err := threescaleClient.CreateApplicationKey(*developerAccount.Status.ID, *application.Status.ID, authSecret.ApplicationKey)
 			if err != nil {
-				statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, applicationAuth, err)
-				return statusReconciler, err
+				return err
 			}
 
 			authSecret.ApplicationID = foundApplication.ApplicationId
@@ -276,15 +218,13 @@ func (r *ApplicationAuthReconciler) applicationAuthReconciler(
 		if application.Status.ID != nil {
 			foundApplication, err := threescaleClient.CreateApplicationRandomKey(*developerAccount.Status.ID, *application.Status.ID)
 			if err != nil {
-				statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, applicationAuth, err)
-				return statusReconciler, err
+				return err
 			}
 			authSecret.ApplicationID = foundApplication.ApplicationId
 			var foundApplicationKeys []threescaleapi.ApplicationKey
 			foundApplicationKeys, err = threescaleClient.ApplicationKeys(*developerAccount.Status.ID, *application.Status.ID)
 			if err != nil {
-				statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, applicationAuth, err)
-				return statusReconciler, err
+				return err
 			}
 			lastKey := len(foundApplicationKeys) - 1
 			authSecret.ApplicationKey = fmt.Sprint(foundApplicationKeys[lastKey].Value)
@@ -300,8 +240,7 @@ func (r *ApplicationAuthReconciler) applicationAuthReconciler(
 	if err != nil {
 		// Handle errors gracefully, e.g., log and return or retry
 		r.Logger().Error(err, "Failed to get existing ApplicationAuthSecret")
-		statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, applicationAuth, err)
-		return statusReconciler, err
+		return err
 	}
 	newData := ApplicationAuthSecret.Data
 	newValues := map[string][]byte{
@@ -317,11 +256,10 @@ func (r *ApplicationAuthReconciler) applicationAuthReconciler(
 	err = r.Client().Update(r.Context(), ApplicationAuthSecret)
 	if err != nil {
 		r.Logger().Error(err, "Failed to update ApplicationAuthSecret")
-		statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, applicationAuth, err)
-		return statusReconciler, err
+		return err
 	}
-	statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, applicationAuth, nil)
-	return statusReconciler, nil
+
+	return nil
 }
 
 func authSecretReferenceSource(cl client.Client, ns string, authSectretRef *corev1.LocalObjectReference, logger logr.Logger) *AuthSecret {
@@ -341,4 +279,25 @@ func authSecretReferenceSource(cl client.Client, ns string, authSectretRef *core
 	}
 
 	return nil
+}
+
+func (r *ApplicationAuthReconciler) reconcileStatus(resource *capabilitiesv1beta1.ApplicationAuth, err error, logger logr.Logger) (ctrl.Result, error) {
+	statusReconciler := NewApplicationAuthStatusReconciler(r.BaseReconciler, resource, err)
+	statusResult, statusErr := statusReconciler.Reconcile()
+
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Reconcile status first as the reconcilerError might need to be updated to the status section of the CR before requeueing
+	if statusErr != nil {
+		return ctrl.Result{}, statusErr
+	}
+
+	if statusResult.Requeue {
+		logger.Info("Reconciling status not finished. Requeueing.")
+		return statusResult, nil
+	}
+
+	return ctrl.Result{}, nil
 }
