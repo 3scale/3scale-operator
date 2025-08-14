@@ -18,15 +18,12 @@ package controllers
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"time"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
+	rand "github.com/3scale/3scale-operator/pkg/crypto/rand"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
@@ -133,6 +130,12 @@ func (r *ApplicationAuthReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			return ctrl.Result{}, err
 		}
 
+		authMode := product.Spec.AuthenticationMode()
+		if authMode == nil {
+			err := fmt.Errorf("unable to identify authentication mode from Product CR")
+			return reconcileStatus(r.BaseReconciler, applicationAuth, err, reqLogger)
+		}
+
 		// Retrieve providerAccountRef
 		providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), applicationAuth.GetNamespace(), applicationAuth.Spec.ProviderAccountRef, r.Logger())
 		if err != nil {
@@ -158,9 +161,14 @@ func (r *ApplicationAuthReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			return ctrl.Result{}, err
 		}
 
-		// populate authSecret struct
-		authSecret := authSecretReferenceSource(r.Client(), applicationAuth.Namespace, applicationAuth.Spec.AuthSecretRef, reqLogger)
-		err = r.applicationAuthReconciler(applicationAuth, *developerAccount.Status.ID, *application.Status.ID, product, *authSecret, threescaleAPIClient)
+		// populate authSecret struct and make sure required fields are available
+		shouldGenerateSecret := applicationAuth.Spec.GenerateSecret != nil && *applicationAuth.Spec.GenerateSecret
+		authSecret, err := authSecretReferenceSource(r.Client(), applicationAuth.Namespace, applicationAuth.Spec.AuthSecretRef, shouldGenerateSecret, *authMode, reqLogger)
+		if err != nil {
+			return reconcileStatus(r.BaseReconciler, applicationAuth, err, reqLogger)
+		}
+
+		err = syncApplicationAuth(*developerAccount.Status.ID, *application.Status.ID, *authMode, *authSecret, threescaleAPIClient)
 		if err != nil {
 			return reconcileStatus(r.BaseReconciler, applicationAuth, err, reqLogger)
 		}
@@ -176,109 +184,112 @@ func (r *ApplicationAuthReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *ApplicationAuthReconciler) applicationAuthReconciler(
-	applicationAuth *capabilitiesv1beta1.ApplicationAuth,
+func syncApplicationAuth(
 	developerAccountID int64,
 	applicationID int64,
-	product *capabilitiesv1beta1.Product,
+	authMode string,
 	authSecret AuthSecret,
 	threescaleClient *threescaleapi.ThreeScaleClient,
 ) error {
-	// generate sha base of timestamp
-	timestamp := time.Now().Unix()
-	// Write the timestamp string and encode to hash
-	hash := sha256.New()
-	hash.Write([]byte(strconv.FormatInt(timestamp, 10)))
-	hashedBytes := hash.Sum(nil)
-	hashedString := hex.EncodeToString(hashedBytes)
-
-	// Check the values if populated or the GenerateSecret field is true and make the api call to update
-	// If UserKey is not populated generate random sha
-	if authSecret.UserKey == "" && *applicationAuth.Spec.GenerateSecret {
-		authSecret.UserKey = hashedString
-	}
-	if authSecret.UserKey != "" {
-		params := make(map[string]string)
-		params["user_key"] = authSecret.UserKey
-		// edge case if the operator is stopped before reconcile finished need to nil check application.Status.ID
-		_, err := threescaleClient.UpdateApplication(developerAccountID, applicationID, params)
+	switch authMode {
+	case "1":
+		// get the existing value from the porta
+		existingApplication, err := threescaleClient.Application(developerAccountID, applicationID)
 		if err != nil {
 			return err
 		}
-	}
+		existingKey := existingApplication.UserKey
 
-	if authSecret.ApplicationKey != "" {
-		foundApplication, err := threescaleClient.CreateApplicationKey(developerAccountID, applicationID, authSecret.ApplicationKey)
+		// user_key mismatch, update
+		if existingKey != authSecret.UserKey {
+			params := make(map[string]string)
+			params["user_key"] = authSecret.UserKey
+			if _, err := threescaleClient.UpdateApplication(developerAccountID, applicationID, params); err != nil {
+				return err
+			}
+		}
+	case "2":
+		// get the existing value from the portal
+		existingKeys, err := threescaleClient.ApplicationKeys(developerAccountID, applicationID)
 		if err != nil {
 			return err
 		}
 
-		authSecret.ApplicationID = foundApplication.ApplicationId
-	}
+		// pre-existing keys
+		if len(existingKeys) > 0 {
+			// Nothing to do, return early
+			if existingKeys[0].Value == authSecret.ApplicationKey {
+				return nil
+			}
 
-	if applicationAuth.Spec.GenerateSecret != nil && *applicationAuth.Spec.GenerateSecret {
-		foundApplication, err := threescaleClient.CreateApplicationRandomKey(developerAccountID, applicationID)
-		if err != nil {
+			// if the key is not match, delete it
+			if err := threescaleClient.DeleteApplicationKey(developerAccountID, applicationID, existingKeys[0].Value); err != nil {
+				return err
+			}
+		}
+
+		if _, err := threescaleClient.CreateApplicationKey(developerAccountID, applicationID, authSecret.ApplicationKey); err != nil {
 			return err
 		}
-		authSecret.ApplicationID = foundApplication.ApplicationId
-		var foundApplicationKeys []threescaleapi.ApplicationKey
-		foundApplicationKeys, err = threescaleClient.ApplicationKeys(developerAccountID, applicationID)
-		if err != nil {
-			return err
-		}
-		lastKey := len(foundApplicationKeys) - 1
-		authSecret.ApplicationKey = fmt.Sprint(foundApplicationKeys[lastKey].Value)
-	}
-
-	// get the current values and update the secret
-	ApplicationAuthSecret := &corev1.Secret{}
-	err := r.Client().Get(r.Context(), types.NamespacedName{
-		Name:      applicationAuth.Spec.AuthSecretRef.Name,
-		Namespace: applicationAuth.Namespace,
-	}, ApplicationAuthSecret)
-	if err != nil {
-		// Handle errors gracefully, e.g., log and return or retry
-		r.Logger().Error(err, "Failed to get existing ApplicationAuthSecret")
-		return err
-	}
-	newData := ApplicationAuthSecret.Data
-	newValues := map[string][]byte{
-		UserKey:        []byte(authSecret.UserKey),
-		ApplicationID:  []byte(authSecret.ApplicationID),
-		ApplicationKey: []byte(authSecret.ApplicationKey),
-	}
-	for key, value := range newValues {
-		newData[key] = value
-	}
-
-	ApplicationAuthSecret.Data = newData
-	err = r.Client().Update(r.Context(), ApplicationAuthSecret)
-	if err != nil {
-		r.Logger().Error(err, "Failed to update ApplicationAuthSecret")
-		return err
 	}
 
 	return nil
 }
 
-func authSecretReferenceSource(cl client.Client, ns string, authSectretRef *corev1.LocalObjectReference, logger logr.Logger) *AuthSecret {
-	if authSectretRef != nil {
-		logger.Info("LookupAuthSecret", "ns", ns, "authSecretRef", authSectretRef)
-		secretSource := helper.NewSecretSource(cl, ns)
+func authSecretReferenceSource(cl client.Client, ns string, authSectretRef *corev1.LocalObjectReference, generateSecret bool, authMode string, logger logr.Logger) (*AuthSecret, error) {
+	logger.Info("LookupAuthSecret", "ns", ns, "authSecretRef", authSectretRef)
+	secretSource := helper.NewSecretSource(cl, ns)
+
+	switch authMode {
+	case "1":
 		userKeyStr, err := secretSource.RequiredFieldValueFromRequiredSecret(authSectretRef.Name, UserKey)
 		if err != nil {
-			userKeyStr = ""
+			return nil, err
 		}
+
+		if userKeyStr == "" {
+			if generateSecret {
+				userKeyStr = rand.String(16)
+
+				newValues := map[string][]byte{
+					UserKey: []byte(userKeyStr),
+				}
+
+				if err := updateSecret(context.Background(), cl, authSectretRef.Name, ns, newValues); err != nil {
+					return nil, err
+				}
+			} else {
+				// Nothing available raise error now
+				return nil, fmt.Errorf("no user_key available in secret and generate secret is set to false")
+			}
+		}
+		return &AuthSecret{UserKey: userKeyStr}, nil
+	case "2":
 		applicationKeyStr, err := secretSource.RequiredFieldValueFromRequiredSecret(authSectretRef.Name, ApplicationKey)
 		if err != nil {
-			applicationKeyStr = ""
+			return nil, err
 		}
 
-		return &AuthSecret{UserKey: userKeyStr, ApplicationKey: applicationKeyStr}
-	}
+		if applicationKeyStr == "" {
+			if generateSecret {
+				applicationKeyStr = rand.String(16)
 
-	return nil
+				newValues := map[string][]byte{
+					ApplicationKey: []byte(applicationKeyStr),
+				}
+
+				if err := updateSecret(context.Background(), cl, authSectretRef.Name, ns, newValues); err != nil {
+					return nil, err
+				}
+			} else {
+				// Nothing available raise error now
+				return nil, fmt.Errorf("no user_key available in secret and generate secret is set to false")
+			}
+		}
+		return &AuthSecret{ApplicationKey: applicationKeyStr}, nil
+	default:
+		return nil, fmt.Errorf("unknown authentication mode")
+	}
 }
 
 func reconcileStatus(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.ApplicationAuth, err error, logger logr.Logger) (ctrl.Result, error) {
@@ -311,6 +322,33 @@ func checkApplicationResources(applicationAuthResource *capabilitiesv1beta1.Appl
 			ErrorType:      helper.OrphanError,
 			FieldErrorList: errors,
 		}
+	}
+
+	return nil
+}
+
+func updateSecret(ctx context.Context, client client.Client, name string, namespace string, values map[string][]byte) error {
+	// get the current values and update the secret
+	secret := &corev1.Secret{}
+	err := client.Get(ctx, types.NamespacedName{
+		Name:      name,
+		Namespace: namespace,
+	}, secret)
+	if err != nil {
+		// Handle errors gracefully, e.g., log and return or retry
+		return err
+	}
+
+	newData := secret.Data
+
+	for key, value := range values {
+		newData[key] = value
+	}
+
+	secret.Data = newData
+
+	if err = client.Update(ctx, secret); err != nil {
+		return err
 	}
 
 	return nil
