@@ -35,6 +35,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -83,77 +84,83 @@ func (r *ApplicationAuthReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		reqLogger.V(1).Info(string(jsonData))
 	}
 
-	// Retrieve application CR, on failed retrieval update status and requeue
-	application := &capabilitiesv1beta1.Application{}
-	err = r.Client().Get(r.Context(), types.NamespacedName{Name: applicationAuth.Spec.ApplicationCRName, Namespace: applicationAuth.Namespace}, application)
-	if err != nil {
-		// If the product CR is not found, update status and requeue
-		if errors.IsNotFound(err) {
-			reqLogger.Info("Application CR not found. Ignoring since object must have been deleted")
-			return r.reconcileStatus(applicationAuth, err, reqLogger)
-		}
-
-		// If API call error, return err
-		return ctrl.Result{}, err
-	}
-
-	// Retrieve DeveloperAccount CR, on failed retrieval update status and requeue
-	developerAccount := &capabilitiesv1beta1.DeveloperAccount{}
-	err = r.Client().Get(r.Context(), types.NamespacedName{Name: application.Spec.AccountCR.Name, Namespace: applicationAuth.Namespace}, developerAccount)
-	if err != nil {
-		// If the product CR is not found, update status and requeue
-		if errors.IsNotFound(err) {
-			reqLogger.Info("DeveloperAccount CR not found. Ignoring since object must have been deleted")
-			return r.reconcileStatus(applicationAuth, err, reqLogger)
-		}
-
-		// If API call error, return err
-		return ctrl.Result{}, err
-	}
-
-	// Retrieve Product CR, on failed retrieval update status and requeue
-	product := &capabilitiesv1beta1.Product{}
-	err = r.Client().Get(r.Context(), types.NamespacedName{Name: application.Spec.ProductCR.Name, Namespace: applicationAuth.Namespace}, product)
-	if err != nil {
-		// If the product CR is not found, update status and requeue
-		if errors.IsNotFound(err) {
-			reqLogger.Info("Product CR not found. Ignoring since object must have been deleted")
-			return r.reconcileStatus(applicationAuth, err, reqLogger)
-		}
-
-		// If API call error, return err
-		return ctrl.Result{}, err
-	}
-
-	// Retrieve providerAccountRef
-	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), applicationAuth.GetNamespace(), applicationAuth.Spec.ProviderAccountRef, r.Logger())
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	// connect to the 3scale porta client
-	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(applicationAuth.GetAnnotations())
-	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount, insecureSkipVerify)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	// Retrieve auth secret, on failed retrieval update status and requeue
-	authSecretObj := &corev1.Secret{}
-	err = r.Client().Get(r.Context(), types.NamespacedName{Name: applicationAuth.Spec.AuthSecretRef.Name, Namespace: applicationAuth.Namespace}, authSecretObj)
-	if err != nil {
-		// If the product CR is not found, update status and requeue
-		if errors.IsNotFound(err) {
-			reqLogger.Info("ApplicationAuth secret not found. Ignoring since object must have been deleted")
-			return r.reconcileStatus(applicationAuth, err, reqLogger)
-		}
-		return ctrl.Result{}, err
-	}
-
-	// populate authSecret struct
-	authSecret := authSecretReferenceSource(r.Client(), applicationAuth.Namespace, applicationAuth.Spec.AuthSecretRef, reqLogger)
 	if !applicationAuth.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ApplicationAuthReadyConditionType) {
-		err := r.applicationAuthReconciler(applicationAuth, developerAccount, application, product, *authSecret, threescaleAPIClient)
+		// Retrieve application CR, on failed retrieval update status and requeue
+		application := &capabilitiesv1beta1.Application{}
+		err = r.Client().Get(r.Context(), types.NamespacedName{Name: applicationAuth.Spec.ApplicationCRName, Namespace: applicationAuth.Namespace}, application)
+		if err != nil {
+			// If the product CR is not found, update status and requeue
+			if errors.IsNotFound(err) {
+				reqLogger.Info("Application CR not found. Ignoring since object must have been deleted")
+				return r.reconcileStatus(applicationAuth, err, reqLogger)
+			}
+
+			// If API call error, return err
+			return ctrl.Result{}, err
+		}
+
+		// Make sure application is ready
+		err = checkApplicationResources(applicationAuth, application)
+		if err != nil {
+			return r.reconcileStatus(applicationAuth, err, reqLogger)
+		}
+
+		// Retrieve DeveloperAccount CR, on failed retrieval update status and requeue
+		developerAccount := &capabilitiesv1beta1.DeveloperAccount{}
+		err = r.Client().Get(r.Context(), types.NamespacedName{Name: application.Spec.AccountCR.Name, Namespace: applicationAuth.Namespace}, developerAccount)
+		if err != nil {
+			// If the product CR is not found, update status and requeue
+			if errors.IsNotFound(err) {
+				reqLogger.Info("DeveloperAccount CR not found. Ignoring since object must have been deleted")
+				return r.reconcileStatus(applicationAuth, err, reqLogger)
+			}
+
+			// If API call error, return err
+			return ctrl.Result{}, err
+		}
+
+		// Retrieve Product CR, on failed retrieval update status and requeue
+		product := &capabilitiesv1beta1.Product{}
+		err = r.Client().Get(r.Context(), types.NamespacedName{Name: application.Spec.ProductCR.Name, Namespace: applicationAuth.Namespace}, product)
+		if err != nil {
+			// If the product CR is not found, update status and requeue
+			if errors.IsNotFound(err) {
+				reqLogger.Info("Product CR not found. Ignoring since object must have been deleted")
+				return r.reconcileStatus(applicationAuth, err, reqLogger)
+			}
+
+			// If API call error, return err
+			return ctrl.Result{}, err
+		}
+
+		// Retrieve providerAccountRef
+		providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), applicationAuth.GetNamespace(), applicationAuth.Spec.ProviderAccountRef, r.Logger())
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		// connect to the 3scale porta client
+		insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(applicationAuth.GetAnnotations())
+		threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount, insecureSkipVerify)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		// Retrieve auth secret, on failed retrieval update status and requeue
+		authSecretObj := &corev1.Secret{}
+		err = r.Client().Get(r.Context(), types.NamespacedName{Name: applicationAuth.Spec.AuthSecretRef.Name, Namespace: applicationAuth.Namespace}, authSecretObj)
+		if err != nil {
+			// If the product CR is not found, update status and requeue
+			if errors.IsNotFound(err) {
+				reqLogger.Info("ApplicationAuth secret not found. Ignoring since object must have been deleted")
+				return r.reconcileStatus(applicationAuth, err, reqLogger)
+			}
+			return ctrl.Result{}, err
+		}
+
+		// populate authSecret struct
+		authSecret := authSecretReferenceSource(r.Client(), applicationAuth.Namespace, applicationAuth.Spec.AuthSecretRef, reqLogger)
+		err = r.applicationAuthReconciler(applicationAuth, *developerAccount.Status.ID, *application.Status.ID, product, *authSecret, threescaleAPIClient)
 		if err != nil {
 			return r.reconcileStatus(applicationAuth, err, reqLogger)
 		}
@@ -171,8 +178,8 @@ func (r *ApplicationAuthReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *ApplicationAuthReconciler) applicationAuthReconciler(
 	applicationAuth *capabilitiesv1beta1.ApplicationAuth,
-	developerAccount *capabilitiesv1beta1.DeveloperAccount,
-	application *capabilitiesv1beta1.Application,
+	developerAccountID int64,
+	applicationID int64,
 	product *capabilitiesv1beta1.Product,
 	authSecret AuthSecret,
 	threescaleClient *threescaleapi.ThreeScaleClient,
@@ -194,41 +201,34 @@ func (r *ApplicationAuthReconciler) applicationAuthReconciler(
 		params := make(map[string]string)
 		params["user_key"] = authSecret.UserKey
 		// edge case if the operator is stopped before reconcile finished need to nil check application.Status.ID
-		if application.Status.ID != nil {
-			_, err := threescaleClient.UpdateApplication(*developerAccount.Status.ID, *application.Status.ID, params)
-			if err != nil {
-				return err
-			}
+		_, err := threescaleClient.UpdateApplication(developerAccountID, applicationID, params)
+		if err != nil {
+			return err
 		}
 	}
 
 	if authSecret.ApplicationKey != "" {
-		// edge case if the operator is stopped before reconcile finished need to nil check application.Status.ID
-		if application.Status.ID != nil {
-			foundApplication, err := threescaleClient.CreateApplicationKey(*developerAccount.Status.ID, *application.Status.ID, authSecret.ApplicationKey)
-			if err != nil {
-				return err
-			}
-
-			authSecret.ApplicationID = foundApplication.ApplicationId
+		foundApplication, err := threescaleClient.CreateApplicationKey(developerAccountID, applicationID, authSecret.ApplicationKey)
+		if err != nil {
+			return err
 		}
+
+		authSecret.ApplicationID = foundApplication.ApplicationId
 	}
 
 	if applicationAuth.Spec.GenerateSecret != nil && *applicationAuth.Spec.GenerateSecret {
-		if application.Status.ID != nil {
-			foundApplication, err := threescaleClient.CreateApplicationRandomKey(*developerAccount.Status.ID, *application.Status.ID)
-			if err != nil {
-				return err
-			}
-			authSecret.ApplicationID = foundApplication.ApplicationId
-			var foundApplicationKeys []threescaleapi.ApplicationKey
-			foundApplicationKeys, err = threescaleClient.ApplicationKeys(*developerAccount.Status.ID, *application.Status.ID)
-			if err != nil {
-				return err
-			}
-			lastKey := len(foundApplicationKeys) - 1
-			authSecret.ApplicationKey = fmt.Sprint(foundApplicationKeys[lastKey].Value)
+		foundApplication, err := threescaleClient.CreateApplicationRandomKey(developerAccountID, applicationID)
+		if err != nil {
+			return err
 		}
+		authSecret.ApplicationID = foundApplication.ApplicationId
+		var foundApplicationKeys []threescaleapi.ApplicationKey
+		foundApplicationKeys, err = threescaleClient.ApplicationKeys(developerAccountID, applicationID)
+		if err != nil {
+			return err
+		}
+		lastKey := len(foundApplicationKeys) - 1
+		authSecret.ApplicationKey = fmt.Sprint(foundApplicationKeys[lastKey].Value)
 	}
 
 	// get the current values and update the secret
@@ -300,4 +300,22 @@ func (r *ApplicationAuthReconciler) reconcileStatus(resource *capabilitiesv1beta
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func checkApplicationResources(applicationAuthResource *capabilitiesv1beta1.ApplicationAuth, applicationResource *capabilitiesv1beta1.Application) error {
+	errors := field.ErrorList{}
+
+	specFldPath := field.NewPath("spec")
+	applicationFldPath := specFldPath.Child("applicationCRName")
+
+	if applicationResource.Status.ID == nil {
+		errors = append(errors, field.Invalid(applicationFldPath, applicationAuthResource.Spec.ApplicationCRName, "applicationCR name doesnt have a valid application reference"))
+
+		return &helper.SpecFieldError{
+			ErrorType:      helper.OrphanError,
+			FieldErrorList: errors,
+		}
+	}
+
+	return nil
 }

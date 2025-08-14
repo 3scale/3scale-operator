@@ -99,7 +99,7 @@ func TestApplicationAuthReconciler_applicationAuthReconciler(t *testing.T) {
 			r := &ApplicationAuthReconciler{
 				BaseReconciler: tt.fields.BaseReconciler,
 			}
-			err := r.applicationAuthReconciler(tt.args.applicationAuth, tt.args.developerAccount, tt.args.application, tt.args.product, tt.args.authSecret, tt.args.threescaleClient)
+			err := r.applicationAuthReconciler(tt.args.applicationAuth, *tt.args.developerAccount.Status.ID, *tt.args.application.Status.ID, tt.args.product, tt.args.authSecret, tt.args.threescaleClient)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("applicationAuthReconciler() error = %v, wantErr %v", err, tt.wantErr)
 				return
