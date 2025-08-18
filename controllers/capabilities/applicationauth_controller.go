@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
@@ -168,7 +169,7 @@ func (r *ApplicationAuthReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			return reconcileStatus(r.BaseReconciler, applicationAuth, err, reqLogger)
 		}
 
-		err = syncApplicationAuth(*developerAccount.Status.ID, *application.Status.ID, *authMode, *authSecret, threescaleAPIClient)
+		err = syncApplicationAuth(*developerAccount.Status.ID, *application.Status.ID, *authMode, *authSecret, threescaleAPIClient, reqLogger)
 		if err != nil {
 			return reconcileStatus(r.BaseReconciler, applicationAuth, err, reqLogger)
 		}
@@ -190,6 +191,7 @@ func syncApplicationAuth(
 	authMode string,
 	authSecret AuthSecret,
 	threescaleClient *threescaleapi.ThreeScaleClient,
+	logger logr.Logger,
 ) error {
 	switch authMode {
 	case "1":
@@ -209,27 +211,42 @@ func syncApplicationAuth(
 			}
 		}
 	case "2":
+		desiredKeys := strings.Split(authSecret.ApplicationKey, ",")
+		if len(desiredKeys) > 5 {
+			return fmt.Errorf("secret contains more than 5 application_key")
+		}
+
 		// get the existing value from the portal
-		existingKeys, err := threescaleClient.ApplicationKeys(developerAccountID, applicationID)
+		applicationKeys, err := threescaleClient.ApplicationKeys(developerAccountID, applicationID)
 		if err != nil {
 			return err
 		}
 
-		// pre-existing keys
-		if len(existingKeys) > 0 {
-			// Nothing to do, return early
-			if existingKeys[0].Value == authSecret.ApplicationKey {
-				return nil
-			}
+		existingKeys := make([]string, 0, len(applicationKeys))
+		for _, key := range applicationKeys {
+			existingKeys = append(existingKeys, key.Value)
+		}
 
-			// if the key is not match, delete it
-			if err := threescaleClient.DeleteApplicationKey(developerAccountID, applicationID, existingKeys[0].Value); err != nil {
-				return err
+		// delete existing and not desired
+		notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
+		logger.V(1).Info("syncApplicationAuth", "notDesiredExistingKeys", notDesiredExistingKeys)
+		for _, key := range notDesiredExistingKeys {
+			// key is expected to exist
+			// notDesiredExistingKeys is a subset of the existingMap key set
+			if err := threescaleClient.DeleteApplicationKey(developerAccountID, applicationID, key); err != nil {
+				return fmt.Errorf("error sync applicationAuth for developerAccountID: %d, applicationID: %d, error: %w", developerAccountID, applicationID, err)
 			}
 		}
 
-		if _, err := threescaleClient.CreateApplicationKey(developerAccountID, applicationID, authSecret.ApplicationKey); err != nil {
-			return err
+		// Create not existing and desired
+		desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
+		logger.V(1).Info("syncApplicationPlans", "desiredNewKeys", desiredNewKeys)
+		for _, key := range desiredNewKeys {
+			// key is expected to exist
+			// desiredNewKeys is a subset of the Spec.ApplicationPlans map key set
+			if _, err := threescaleClient.CreateApplicationKey(developerAccountID, applicationID, key); err != nil {
+				return fmt.Errorf("error sync applicationAuth for developerAccountID: %d, applicationID: %d, error: %w", developerAccountID, applicationID, err)
+			}
 		}
 	}
 

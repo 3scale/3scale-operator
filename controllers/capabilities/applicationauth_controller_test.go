@@ -23,6 +23,7 @@ import (
 func TestApplicationAuthReconciler_syncApplicationAuth(t *testing.T) {
 	appID := int64(3)
 	userAccountID := int64(3)
+	logger := logf.Log.WithName("ApplicationAuth reconciler")
 
 	tests := []struct {
 		name        string
@@ -122,6 +123,34 @@ func TestApplicationAuthReconciler_syncApplicationAuth(t *testing.T) {
 			expectedKey: "testkey",
 			wantErr:     false,
 		},
+		{
+			name: "update existing app_key with the same value should not return error",
+			mockServer: &mockApplicationAuthServer{
+				authMode:      "2",
+				keys:          []string{"testkey"},
+				userAccountID: appID,
+				appID:         userAccountID,
+			},
+			authMode:    "2",
+			authSecret:  getAuthSecret(),
+			expectedKey: "testkey",
+			wantErr:     false,
+		},
+		{
+			name: "update with secret contains multiple app_key",
+			mockServer: &mockApplicationAuthServer{
+				authMode:      "2",
+				keys:          []string{"testkey"},
+				userAccountID: appID,
+				appID:         userAccountID,
+			},
+			authMode: "2",
+			authSecret: AuthSecret{
+				ApplicationKey: "testkey1,testkey2,testkey3",
+			},
+			expectedKey: "testkey1,testkey2,testkey3",
+			wantErr:     false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -129,7 +158,7 @@ func TestApplicationAuthReconciler_syncApplicationAuth(t *testing.T) {
 			ap, _ := threescaleapi.NewAdminPortalFromStr(srv.URL)
 			threescaleClient := threescaleapi.NewThreeScale(ap, "test", srv.Client())
 
-			err := syncApplicationAuth(userAccountID, appID, tt.authMode, tt.authSecret, threescaleClient)
+			err := syncApplicationAuth(userAccountID, appID, tt.authMode, tt.authSecret, threescaleClient, logger)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("syncApplicationAuth() error = %v, wantErr %v", err, tt.wantErr)
 				return
