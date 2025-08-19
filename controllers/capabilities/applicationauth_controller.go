@@ -47,12 +47,14 @@ type AuthSecret struct {
 	UserKey        string
 	ApplicationKey string
 	ApplicationID  string
+	ClientSecret   string
 }
 
 const (
 	UserKey        = "UserKey"
 	ApplicationKey = "ApplicationKey"
 	ApplicationID  = "ApplicationID"
+	ClientSecret   = "ClientSecret"
 )
 
 // +kubebuilder:rbac:groups=capabilities.3scale.net,resources=applicationauths,verbs=get;list;watch;create;update;patch;delete
@@ -248,6 +250,29 @@ func syncApplicationAuth(
 				return fmt.Errorf("error sync applicationAuth for developerAccountID: %d, applicationID: %d, error: %w", developerAccountID, applicationID, err)
 			}
 		}
+	case "oidc":
+		// get the existing value from the portal
+		applicationKeys, err := threescaleClient.ApplicationKeys(developerAccountID, applicationID)
+		if err != nil {
+			return err
+		}
+
+		// pre-existing keys
+		if len(applicationKeys) > 0 {
+			// Nothing to do, return early
+			if applicationKeys[0].Value == authSecret.ClientSecret {
+				return nil
+			}
+
+			// if the key is not match, delete it
+			if err := threescaleClient.DeleteApplicationKey(developerAccountID, applicationID, applicationKeys[0].Value); err != nil {
+				return err
+			}
+		}
+
+		if _, err = threescaleClient.CreateApplicationKey(developerAccountID, applicationID, authSecret.ClientSecret); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -304,6 +329,25 @@ func authSecretReferenceSource(cl client.Client, ns string, authSectretRef *core
 			}
 		}
 		return &AuthSecret{ApplicationKey: applicationKeyStr}, nil
+	case "oidc":
+		clientSecretStr, err := secretSource.RequiredFieldValueFromRequiredSecret(authSectretRef.Name, ClientSecret)
+		if err != nil {
+			return nil, err
+		}
+
+		if clientSecretStr == "" {
+			if generateSecret {
+				clientSecretStr = rand.String(16)
+			}
+			newValues := map[string][]byte{
+				ClientSecret: []byte(clientSecretStr),
+			}
+
+			if err := updateSecret(context.Background(), cl, authSectretRef.Name, ns, newValues); err != nil {
+				return nil, err
+			}
+		}
+		return &AuthSecret{ClientSecret: clientSecretStr}, nil
 	default:
 		return nil, fmt.Errorf("unknown authentication mode")
 	}
