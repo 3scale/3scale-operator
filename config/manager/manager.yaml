@@ -60,7 +60,7 @@ spec:
         - name: RELATED_IMAGE_SYSTEM_MEMCACHED
           value: "mirror.gcr.io/library/memcached:1.5"
         - name: RELATED_IMAGE_ZYNC_POSTGRESQL
-          value: "quay.io/sclorg/postgresql-13-c8s"
+          value: "quay.io/sclorg/postgresql-15-c8s"
         - name: RELATED_IMAGE_OC_CLI
           value: "quay.io/openshift/origin-cli:4.7"
         - name: RELATED_IMAGE_SYSTEM_SEARCHD
