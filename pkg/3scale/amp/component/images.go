@@ -25,7 +25,7 @@ func SystemMemcachedImageURL() string {
 }
 
 func ZyncPostgreSQLImageURL() string {
-	return "quay.io/sclorg/postgresql-13-c8s"
+	return "quay.io/sclorg/postgresql-15-c8s"
 }
 
 func OCCLIImageURL() string {
