@@ -16,7 +16,7 @@ metadata:
     repository: https://github.com/3scale/3scale-operator
     rht_backend_redis_requirements: 7.0.0
     rht_mysql_requirements: 8.0.0
-    rht_postgres_requirements: 13.0.0
+    rht_postgres_requirements: 15.0.0
     rht_system_redis_requirements: 7.0.0
     support: Red Hat
     tectonic-visibility: ocs
