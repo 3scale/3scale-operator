@@ -10,7 +10,7 @@ objects:
     data:
       rht_threescale_version_requirements: ${THREESCALE_VERSION}
       rht_mysql_requirements: 8.0.0
-      rht_postgres_requirements: 13.0.0
+      rht_postgres_requirements: 15.0.0
       rht_system_redis_requirements: 7.0.0
       rht_backend_redis_requirements: 7.0.0
 parameters:

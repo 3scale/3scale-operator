@@ -6,4 +6,4 @@ resources:
 
 images:
   - name: postgres
-    newName: mirror.gcr.io/library/postgres:13
+    newName: quay.io/sclorg/postgresql-15-c8s
