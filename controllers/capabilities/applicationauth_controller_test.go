@@ -123,6 +123,45 @@ func TestApplicationAuthReconciler_syncApplicationAuth(t *testing.T) {
 			expectedKey: "testkey",
 			wantErr:     false,
 		},
+		{
+			name: "returns error with empty client_secret with empty secret",
+			mockServer: &mockApplicationAuthServer{
+				authMode:      "oidc",
+				keys:          []string{},
+				userAccountID: appID,
+				appID:         userAccountID,
+			},
+			authMode:    "oidc",
+			authSecret:  getEmptyAuthSecret(),
+			expectedKey: "",
+			wantErr:     true,
+		},
+		{
+			name: "update existing client_secret with value from secret",
+			mockServer: &mockApplicationAuthServer{
+				authMode:      "oidc",
+				keys:          []string{"initalkey"},
+				userAccountID: appID,
+				appID:         userAccountID,
+			},
+			authMode:    "oidc",
+			authSecret:  getAuthSecret(),
+			expectedKey: "testkey",
+			wantErr:     false,
+		},
+		{
+			name: "update existing client_secret with the same value should not return error",
+			mockServer: &mockApplicationAuthServer{
+				authMode:      "oidc",
+				keys:          []string{"testkey"},
+				userAccountID: appID,
+				appID:         userAccountID,
+			},
+			authMode:    "oidc",
+			authSecret:  getAuthSecret(),
+			expectedKey: "testkey",
+			wantErr:     false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -260,6 +299,30 @@ func TestApplicationAuthReconciler_authSecretReferenceSource(t *testing.T) {
 			wantErr:        false,
 			err:            "",
 		},
+		{
+			name:           "return error when secret is empty",
+			authMode:       "oidc",
+			generateSecret: true,
+			secretData:     map[string][]byte{},
+			wantErr:        true,
+			err:            "secret field 'ClientSecret' is required in secret 'test'",
+		},
+		{
+			name:           "generate client_secret when secret is empty",
+			authMode:       "oidc",
+			generateSecret: true,
+			secretData:     map[string][]byte{"ClientSecret": []byte("")},
+			wantErr:        false,
+			err:            "",
+		},
+		{
+			name:           "use client_secret value in secret",
+			authMode:       "oidc",
+			generateSecret: true,
+			secretData:     map[string][]byte{"ClientSecret": []byte("testkey")},
+			wantErr:        false,
+			err:            "",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -317,6 +380,10 @@ func TestApplicationAuthReconciler_authSecretReferenceSource(t *testing.T) {
 					if authSecret.ApplicationKey != string(newSecret.Data["ApplicationKey"]) {
 						t.Fatalf("mismatch user_key expected = '%s', got '%s'", authSecret.ApplicationKey, newSecret.Data["ApplicationKey"])
 					}
+				case "oidc":
+					if authSecret.ClientSecret != string(newSecret.Data[ClientSecret]) {
+						t.Fatalf("mismatch user_key expected = '%s', got '%s'", authSecret.ClientSecret, newSecret.Data[ClientSecret])
+					}
 				}
 			}
 		})
@@ -373,6 +440,7 @@ func getAuthSecret() AuthSecret {
 		UserKey:        "testkey",
 		ApplicationKey: "testkey",
 		ApplicationID:  "",
+		ClientSecret:   "testkey",
 	}
 	return authSecret
 }
@@ -400,7 +468,7 @@ func (m *mockApplicationAuthServer) GetKey(mode string) string {
 	switch mode {
 	case "1":
 		return m.userKey
-	case "2":
+	case "2", "oidc":
 		return strings.Join(m.keys, ",")
 	default:
 		return ""
@@ -461,6 +529,8 @@ func (m *mockApplicationAuthServer) applicationKeysHandler(w http.ResponseWriter
 
 		if m.authMode == "2" {
 			keyLimit = 5
+		} else if m.authMode == "oidc" {
+			keyLimit = 1
 		}
 
 		// Check if the current length does not exceed 5 keys limit

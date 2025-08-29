@@ -47,12 +47,14 @@ type AuthSecret struct {
 	UserKey        string
 	ApplicationKey string
 	ApplicationID  string
+	ClientSecret   string
 }
 
 const (
 	UserKey        = "UserKey"
 	ApplicationKey = "ApplicationKey"
 	ApplicationID  = "ApplicationID"
+	ClientSecret   = "ClientSecret"
 )
 
 // +kubebuilder:rbac:groups=capabilities.3scale.net,resources=applicationauths,verbs=get;list;watch;create;update;patch;delete
@@ -202,6 +204,8 @@ func GetAuthController(mode string, logger logr.Logger) (AuthController, error) 
 		return &userKeyAuthMode{logger: logger}, nil
 	case "2":
 		return &appIDAuthMode{logger: logger}, nil
+	case "oidc":
+		return &oidcAuthMode{logger: logger}, nil
 	default:
 		return nil, fmt.Errorf("unknown authentication mode")
 	}
@@ -326,6 +330,58 @@ func (a *appIDAuthMode) SecretReferenceSource(cl client.Client, ns string, authS
 		}
 	}
 	return &AuthSecret{ApplicationKey: applicationKeyStr}, nil
+}
+
+type oidcAuthMode struct {
+	logger logr.Logger
+}
+
+func (o *oidcAuthMode) Sync(threescaleClient *threescaleapi.ThreeScaleClient, developerAccountID int64, applicationID int64, authSecret AuthSecret) error {
+	// get the existing value from the portal
+	applicationKeys, err := threescaleClient.ApplicationKeys(developerAccountID, applicationID)
+	if err != nil {
+		return err
+	}
+
+	// pre-existing keys
+	if len(applicationKeys) > 0 {
+		// Nothing to do, return early
+		if applicationKeys[0].Value == authSecret.ClientSecret {
+			return nil
+		}
+
+		// if the key is not match, delete it
+		if err := threescaleClient.DeleteApplicationKey(developerAccountID, applicationID, applicationKeys[0].Value); err != nil {
+			return err
+		}
+	}
+
+	if _, err = threescaleClient.CreateApplicationKey(developerAccountID, applicationID, authSecret.ClientSecret); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (o *oidcAuthMode) SecretReferenceSource(cl client.Client, ns string, authSectretRef *corev1.LocalObjectReference, generateSecret bool) (*AuthSecret, error) {
+	secretSource := helper.NewSecretSource(cl, ns)
+	clientSecretStr, err := secretSource.RequiredFieldValueFromRequiredSecret(authSectretRef.Name, ClientSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	if clientSecretStr == "" {
+		if generateSecret {
+			clientSecretStr = rand.String(16)
+		}
+		newValues := map[string][]byte{
+			ClientSecret: []byte(clientSecretStr),
+		}
+
+		if err := updateSecret(context.Background(), cl, authSectretRef.Name, ns, newValues); err != nil {
+			return nil, err
+		}
+	}
+	return &AuthSecret{ClientSecret: clientSecretStr}, nil
 }
 
 func (r *ApplicationAuthReconciler) reconcileStatus(resource *capabilitiesv1beta1.ApplicationAuth, err error, logger logr.Logger) (ctrl.Result, error) {
