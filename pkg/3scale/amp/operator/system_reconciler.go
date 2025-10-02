@@ -574,8 +574,6 @@ func (r *SystemReconciler) systemRedisTLSEnvVarMutator(desired, existing *k8sapp
 
 func systemDeploymentVolumesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	volumeNames := []string{
-		"system-storage",
-		"system-config",
 		"tls-secret",
 		"writable-tls",
 		"system-redis-tls",
@@ -597,7 +595,6 @@ func systemDeploymentInitContainerVolumeMountsMutator(desired, existing *k8sapps
 
 func systemDeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	volumeMountNames := []string{
-		"system-storage",
 		"s3-credentials",
 		"system-redis-tls",
 		"backend-redis-tls",
@@ -608,9 +605,6 @@ func systemDeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.D
 
 func sidekiqDeploymentVolumesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	volumeNames := []string{
-		"system-tmp",
-		"system-storage",
-		"system-config",
 		"s3-credentials",
 		"tls-secret",
 		"writable-tls",
@@ -634,9 +628,6 @@ func sidekiqDeploymentInitContainerVolumeMountsMutator(desired, existing *k8sapp
 
 func sidekiqDeploymentContainerVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	volumeMountNames := []string{
-		"system-tmp",
-		"system-storage",
-		"system-config",
 		"s3-credentials",
 		"system-redis-tls",
 		"backend-redis-tls",
