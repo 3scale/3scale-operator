@@ -33,7 +33,7 @@ func (b *ApplicationEntity) Description() string {
 	return b.ApplicationObj.Description
 }
 
-func (b *ApplicationEntity) UserAccountID() string {
+func (b *ApplicationEntity) UserAccountID() int64 {
 	return b.ApplicationObj.UserAccountID
 }
 
