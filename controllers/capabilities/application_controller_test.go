@@ -118,7 +118,7 @@ func getApplicationJson(state string) *client.Application {
 		CreatedAt:               "",
 		UpdatedAt:               "",
 		State:                   state,
-		UserAccountID:           "",
+		UserAccountID:           3,
 		FirstTrafficAt:          "",
 		FirstDailyTrafficAt:     "",
 		EndUserRequired:         false,

@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"reflect"
-	"strconv"
 	"testing"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
@@ -23,7 +22,7 @@ func TestApplicationAuthReconciler_applicationAuthReconciler(t *testing.T) {
 	userAccountID := int64(3)
 	applicationUpdate := &threescaleapi.ApplicationElem{
 		Application: threescaleapi.Application{
-			UserAccountID: strconv.FormatInt(userAccountID, 10),
+			UserAccountID: userAccountID,
 			ID:            appID,
 			AppName:       "newName",
 		},
