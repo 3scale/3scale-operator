@@ -34,22 +34,6 @@ func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) error {
 	}
 
 	//
-	// Deleted existing and not desired
-	//
-	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
-	t.logger.V(1).Info("syncMethods", "notDesiredExistingKeys", notDesiredExistingKeys)
-	notDesiredMap := map[string]threescaleapi.MethodItem{}
-	for _, systemName := range notDesiredExistingKeys {
-		// key is expected to exist
-		// notDesiredExistingKeys is a subset of the existingMap key set
-		notDesiredMap[systemName] = existingMap[systemName]
-	}
-	err = t.processNotDesiredMethods(notDesiredMap)
-	if err != nil {
-		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
-	}
-
-	//
 	// Reconcile existing and changed
 	//
 	matchedKeys := helper.ArrayStringIntersection(existingKeys, desiredKeys)
@@ -79,6 +63,22 @@ func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) error {
 		desiredNewMap[systemName] = t.resource.Spec.Methods[systemName]
 	}
 	err = t.createNewMethods(desiredNewMap)
+	if err != nil {
+		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
+	}
+
+	//
+	// Deleted existing and not desired
+	//
+	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
+	t.logger.V(1).Info("syncMethods", "notDesiredExistingKeys", notDesiredExistingKeys)
+	notDesiredMap := map[string]threescaleapi.MethodItem{}
+	for _, systemName := range notDesiredExistingKeys {
+		// key is expected to exist
+		// notDesiredExistingKeys is a subset of the existingMap key set
+		notDesiredMap[systemName] = existingMap[systemName]
+	}
+	err = t.processNotDesiredMethods(notDesiredMap)
 	if err != nil {
 		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
 	}
