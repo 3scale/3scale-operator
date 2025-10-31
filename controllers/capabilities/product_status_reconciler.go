@@ -73,6 +73,7 @@ func (s *ProductStatusReconciler) Reconcile() (reconcile.Result, error) {
 
 func (s *ProductStatusReconciler) calculateStatus() *capabilitiesv1beta1.ProductStatus {
 	newStatus := &capabilitiesv1beta1.ProductStatus{}
+	newStatus.ID = s.resource.Status.ID
 	if s.entity != nil {
 		tmpID := s.entity.ID()
 		newStatus.ID = &tmpID

@@ -73,6 +73,7 @@ func (s *BackendStatusReconciler) Reconcile() (reconcile.Result, error) {
 
 func (s *BackendStatusReconciler) calculateStatus() *capabilitiesv1beta1.BackendStatus {
 	newStatus := &capabilitiesv1beta1.BackendStatus{}
+	newStatus.ID = s.backendResource.Status.ID
 	if s.backendAPIEntity != nil {
 		tmp := s.backendAPIEntity.ID()
 		newStatus.ID = &tmp
