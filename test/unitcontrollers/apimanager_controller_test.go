@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -76,6 +78,23 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Define the secret
+	systemappSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "system-database",
+			Namespace: namespace,
+		},
+		StringData: map[string]string{
+			"DB_USER":          "mysql",
+			"DB_PASSWORD":      "password",
+			"DB_ROOT_PASSWORD": "rootpassword",
+			"URL":              fmt.Sprintf("mysql2://root:rootpassword@system-mysql.%s.svc.cluster.local/dev", namespace),
+		},
+		Type: corev1.SecretTypeOpaque,
+	}
+
+	objs = append(objs, systemappSecret)
+
 	// Create a fake client to mock API calls.
 	cl := fake.NewClientBuilder().WithScheme(s).WithRuntimeObjects(objs...).WithStatusSubresource(apimanager).Build()
 	clientAPIReader := fake.NewClientBuilder().WithScheme(s).WithRuntimeObjects(objs...).WithStatusSubresource(apimanager).Build()
@@ -110,7 +129,6 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 
 	if finalAPIManager.Annotations == nil {
 		t.Error("APIManager's does not have annotations")
-
 	}
 
 	if val, ok := finalAPIManager.Annotations[appsv1alpha1.OperatorVersionAnnotation]; !ok || val != version.Version {
