@@ -76,21 +76,21 @@ func (s *ActiveDocStatusReconciler) Reconcile() (reconcile.Result, error) {
 }
 
 func (s *ActiveDocStatusReconciler) calculateStatus() (*capabilitiesv1beta1.ActiveDocStatus, error) {
-	newStatus := &capabilitiesv1beta1.ActiveDocStatus{}
+	newStatus := &capabilitiesv1beta1.ActiveDocStatus{
+		ID:                  s.resource.Status.ID,
+		ProviderAccountHost: s.providerAccountHost,
+		ObservedGeneration:  s.resource.Status.ObservedGeneration,
+	}
 
 	if s.activeDoc != nil {
 		newStatus.ID = s.activeDoc.Element.ID
 	}
-
-	newStatus.ProviderAccountHost = s.providerAccountHost
 
 	productResourceName, err := s.getReferencedProduct()
 	if err != nil {
 		return nil, err
 	}
 	newStatus.ProductResourceName = productResourceName
-
-	newStatus.ObservedGeneration = s.resource.Status.ObservedGeneration
 
 	newStatus.Conditions = s.resource.Status.Conditions.Copy()
 	newStatus.Conditions.SetCondition(s.readyCondition())
