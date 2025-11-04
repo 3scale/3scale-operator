@@ -73,7 +73,13 @@ func (s *ApplicationStatusReconciler) Reconcile() (reconcile.Result, error) {
 }
 
 func (s *ApplicationStatusReconciler) calculateStatus() *capabilitiesv1beta1.ApplicationStatus {
-	newStatus := &capabilitiesv1beta1.ApplicationStatus{}
+	newStatus := &capabilitiesv1beta1.ApplicationStatus{
+		ID:                  s.applicationResource.Status.ID,
+		State:               s.applicationResource.Status.State,
+		ProviderAccountHost: s.applicationResource.Status.ProviderAccountHost,
+		ObservedGeneration:  s.applicationResource.Status.ObservedGeneration,
+		Conditions:          s.applicationResource.Status.Conditions.Copy(),
+	}
 
 	if s.entity != nil {
 		tmpID := s.entity.ID()
@@ -84,11 +90,10 @@ func (s *ApplicationStatusReconciler) calculateStatus() *capabilitiesv1beta1.App
 		newStatus.State = s.entity.ApplicationState()
 	}
 
-	newStatus.ProviderAccountHost = s.providerAccountHost
+	if s.providerAccountHost != "" {
+		newStatus.ProviderAccountHost = s.providerAccountHost
+	}
 
-	newStatus.ObservedGeneration = s.applicationResource.Status.ObservedGeneration
-
-	newStatus.Conditions = s.applicationResource.Status.Conditions.Copy()
 	newStatus.Conditions.SetCondition(s.ReadyCondition())
 
 	return newStatus

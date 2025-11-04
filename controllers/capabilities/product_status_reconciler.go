@@ -72,17 +72,21 @@ func (s *ProductStatusReconciler) Reconcile() (reconcile.Result, error) {
 }
 
 func (s *ProductStatusReconciler) calculateStatus() *capabilitiesv1beta1.ProductStatus {
-	newStatus := &capabilitiesv1beta1.ProductStatus{}
+	newStatus := &capabilitiesv1beta1.ProductStatus{
+		ID:                  s.resource.Status.ID,
+		ProviderAccountHost: s.resource.Status.ProviderAccountHost,
+		ObservedGeneration:  s.resource.Status.ObservedGeneration,
+		Conditions:          s.resource.Status.Conditions.Copy(),
+	}
 	if s.entity != nil {
 		tmpID := s.entity.ID()
 		newStatus.ID = &tmpID
 	}
 
-	newStatus.ProviderAccountHost = s.providerAccountHost
+	if s.providerAccountHost != "" {
+		newStatus.ProviderAccountHost = s.providerAccountHost
+	}
 
-	newStatus.ObservedGeneration = s.resource.Status.ObservedGeneration
-
-	newStatus.Conditions = s.resource.Status.Conditions.Copy()
 	newStatus.Conditions.SetCondition(s.syncCondition())
 	newStatus.Conditions.SetCondition(s.orphanCondition())
 	newStatus.Conditions.SetCondition(s.invalidCondition())
