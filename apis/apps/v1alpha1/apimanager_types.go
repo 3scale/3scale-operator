@@ -1458,15 +1458,6 @@ func (apimanager *APIManager) GetSystemDatabaseSecretRefs() []*v1.LocalObjectRef
 	return secretRefs
 }
 
-func (apimanager *APIManager) GetZyncSecretRefs() []*v1.LocalObjectReference {
-	secretRefs := []*v1.LocalObjectReference{}
-	zyncSecretRef := v1.LocalObjectReference{
-		Name: "zync",
-	}
-	secretRefs = append(secretRefs, &zyncSecretRef)
-	return secretRefs
-}
-
 func (apimanager *APIManager) Get3scaleSecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 
@@ -1503,11 +1494,6 @@ func (apimanager *APIManager) Get3scaleSecretRefs() []*v1.LocalObjectReference {
 	systemDatabaseSecretRefs := apimanager.GetSystemDatabaseSecretRefs()
 	if len(systemDatabaseSecretRefs) > 0 {
 		secretRefs = append(secretRefs, systemDatabaseSecretRefs...)
-	}
-
-	zyncSecretRefs := apimanager.GetZyncSecretRefs()
-	if len(zyncSecretRefs) > 0 {
-		secretRefs = append(secretRefs, zyncSecretRefs...)
 	}
 
 	secretRefs = removeDuplicateSecretRefs(secretRefs)

@@ -274,9 +274,6 @@ func TestAPIManager_Get3scaleSecretRefs(t *testing.T) {
 				{
 					Name: "system-database",
 				},
-				{
-					Name: "zync",
-				},
 			},
 		},
 		{
@@ -341,9 +338,6 @@ func TestAPIManager_Get3scaleSecretRefs(t *testing.T) {
 				},
 				{
 					Name: "system-database",
-				},
-				{
-					Name: "zync",
 				},
 			},
 		},
