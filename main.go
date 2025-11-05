@@ -445,9 +445,9 @@ func main() {
 	if err = (&capabilitiescontroller.ApplicationAuthReconciler{
 		BaseReconciler: reconcilers.NewBaseReconciler(
 			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
-			ctrl.Log.WithName("controllers").WithName("Application"),
+			ctrl.Log.WithName("controllers").WithName("ApplicationAuth"),
 			discoveryApplicationAuth,
-			mgr.GetEventRecorderFor("Application")),
+			mgr.GetEventRecorderFor("ApplicationAuth")),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Application")
 		os.Exit(1)
