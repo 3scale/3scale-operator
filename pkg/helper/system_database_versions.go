@@ -51,14 +51,14 @@ func VerifySystemDatabase(k8sclient client.Client, reqConfigMap *v1.ConfigMap, a
 		}
 
 		databaseVersionVerified, err = verifyMySQLVersion(dbConfig, databaseRequirement)
+
 		if err != nil {
 			logger.Info("Failed to verify MySQL database version", "err", err)
 			return false, err
 		}
 	} else if strings.HasPrefix(dbConfig.URL, "oracle-enhanced://") {
-		// TODO: revert to old code once https://issues.redhat.com/browse/THREESCALE-12001 is fixed
-		logger.Info("Oracle system database discovered")
-		return false, fmt.Errorf("unsupported database, Oracle DB is not supported in this version of 3scale")
+		logger.Info("Oracle system database discovered, bypassing version check")
+		return true, nil
 	} else {
 		return false, fmt.Errorf("unsupported database")
 	}
@@ -70,22 +70,4 @@ func VerifySystemDatabase(k8sclient client.Client, reqConfigMap *v1.ConfigMap, a
 	}
 
 	return databaseVersionVerified, nil
-}
-
-// IsOracleDB check whether we have oracle DB
-// TODO: remove once https://issues.redhat.com/browse/THREESCALE-12001 is fixed
-func IsOracleDB(k8sclient client.Client, apimInstance *appsv1alpha1.APIManager, logger logr.Logger) (bool, error) {
-	connSecret, err := fetchSecret(k8sclient, systemDatabaseName, apimInstance.Namespace)
-	if err != nil {
-		logger.Info("System database secret not found")
-		return false, err
-	}
-
-	dbConfig := reconcileSystemDBSecret(*connSecret)
-
-	if strings.HasPrefix(dbConfig.URL, "oracle-enhanced://") {
-		logger.Info("Oracle system database discovered")
-		return true, nil
-	}
-	return false, nil
 }
