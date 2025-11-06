@@ -120,18 +120,6 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, nil
 	}
 
-	// TODO: remove once https://issues.redhat.com/browse/THREESCALE-12001 is fixed
-	ok, err := helper.IsOracleDB(r.Client(), instance, logger)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-	if ok {
-		// always run preflightChecks if oracle db is detected
-		// this will allow us to return the error and block the
-		// reconcilation loop
-		preflightsRequired = true
-	}
-
 	var preflightChecksError error
 	if preflightsRequired {
 		result, err, preflightChecksError = r.PreflightChecks(instance, logger)
