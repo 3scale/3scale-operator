@@ -40,8 +40,8 @@ func getApplicationPlanListByProductJson() *client.ApplicationPlanJSONList {
 			{
 				Element: client.ApplicationPlanItem{
 					ID:         2,
-					Name:       "test",
-					SystemName: "test",
+					Name:       "test2",
+					SystemName: "test2",
 				},
 			},
 		},
@@ -62,7 +62,7 @@ func getApplicationJson(state string) *client.Application {
 		ServiceID:               0,
 		UserKey:                 "",
 		ProviderVerificationKey: "",
-		PlanID:                  0,
+		PlanID:                  1,
 		AppName:                 "test",
 		Description:             "test",
 		ExtraFields:             "",
