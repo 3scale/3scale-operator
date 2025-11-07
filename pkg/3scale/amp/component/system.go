@@ -315,6 +315,8 @@ func (system *System) buildAppEnv() []v1.EnvVar {
 
 func (system *System) buildAppMasterContainerEnv() []v1.EnvVar {
 	result := system.buildSystemBaseEnv()
+	result = append(result, helper.EnvVarFromValue("PORT", "3002"))
+	result = append(result, helper.EnvVarFromValue("TENANT_MODE", "master"))
 	if system.Options.AppMetrics {
 		result = append(result, helper.EnvVarFromValue(SystemAppPrometheusExporterPortEnvVarName, strconv.Itoa(SystemAppMasterContainerPrometheusPort)))
 	}
@@ -325,6 +327,8 @@ func (system *System) buildAppMasterContainerEnv() []v1.EnvVar {
 
 func (system *System) buildAppProviderContainerEnv() []v1.EnvVar {
 	result := system.buildSystemBaseEnv()
+	result = append(result, helper.EnvVarFromValue("PORT", "3000"))
+	result = append(result, helper.EnvVarFromValue("TENANT_MODE", "provider"))
 	if system.Options.AppMetrics {
 		result = append(result, helper.EnvVarFromValue(SystemAppPrometheusExporterPortEnvVarName, strconv.Itoa(SystemAppProviderContainerPrometheusPort)))
 	}
@@ -335,6 +339,7 @@ func (system *System) buildAppProviderContainerEnv() []v1.EnvVar {
 
 func (system *System) buildAppDeveloperContainerEnv() []v1.EnvVar {
 	result := system.buildSystemBaseEnv()
+	result = append(result, helper.EnvVarFromValue("PORT", "3001"))
 	if system.Options.AppMetrics {
 		result = append(result, helper.EnvVarFromValue(SystemAppPrometheusExporterPortEnvVarName, strconv.Itoa(SystemAppDeveloperContainerPrometheusPort)))
 	}
@@ -727,7 +732,6 @@ func (system *System) AppDeployment(ctx context.Context, k8sclient client.Client
 						{
 							Name:         SystemAppMasterContainerName,
 							Image:        containerImage,
-							Args:         []string{"env", "TENANT_MODE=master", "PORT=3002", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
 							Ports:        system.appMasterPorts(),
 							Env:          system.buildAppMasterContainerEnv(),
 							Resources:    *system.Options.AppMasterContainerResourceRequirements,
@@ -778,7 +782,6 @@ func (system *System) AppDeployment(ctx context.Context, k8sclient client.Client
 						{
 							Name:         SystemAppProviderContainerName,
 							Image:        containerImage,
-							Args:         []string{"env", "TENANT_MODE=provider", "PORT=3000", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
 							Ports:        system.appProviderPorts(),
 							Env:          system.buildAppProviderContainerEnv(),
 							Resources:    *system.Options.AppProviderContainerResourceRequirements,
@@ -829,7 +832,6 @@ func (system *System) AppDeployment(ctx context.Context, k8sclient client.Client
 						{
 							Name:         SystemAppDeveloperContainerName,
 							Image:        containerImage,
-							Args:         []string{"env", "PORT=3001", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
 							Ports:        system.appDeveloperPorts(),
 							Env:          system.buildAppDeveloperContainerEnv(),
 							Resources:    *system.Options.AppDeveloperContainerResourceRequirements,
