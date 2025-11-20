@@ -172,14 +172,20 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	// SystemApp PreHook Job
 	var preHookJob *v1.Job
 	if imageChanged {
-		if !revisionChanged && imageChanged {
+		// Version upgrades, or image changes, occur before the Deployment is
+		// updated, so the revision version remains unchanged.
+		// Delete the old job so we can trigger a new one
+		if !revisionChanged {
 			err = helper.DeleteJob(r.Context(), component.SystemAppPreHookJobName, currentNameSpace, r.Client())
 			if err != nil {
 				return reconcile.Result{}, err
 			}
 		}
+		// Increase revision version by 1 to avoid rerun the job once the Deployment
+		// is updated with the new image
 		preHookJob = system.AppPreHookJob(ampImages.Options.SystemImage, currentNameSpace, currentAppDeploymentRevision+1)
 	} else {
+		// normal rollout
 		if revisionChanged {
 			err = helper.DeleteJob(r.Context(), component.SystemAppPreHookJobName, currentNameSpace, r.Client())
 			if err != nil {
