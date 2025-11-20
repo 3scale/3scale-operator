@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	k8sappsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -160,30 +161,44 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	// Check if the system image has changed (indicating an upgrade)
+	imageChanged, err := hasSystemImageChanged(currentNameSpace, ampImages.Options.SystemImage, r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// If the system-app Deployment revision has changed, delete the PreHook/PostHook Jobs so they can be recreated
 	revisionChanged, err := helper.HasAppRevisionChanged(component.SystemAppPreHookJobName, currentAppDeploymentRevision, currentNameSpace, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	if revisionChanged {
-		err = helper.DeleteJob(r.Context(), component.SystemAppPreHookJobName, currentNameSpace, r.Client())
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	}
-	revisionChanged, err = helper.HasAppRevisionChanged(component.SystemAppPostHookJobName, currentAppDeploymentRevision, currentNameSpace, r.Client())
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if revisionChanged {
-		err = helper.DeleteJob(r.Context(), component.SystemAppPostHookJobName, currentNameSpace, r.Client())
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	}
 
 	// SystemApp PreHook Job
-	preHookJob := system.AppPreHookJob(ampImages.Options.SystemImage, currentNameSpace, currentAppDeploymentRevision)
+	var preHookJob *v1.Job
+	if imageChanged {
+		// Version upgrades, or image changes, occur before the Deployment is
+		// updated, so the revision version remains unchanged.
+		// Delete the old job so we can trigger a new one
+		if !revisionChanged {
+			err = helper.DeleteJob(r.Context(), component.SystemAppPreHookJobName, currentNameSpace, r.Client())
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+		}
+		// Increase revision version by 1 to avoid rerun the job once the Deployment
+		// is updated with the new image
+		preHookJob = system.AppPreHookJob(ampImages.Options.SystemImage, currentNameSpace, currentAppDeploymentRevision+1)
+	} else {
+		// normal rollout
+		if revisionChanged {
+			err = helper.DeleteJob(r.Context(), component.SystemAppPreHookJobName, currentNameSpace, r.Client())
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+		}
+		preHookJob = system.AppPreHookJob(ampImages.Options.SystemImage, currentNameSpace, currentAppDeploymentRevision)
+	}
+
 	err = r.ReconcileJob(preHookJob, reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -240,6 +255,18 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 	if k8serr.IsNotFound(err) || !helper.IsDeploymentAvailable(deployment) || helper.IsDeploymentProgressing(deployment) || !finished {
 		systemComponentsReady = false
+	}
+
+	revisionChanged, err = helper.HasAppRevisionChanged(component.SystemAppPostHookJobName, currentAppDeploymentRevision, currentNameSpace, r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if revisionChanged {
+		err = helper.DeleteJob(r.Context(), component.SystemAppPostHookJobName, currentNameSpace, r.Client())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
 	}
 
 	// SystemApp PostHook Job
@@ -394,6 +421,37 @@ func getSystemAppDeploymentRevision(namespace string, client k8sclient.Client) (
 	}
 
 	return strconv.ParseInt(v, 10, 64)
+}
+
+// hasSystemImageChanged checks if the system image has changed compared to the currently deployed image
+// This indicates an upgrade scenario where hooks should be run
+func hasSystemImageChanged(namespace string, desiredImage string, client k8sclient.Client) (bool, error) {
+	deployment := &k8sappsv1.Deployment{}
+	err := client.Get(context.TODO(), k8sclient.ObjectKey{
+		Namespace: namespace,
+		Name:      component.SystemAppDeploymentName,
+	}, deployment)
+
+	// Return error if can't get Deployment
+	if err != nil && !k8serr.IsNotFound(err) {
+		return false, fmt.Errorf("error getting deployment %s: %w", component.SystemAppDeploymentName, err)
+	}
+
+	// If the Deployment doesn't exist yet, this is a fresh install, not an upgrade
+	if k8serr.IsNotFound(err) {
+		return false, nil
+	}
+
+	// Check if the system-app container image has changed
+	for _, container := range deployment.Spec.Template.Spec.Containers {
+		if container.Name == "system-master" || container.Name == "system-provider" || container.Name == "system-developer" {
+			if container.Image != desiredImage {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
 }
 
 func (r *SystemReconciler) systemAppDeploymentResourceMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
