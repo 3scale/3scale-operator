@@ -4,27 +4,20 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
-	"github.com/3scale/3scale-operator/pkg/apispkg/common"
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-porta-go-client/client"
-	"github.com/go-logr/logr"
 	"io/ioutil"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
 	"reflect"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"testing"
 	"time"
-)
 
-func create(x int64) *int64 {
-	return &x
-}
-
-type (
-	fakeThreescaleClient struct{}
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	"github.com/3scale/3scale-operator/pkg/apispkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-porta-go-client/client"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 type RoundTripFunc func(req *http.Request) *http.Response
@@ -32,11 +25,13 @@ type RoundTripFunc func(req *http.Request) *http.Response
 func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req), nil
 }
+
 func NewTestClient(fn RoundTripFunc) *http.Client {
 	return &http.Client{
 		Transport: RoundTripFunc(fn),
 	}
 }
+
 func getProviderAccount() (Secret *v1.Secret) {
 	Secret = &v1.Secret{
 		TypeMeta: metav1.TypeMeta{},
@@ -53,10 +48,7 @@ func getProviderAccount() (Secret *v1.Secret) {
 	}
 	return Secret
 }
-func newTrue() *bool {
-	b := true
-	return &b
-}
+
 func getProxyConfigPromoteCRStaging() (CR *capabilitiesv1beta1.ProxyConfigPromote) {
 	CR = &capabilitiesv1beta1.ProxyConfigPromote{
 		ObjectMeta: metav1.ObjectMeta{
@@ -69,6 +61,7 @@ func getProxyConfigPromoteCRStaging() (CR *capabilitiesv1beta1.ProxyConfigPromot
 	}
 	return CR
 }
+
 func getProxyConfigPromoteCRProduction() (CR *capabilitiesv1beta1.ProxyConfigPromote) {
 	CR = &capabilitiesv1beta1.ProxyConfigPromote{
 		ObjectMeta: metav1.ObjectMeta{
@@ -77,7 +70,7 @@ func getProxyConfigPromoteCRProduction() (CR *capabilitiesv1beta1.ProxyConfigPro
 		},
 		Spec: capabilitiesv1beta1.ProxyConfigPromoteSpec{
 			ProductCRName: "test",
-			Production:    newTrue(),
+			Production:    ptr.To(true),
 		},
 	}
 	return CR
@@ -88,7 +81,8 @@ func getProductList() (productList *capabilitiesv1beta1.ProductList) {
 		TypeMeta: metav1.TypeMeta{},
 		ListMeta: metav1.ListMeta{},
 		Items: []capabilitiesv1beta1.Product{
-			{TypeMeta: metav1.TypeMeta{},
+			{
+				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: "test",
@@ -99,7 +93,7 @@ func getProductList() (productList *capabilitiesv1beta1.ProductList) {
 					Description: "test",
 				},
 				Status: capabilitiesv1beta1.ProductStatus{
-					ID:                  create(3),
+					ID:                  ptr.To(int64(3)),
 					ProviderAccountHost: "some string",
 					ObservedGeneration:  1,
 					Conditions:          nil,
@@ -111,7 +105,6 @@ func getProductList() (productList *capabilitiesv1beta1.ProductList) {
 }
 
 func getProductCR() (CR *capabilitiesv1beta1.Product) {
-
 	CR = &capabilitiesv1beta1.Product{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
@@ -124,7 +117,7 @@ func getProductCR() (CR *capabilitiesv1beta1.Product) {
 			Description: "test",
 		},
 		Status: capabilitiesv1beta1.ProductStatus{
-			ID:                  create(3),
+			ID:                  ptr.To(int64(3)),
 			ProviderAccountHost: "some string",
 			ObservedGeneration:  1,
 			Conditions: common.Conditions{common.Condition{
@@ -135,6 +128,7 @@ func getProductCR() (CR *capabilitiesv1beta1.Product) {
 	}
 	return CR
 }
+
 func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList, proxyConfigElementSandbox *client.ProxyConfigElement, proxyConfigElementProduction *client.ProxyConfigElement) *http.Client {
 	// override httpClient
 	httpClient := NewTestClient(func(req *http.Request) *http.Response {
@@ -207,7 +201,7 @@ func emptyMockHttpClient() *http.Client {
 func responseBody(class interface{}) (responseBodyBytes []byte) {
 	responseBodyBytes, err := json.Marshal(class)
 	if err != nil {
-		fmt.Println("json marshal error", "err")
+		fmt.Println("json marshal error", err)
 	}
 	return responseBodyBytes
 }
@@ -308,32 +302,23 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 	// new adminportal
 	ap, _ := client.NewAdminPortalFromStr("https://3scale-admin.test.3scale.net")
 
-	type fields struct {
-		BaseReconciler *reconcilers.BaseReconciler
-	}
 	type args struct {
-		proxyConfigPromote  *capabilitiesv1beta1.ProxyConfigPromote
-		reqLogger           logr.Logger
-		threescaleAPIClient *client.ThreeScaleClient
-		product             *capabilitiesv1beta1.Product
+		proxyConfigPromote *capabilitiesv1beta1.ProxyConfigPromote
+		httpClient         *http.Client
+		product            *capabilitiesv1beta1.Product
 	}
 	tests := []struct {
 		name    string
-		fields  fields
 		args    args
 		want    *ProxyConfigPromoteStatusReconciler
 		wantErr bool
 	}{
 		{
 			name: "Test promotion to Staging Completed",
-			fields: fields{
-				BaseReconciler: getBaseReconciler(),
-			},
 			args: args{
-				proxyConfigPromote:  getProxyConfigPromoteCRStaging(),
-				reqLogger:           logf.Log.WithName("test reqlogger"),
-				threescaleAPIClient: client.NewThreeScale(ap, "test", mockHttpClient(proxyJson, productList, proxyConfigElementSandbox, failedProxyConfigElementProduction)),
-				product:             getProductCR(),
+				proxyConfigPromote: getProxyConfigPromoteCRStaging(),
+				httpClient:         mockHttpClient(proxyJson, productList, proxyConfigElementSandbox, failedProxyConfigElementProduction),
+				product:            getProductCR(),
 			},
 			want: &ProxyConfigPromoteStatusReconciler{
 				BaseReconciler:          getBaseReconciler(),
@@ -348,14 +333,10 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 		},
 		{
 			name: "Test promotion to Staging not Completed",
-			fields: fields{
-				BaseReconciler: getBaseReconciler(),
-			},
 			args: args{
-				proxyConfigPromote:  getProxyConfigPromoteCRStaging(),
-				reqLogger:           logf.Log.WithName("test reqlogger"),
-				threescaleAPIClient: client.NewThreeScale(ap, "test", mockHttpClient(proxyJson, productList, proxyConfigElementSandbox, failedProxyConfigElementProduction)),
-				product:             getProductCR(),
+				proxyConfigPromote: getProxyConfigPromoteCRStaging(),
+				httpClient:         mockHttpClient(proxyJson, productList, proxyConfigElementSandbox, failedProxyConfigElementProduction),
+				product:            getProductCR(),
 			},
 			want: &ProxyConfigPromoteStatusReconciler{
 				BaseReconciler:          getBaseReconciler(),
@@ -370,14 +351,10 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 		},
 		{
 			name: "Test empty staging environment response",
-			fields: fields{
-				BaseReconciler: getBaseReconciler(),
-			},
 			args: args{
-				proxyConfigPromote:  getProxyConfigPromoteCRStaging(),
-				reqLogger:           logf.Log.WithName("test reqlogger"),
-				threescaleAPIClient: client.NewThreeScale(ap, "test", emptyMockHttpClient()),
-				product:             getProductCR(),
+				proxyConfigPromote: getProxyConfigPromoteCRStaging(),
+				httpClient:         emptyMockHttpClient(),
+				product:            getProductCR(),
 			},
 			want: &ProxyConfigPromoteStatusReconciler{
 				BaseReconciler:          getBaseReconciler(),
@@ -392,14 +369,10 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 		},
 		{
 			name: "Test promotion to Production Completed",
-			fields: fields{
-				BaseReconciler: getBaseReconciler(),
-			},
 			args: args{
-				proxyConfigPromote:  getProxyConfigPromoteCRProduction(),
-				reqLogger:           logf.Log.WithName("test reqlogger"),
-				threescaleAPIClient: client.NewThreeScale(ap, "test", mockHttpClient(proxyJson, productList, proxyConfigElementSandbox, proxyConfigElementProduction)),
-				product:             getProductCR(),
+				proxyConfigPromote: getProxyConfigPromoteCRProduction(),
+				httpClient:         mockHttpClient(proxyJson, productList, proxyConfigElementSandbox, proxyConfigElementProduction),
+				product:            getProductCR(),
 			},
 			want: &ProxyConfigPromoteStatusReconciler{
 				BaseReconciler:          getBaseReconciler(),
@@ -413,25 +386,82 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 			wantErr: false,
 		},
 		{
-			name: "Test promotion to Production Failed",
-			fields: fields{
-				BaseReconciler: getBaseReconciler(),
-			},
+			name: "Test promotion with Product in Failed status",
 			args: args{
-				proxyConfigPromote:  getProxyConfigPromoteCRProduction(),
-				reqLogger:           logf.Log.WithName("test reqlogger"),
-				threescaleAPIClient: client.NewThreeScale(ap, "test", mockHttpClient(proxyJson, productList, failedProxyConfigElementSandbox, failedProxyConfigElementProduction)),
-				product:             getProductCR(),
+				proxyConfigPromote: getProxyConfigPromoteCRProduction(),
+				httpClient:         mockHttpClient(proxyJson, productList, failedProxyConfigElementSandbox, failedProxyConfigElementProduction),
+				product: &capabilitiesv1beta1.Product{
+					TypeMeta: metav1.TypeMeta{},
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "test",
+					},
+					Spec: capabilitiesv1beta1.ProductSpec{
+						Name:        "test",
+						SystemName:  "test",
+						Description: "test",
+					},
+					Status: capabilitiesv1beta1.ProductStatus{
+						ID:                  ptr.To(int64(3)),
+						ProviderAccountHost: "some string",
+						ObservedGeneration:  1,
+						Conditions: common.Conditions{common.Condition{
+							Type:   capabilitiesv1beta1.ProductFailedConditionType,
+							Status: v1.ConditionTrue,
+						}},
+					},
+				},
 			},
 			wantErr: true,
+		},
+		{
+			name: "Allow promote Product with Failed and ErrReferencedMethodIsBeingDeleted message ",
+			args: args{
+				proxyConfigPromote: getProxyConfigPromoteCRProduction(),
+				httpClient:         mockHttpClient(proxyJson, productList, proxyConfigElementSandbox, proxyConfigElementProduction),
+				product: &capabilitiesv1beta1.Product{
+					TypeMeta: metav1.TypeMeta{},
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "test",
+					},
+					Spec: capabilitiesv1beta1.ProductSpec{
+						Name:        "test",
+						SystemName:  "test",
+						Description: "test",
+					},
+					Status: capabilitiesv1beta1.ProductStatus{
+						ID:                  ptr.To(int64(3)),
+						ProviderAccountHost: "some string",
+						ObservedGeneration:  1,
+						Conditions: common.Conditions{common.Condition{
+							Type:    capabilitiesv1beta1.ProductFailedConditionType,
+							Message: helper.ErrReferencedMethodIsBeingDeleted.Error(),
+							Status:  v1.ConditionTrue,
+						}},
+					},
+				},
+			},
+			want: &ProxyConfigPromoteStatusReconciler{
+				BaseReconciler:          getBaseReconciler(),
+				resource:                getProxyConfigPromoteCRProduction(),
+				productID:               "3",
+				latestProductionVersion: 1,
+				latestStagingVersion:    1,
+				reconcileError:          nil,
+				logger:                  logf.Log.WithValues("Status Reconciler", "test"),
+			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &ProxyConfigPromoteReconciler{
-				BaseReconciler: tt.fields.BaseReconciler,
+				BaseReconciler: getBaseReconciler(),
 			}
-			got, err := r.proxyConfigPromoteReconciler(tt.args.proxyConfigPromote, tt.args.reqLogger, tt.args.threescaleAPIClient, tt.args.product)
+			reqLogger := logf.Log.WithName("test reqlogger")
+			threescaleAPIClient := client.NewThreeScale(ap, "test", tt.args.httpClient)
+			got, err := r.proxyConfigPromoteReconciler(tt.args.proxyConfigPromote, reqLogger, threescaleAPIClient, tt.args.product)
 			if (err != nil) && tt.wantErr {
 				t.Logf("proxyConfigPromoteReconciler(), wantErr %v", tt.wantErr)
 				return

@@ -1,6 +1,10 @@
 package controllers
 
 import (
+	"reflect"
+	"testing"
+	"time"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
@@ -9,11 +13,9 @@ import (
 	v1 "github.com/openshift/api/config/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"reflect"
+	"k8s.io/utils/ptr"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"testing"
-	"time"
 )
 
 func getApplicationCR() (CR *capabilitiesv1beta1.Application) {
@@ -42,6 +44,7 @@ func getApplicationCR() (CR *capabilitiesv1beta1.Application) {
 	}
 	return CR
 }
+
 func getApplicationCRSuspend() (CR *capabilitiesv1beta1.Application) {
 	statusID := int64(3)
 	CR = &capabilitiesv1beta1.Application{
@@ -160,6 +163,7 @@ func getFailedApplicationCR() (CR *capabilitiesv1beta1.Application) {
 	}
 	return CR
 }
+
 func unknowAccountApplicationCR() (CR *capabilitiesv1beta1.Application) {
 	CR = &capabilitiesv1beta1.Application{
 		TypeMeta: metav1.TypeMeta{},
@@ -182,6 +186,7 @@ func unknowAccountApplicationCR() (CR *capabilitiesv1beta1.Application) {
 	}
 	return CR
 }
+
 func getApplicationProductCR() (CR *capabilitiesv1beta1.Product) {
 	// used for string pointer
 	test := "test"
@@ -213,7 +218,7 @@ func getApplicationProductCR() (CR *capabilitiesv1beta1.Product) {
 			},
 		},
 		Status: capabilitiesv1beta1.ProductStatus{
-			ID:                  create(3),
+			ID:                  ptr.To(int64(3)),
 			ProviderAccountHost: "some string",
 			ObservedGeneration:  1,
 			Conditions: common.Conditions{common.Condition{
@@ -233,7 +238,8 @@ func getApplicationProductList() (productList *capabilitiesv1beta1.ProductList) 
 		TypeMeta: metav1.TypeMeta{},
 		ListMeta: metav1.ListMeta{},
 		Items: []capabilitiesv1beta1.Product{
-			{TypeMeta: metav1.TypeMeta{},
+			{
+				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: "test",
@@ -260,7 +266,7 @@ func getApplicationProductList() (productList *capabilitiesv1beta1.ProductList) 
 					},
 				},
 				Status: capabilitiesv1beta1.ProductStatus{
-					ID:                  create(3),
+					ID:                  ptr.To(int64(3)),
 					ProviderAccountHost: "some string",
 					ObservedGeneration:  1,
 					Conditions:          nil,
@@ -290,7 +296,6 @@ func getProviderAccountRefSecret() (secret *corev1.Secret) {
 }
 
 func getApplicationDeveloperAccount() (CR *capabilitiesv1beta1.DeveloperAccount) {
-
 	CR = &capabilitiesv1beta1.DeveloperAccount{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
@@ -306,7 +311,7 @@ func getApplicationDeveloperAccount() (CR *capabilitiesv1beta1.DeveloperAccount)
 			},
 		},
 		Status: capabilitiesv1beta1.DeveloperAccountStatus{
-			ID:                  create(3),
+			ID:                  ptr.To(int64(3)),
 			ProviderAccountHost: "some string",
 			Conditions: common.Conditions{
 				common.Condition{
@@ -384,7 +389,7 @@ func TestApplicationStatusReconciler_Reconcile(t *testing.T) {
 }
 
 func TestApplicationStatusReconciler_calculateStatus(t *testing.T) {
-	//ID := int64(3)
+	// ID := int64(3)
 	type fields struct {
 		BaseReconciler      *reconcilers.BaseReconciler
 		applicationResource *capabilitiesv1beta1.Application

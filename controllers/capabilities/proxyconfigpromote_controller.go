@@ -144,7 +144,10 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 	var currentStagingVersion int
 
 	// Only proceed with proxyConfigPromote if status of the product is marked as "Completed"
-	if product.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ProductSyncedConditionType) {
+	// OR the status is marked with ErrReferencedMethodIsBeingDeleted
+	failedCond := product.Status.Conditions.GetCondition(capabilitiesv1beta1.ProductFailedConditionType)
+	if product.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ProductSyncedConditionType) ||
+		(failedCond != nil && failedCond.IsTrue() && failedCond.Message == helper.ErrReferencedMethodIsBeingDeleted.Error()) {
 		productID := product.Status.ID
 		productIDInt64 := *productID
 		productIDStr := strconv.Itoa(int(productIDInt64))
