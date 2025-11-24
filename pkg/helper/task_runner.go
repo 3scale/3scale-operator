@@ -51,7 +51,7 @@ func (t *taskRunnerImpl) Run() error {
 		t.logger.V(1).Info("Measure", task.Name, elapsed)
 	}
 	if reqerr {
-		return fmt.Errorf("method is used by the latest gateway configuration, it will be removed from 3scale only once the promotion without the mapping rule that uses the deleted method is done")
+		return ErrReferencedMethodIsBeingDeleted
 	}
 	return nil
 }
