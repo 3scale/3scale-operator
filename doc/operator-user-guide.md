@@ -1098,9 +1098,9 @@ The Operator sets this variable to true when:
 
 The tables below show the mapping between TLS certificate environment variables in the pods, their corresponding definitions in the related Redis backend and system secrets.
 
-Table. **Backend** - pods: `backend-listener`,`backend-cron`; `backend worker`, secret: `backedn-redis`
+Table. **Backend** - pods: `backend-listener`,`backend-cron`; `backend worker`, secret: `backend-redis`
 
-| ENV Var Name and value (Path in pod) in Backend pods     | Data field Name in backedn-redis secret |
+| ENV Var Name and value (Path in pod) in Backend pods     | Data field Name in backend-redis secret |
 |----------------------------------------------------------|----------------------------------------|
 | CONFIG_REDIS_CA_FILE=/tls/backend-redis-ca.crt           | REDIS_SSL_CA                                 |
 | CONFIG_REDIS_CERT=/tls/backend-redis-client.crt          | REDIS_SSL_CERT                               |
@@ -1113,17 +1113,17 @@ Table. **Backend** - pods: `backend-listener`,`backend-cron`; `backend worker`, 
 
 
 
-Table. **System** - pods: `system-app`, `system-sidekiq`; secrets: `system-redis` and `backedn-redis`
+Table. **System** - pods: `system-app`, `system-sidekiq`; secrets: `system-redis` and `backend-redis`
 
-| ENV Var Name and value (Path in pod) in system pods           | Data field Name in system or backedn-redis secrets | secret name  |
+| ENV Var Name and value (Path in pod) in system pods           | Data field Name in system or backend-redis secrets | secret name  |
 |---------------------------------------------------------------|------------------------|--------------|
 | REDIS_CA_FILE=/tls/system-redis/system-redis-ca.crt           | REDIS_SSL_CA                 | system-redis |
 | REDIS_CLIENT_CERT=/tls/system-redis/system-redis-client.crt   | REDIS_SSL_CERT               | system-redis |
 | REDIS_PRIVATE_KEY=/tls/system-redis/system-redis-private.key  | REDIS_SSL_KEY                | system-redis |
 | REDIS_SSL=1                                                   |                        | NA           |
-| BACKEND_REDIS_CA_FILE=/tls/backend-redis-ca.crt               | REDIS_SSL_CA                 | backedn-redis|
-| BACKEND_REDIS_CERT=/tls/backend-redis-client.crt              | REDIS_SSL_CERT               | backedn-redis|
-| BACKEND_REDIS_PRIVATE_KEY=/tls/backend-redis-private.key      | REDIS_SSL_KEY                | backedn-redis|
+| BACKEND_REDIS_CA_FILE=/tls/backend-redis-ca.crt               | REDIS_SSL_CA                 | backend-redis|
+| BACKEND_REDIS_CERT=/tls/backend-redis-client.crt              | REDIS_SSL_CERT               | backend-redis|
+| BACKEND_REDIS_PRIVATE_KEY=/tls/backend-redis-private.key      | REDIS_SSL_KEY                | backend-redis|
 | BACKEND_REDIS_SSL=1                                           |                        | NA           |
 
 **Note** Following environment variables are defined and set to "1" (true) in system pods,  when `redisTLSEnabled` is `true`.
