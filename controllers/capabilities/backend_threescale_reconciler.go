@@ -138,26 +138,6 @@ func (t *BackendThreescaleReconciler) syncMethods(_ interface{}) error {
 	}
 
 	//
-	// Deleted existing and not desired
-	//
-	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
-	notDesiredMap := map[string]threescaleapi.MethodItem{}
-	for _, systemName := range notDesiredExistingKeys {
-		// key is expected to exist
-		// notDesiredExistingKeys is a subset of the existingMap key set
-		notDesiredMap[systemName] = existingMap[systemName]
-	}
-	err = t.deleteNotDesiredMethodsFrom3scale(notDesiredMap)
-	if err != nil {
-		return fmt.Errorf("error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
-	}
-
-	err = t.deleteExternalMetricReferences(notDesiredExistingKeys)
-	if err != nil {
-		return fmt.Errorf("error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
-	}
-
-	//
 	// Reconcile existing and changed
 	//
 	matchedKeys := helper.ArrayStringIntersection(existingKeys, desiredKeys)
@@ -185,6 +165,26 @@ func (t *BackendThreescaleReconciler) syncMethods(_ interface{}) error {
 		desiredNewMap[systemName] = t.backendResource.Spec.Methods[systemName]
 	}
 	err = t.createNewMethods(desiredNewMap)
+	if err != nil {
+		return fmt.Errorf("error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
+	}
+
+	//
+	// Deleted existing and not desired
+	//
+	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
+	notDesiredMap := map[string]threescaleapi.MethodItem{}
+	for _, systemName := range notDesiredExistingKeys {
+		// key is expected to exist
+		// notDesiredExistingKeys is a subset of the existingMap key set
+		notDesiredMap[systemName] = existingMap[systemName]
+	}
+	err = t.deleteNotDesiredMethodsFrom3scale(notDesiredMap)
+	if err != nil {
+		return fmt.Errorf("error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
+	}
+
+	err = t.deleteExternalMetricReferences(notDesiredExistingKeys)
 	if err != nil {
 		return fmt.Errorf("error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
 	}
@@ -345,27 +345,6 @@ func (t *BackendThreescaleReconciler) syncMetrics(_ interface{}) error {
 	}
 
 	//
-	// Deleted existing and not desired metrics
-	//
-
-	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
-	notDesiredMap := map[string]threescaleapi.MetricItem{}
-	for _, systemName := range notDesiredExistingKeys {
-		// key is expected to exist
-		// notDesiredExistingKeys is a subset of the existingMap key set
-		notDesiredMap[systemName] = existingMap[systemName]
-	}
-	err = t.deleteNotDesiredMetricsFrom3scale(notDesiredMap)
-	if err != nil {
-		return fmt.Errorf("error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
-	}
-
-	err = t.deleteExternalMetricReferences(notDesiredExistingKeys)
-	if err != nil {
-		return fmt.Errorf("error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
-	}
-
-	//
 	// Reconcile existing and changed metrics
 	//
 
@@ -395,6 +374,27 @@ func (t *BackendThreescaleReconciler) syncMetrics(_ interface{}) error {
 		desiredNewMap[systemName] = t.backendResource.Spec.Metrics[systemName]
 	}
 	err = t.createNewMetrics(desiredNewMap)
+	if err != nil {
+		return fmt.Errorf("error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
+	}
+
+	//
+	// Deleted existing and not desired metrics
+	//
+
+	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
+	notDesiredMap := map[string]threescaleapi.MetricItem{}
+	for _, systemName := range notDesiredExistingKeys {
+		// key is expected to exist
+		// notDesiredExistingKeys is a subset of the existingMap key set
+		notDesiredMap[systemName] = existingMap[systemName]
+	}
+	err = t.deleteNotDesiredMetricsFrom3scale(notDesiredMap)
+	if err != nil {
+		return fmt.Errorf("error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
+	}
+
+	err = t.deleteExternalMetricReferences(notDesiredExistingKeys)
 	if err != nil {
 		return fmt.Errorf("error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
 	}
