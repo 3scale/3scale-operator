@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	"github.com/go-logr/logr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -26,22 +27,21 @@ func BackendList(ns string, cl client.Client, providerAccountURLStr string, logg
 	logger.V(1).Info("Backend resources", "total", len(backendList.Items))
 
 	validBackends := make([]capabilitiesv1beta1.Backend, 0)
-	for idx := range backendList.Items {
+	for idx, backend := range backendList.Items {
 		// Filter by synchronized
-		if !backendList.Items[idx].IsSynced() {
-			continue
-		}
+		failedCond := backend.Status.Conditions.GetCondition(capabilitiesv1beta1.BackendFailedConditionType)
+		if backend.IsSynced() || (failedCond != nil && failedCond.IsTrue() && failedCond.Message == helper.ErrReferencedMethodIsBeingDeleted.Error()) {
+			backendProviderAccount, err := LookupProviderAccount(cl, ns, backendList.Items[idx].Spec.ProviderAccountRef, logger)
+			if err != nil {
+				return nil, fmt.Errorf("BackendList: %w", err)
+			}
 
-		backendProviderAccount, err := LookupProviderAccount(cl, ns, backendList.Items[idx].Spec.ProviderAccountRef, logger)
-		if err != nil {
-			return nil, fmt.Errorf("BackendList: %w", err)
+			// Filter by provider account
+			if providerAccountURLStr != backendProviderAccount.AdminURLStr {
+				continue
+			}
+			validBackends = append(validBackends, backendList.Items[idx])
 		}
-
-		// Filter by provider account
-		if providerAccountURLStr != backendProviderAccount.AdminURLStr {
-			continue
-		}
-		validBackends = append(validBackends, backendList.Items[idx])
 	}
 
 	logger.V(1).Info("Backend valid resources", "total", len(validBackends))
