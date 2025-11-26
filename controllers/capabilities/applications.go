@@ -17,12 +17,13 @@ func (t *ApplicationThreescaleReconciler) syncApplication(_ interface{}) error {
 		params["description"] = t.applicationResource.Spec.Description
 	}
 
-	planID, err := t.findPlanId(*t.productResource.Status.ID)
+	plan, err := t.findPlan(*t.productResource.Status.ID)
 	if err != nil {
 		return fmt.Errorf("error finding plan ID for plan : [%s]", t.applicationResource.Spec.ApplicationPlanName)
 	}
-	if t.applicationEntity.PlanID() != planID {
-		_, err := t.threescaleAPIClient.ChangeApplicationPlan(*t.accountResource.Status.ID, *t.applicationResource.Status.ID, planID)
+
+	if t.applicationEntity.PlanID() != plan.Element.ID {
+		_, err := t.threescaleAPIClient.ChangeApplicationPlan(*t.accountResource.Status.ID, *t.applicationResource.Status.ID, plan.Element.ID)
 		if err != nil {
 			return fmt.Errorf("error sync application [%s;%d]: %w", t.applicationResource.Spec.Name, t.applicationEntity.ID(), err)
 		}
@@ -50,26 +51,4 @@ func (t *ApplicationThreescaleReconciler) syncApplication(_ interface{}) error {
 	}
 
 	return nil
-}
-
-func (t *ApplicationThreescaleReconciler) findPlanId(productID int64) (int64, error) {
-	planList, err := t.threescaleAPIClient.ListApplicationPlansByProduct(productID)
-	if err != nil {
-		return -1, fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.ApplicationPlanName, err)
-	}
-
-	planID, planExists := func(pList []threescaleapi.ApplicationPlan) (int, bool) {
-		for i, item := range pList {
-			if item.Element.SystemName == t.applicationResource.Spec.ApplicationPlanName {
-				return i, true
-			}
-		}
-		return -1, false
-	}(planList.Plans)
-	var planObj *threescaleapi.ApplicationPlan
-	if planExists {
-		planObj = &planList.Plans[planID]
-		return planObj.Element.ID, nil
-	}
-	return -1, fmt.Errorf("plan no longer exists")
 }

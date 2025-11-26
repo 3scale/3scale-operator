@@ -52,7 +52,7 @@ func (t *ApplicationThreescaleReconciler) Reconcile() (*controllerhelper.Applica
 }
 
 func (t *ApplicationThreescaleReconciler) reconcile3scaleApplication() (*controllerhelper.ApplicationEntity, error) {
-	planObj, err := t.findPlan()
+	planObj, err := t.findPlan(*t.productResource.Status.ID)
 	if err != nil {
 		return nil, fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.Name, err)
 	}
@@ -114,24 +114,17 @@ func (t *ApplicationThreescaleReconciler) findApplication() (*threescaleapi.Appl
 	return nil, nil
 }
 
-func (t *ApplicationThreescaleReconciler) findPlan() (*threescaleapi.ApplicationPlan, error) {
-	planList, err := t.threescaleAPIClient.ListApplicationPlansByProduct(*t.productResource.Status.ID)
+func (t *ApplicationThreescaleReconciler) findPlan(productID int64) (*threescaleapi.ApplicationPlan, error) {
+	planList, err := t.threescaleAPIClient.ListApplicationPlansByProduct(productID)
 	if err != nil {
-		return nil, fmt.Errorf("reconcile3scaleApplications application [%s]: %w", t.applicationResource.Spec.ApplicationPlanName, err)
+		return nil, fmt.Errorf("failed to retrieve application plans for product [%s]: %w", t.applicationResource.Spec.ProductCR.Name, err)
 	}
 
-	planID, planExists := func(pList []threescaleapi.ApplicationPlan) (int, bool) {
-		for i, item := range pList {
-			if item.Element.SystemName == t.applicationResource.Spec.ApplicationPlanName {
-				return i, true
-			}
+	for _, plan := range planList.Plans {
+		if plan.Element.SystemName == t.applicationResource.Spec.ApplicationPlanName {
+			return &plan, nil
 		}
-		return -1, false
-	}(planList.Plans)
-	var planObj *threescaleapi.ApplicationPlan
-	if planExists {
-		planObj = &planList.Plans[planID]
-		return planObj, nil
 	}
+
 	return nil, fmt.Errorf("plan [%s] doesnt exist in product [%s] ", t.applicationResource.Spec.ApplicationPlanName, t.productResource.Spec.Name)
 }
