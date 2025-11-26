@@ -258,7 +258,7 @@ func (r *ApplicationReconciler) applicationReconciler(applicationResource *capab
 		return statusReconciler, err
 	}
 
-	reconciler := NewApplicationReconciler(r.BaseReconciler, applicationResource, accountResource, productResource, threescaleAPIClient)
+	reconciler := NewApplicationReconciler(r.BaseReconciler, applicationResource, *accountResource.Status.ID, *productResource.Status.ID, threescaleAPIClient)
 	ApplicationEntity, err := reconciler.Reconcile()
 	if err != nil {
 		statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, nil, providerAccountAdminURLStr, err)

@@ -17,33 +17,28 @@ type ApplicationThreescaleReconciler struct {
 	*reconcilers.BaseReconciler
 	applicationResource *capabilitiesv1beta1.Application
 	applicationEntity   *controllerhelper.ApplicationEntity
-	accountResource     *capabilitiesv1beta1.DeveloperAccount
-	productResource     *capabilitiesv1beta1.Product
+	accountID           int64
+	productID           int64
 	threescaleAPIClient *threescaleapi.ThreeScaleClient
 	logger              logr.Logger
 }
 
-func NewApplicationReconciler(b *reconcilers.BaseReconciler, applicationResource *capabilitiesv1beta1.Application, accountResource *capabilitiesv1beta1.DeveloperAccount, productResource *capabilitiesv1beta1.Product, threescaleAPIClient *threescaleapi.ThreeScaleClient) *ApplicationThreescaleReconciler {
+func NewApplicationReconciler(b *reconcilers.BaseReconciler, applicationResource *capabilitiesv1beta1.Application, accountID int64, productID int64, threescaleAPIClient *threescaleapi.ThreeScaleClient) *ApplicationThreescaleReconciler {
 	return &ApplicationThreescaleReconciler{
 		BaseReconciler:      b,
 		applicationResource: applicationResource,
-		accountResource:     accountResource,
-		productResource:     productResource,
+		accountID:           accountID,
+		productID:           productID,
 		threescaleAPIClient: threescaleAPIClient,
 		logger:              b.Logger().WithValues("3scale Reconciler", applicationResource.Name),
 	}
 }
 
 func (t *ApplicationThreescaleReconciler) Reconcile() (*controllerhelper.ApplicationEntity, error) {
-	applicationEntity, err := t.reconcile3scaleApplication()
-	if err != nil {
-		return nil, err
-	}
-	t.applicationEntity = applicationEntity
 	taskRunner := helper.NewTaskRunner(nil, t.logger)
 	taskRunner.AddTask("SyncApplication", t.syncApplication)
 
-	err = taskRunner.Run()
+	err := taskRunner.Run()
 	if err != nil {
 		return nil, err
 	}
@@ -51,35 +46,8 @@ func (t *ApplicationThreescaleReconciler) Reconcile() (*controllerhelper.Applica
 	return t.applicationEntity, nil
 }
 
-func (t *ApplicationThreescaleReconciler) reconcile3scaleApplication() (*controllerhelper.ApplicationEntity, error) {
-	planObj, err := t.findPlan(*t.productResource.Status.ID)
-	if err != nil {
-		return nil, fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.Name, err)
-	}
-
-	application, err := t.findApplication()
-	if err != nil {
-		return nil, err
-	}
-
-	if application == nil {
-		params := threescaleapi.Params{
-			"description": t.applicationResource.Spec.Description,
-		}
-		// Application doesn't exist yet - create it
-		a, err := t.threescaleAPIClient.CreateApplication(*t.accountResource.Status.ID, planObj.Element.ID, t.applicationResource.Spec.Name, params)
-		if err != nil {
-			return nil, fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.Name, err)
-		}
-		application = &a
-		t.applicationResource.Status.ID = &application.ID
-	}
-
-	return controllerhelper.NewApplicationEntity(application, t.threescaleAPIClient, t.logger), nil
-}
-
-func (t *ApplicationThreescaleReconciler) findApplication() (*threescaleapi.Application, error) {
-	applicationList, err := t.threescaleAPIClient.ListApplications(*t.accountResource.Status.ID)
+func (t *ApplicationThreescaleReconciler) findApplication(accountID int64) (*threescaleapi.Application, error) {
+	applicationList, err := t.threescaleAPIClient.ListApplications(accountID)
 	if err != nil {
 		return nil, fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.Name, err)
 	}
@@ -89,12 +57,12 @@ func (t *ApplicationThreescaleReconciler) findApplication() (*threescaleapi.Appl
 	if t.applicationResource.Status.ID == nil {
 		if value, found := t.applicationResource.ObjectMeta.Annotations[applicationIdAnnotation]; found {
 			// If the applicationID annotation is found, convert it to int64
-			applicationIdConvertedFromString, err := strconv.ParseInt(value, 10, 64)
+			applicationIDConvertedFromString, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
 				return nil, fmt.Errorf("failed to convert applicationID annotation value %s to int64: %w", value, err)
 			}
 
-			applicationID = applicationIdConvertedFromString
+			applicationID = applicationIDConvertedFromString
 		}
 	} else {
 		applicationID = *t.applicationResource.Status.ID
@@ -126,10 +94,37 @@ func (t *ApplicationThreescaleReconciler) findPlan(productID int64) (*threescale
 		}
 	}
 
-	return nil, fmt.Errorf("plan [%s] doesnt exist in product [%s] ", t.applicationResource.Spec.ApplicationPlanName, t.productResource.Spec.Name)
+	return nil, fmt.Errorf("plan [%s] doesnt exist in product [%s]", t.applicationResource.Spec.ApplicationPlanName, t.applicationResource.Spec.ProductCR.Name)
 }
 
-func (t *ApplicationThreescaleReconciler) syncApplication(_ interface{}) error {
+func (t *ApplicationThreescaleReconciler) syncApplication(_ any) error {
+	plan, err := t.findPlan(t.productID)
+	if err != nil {
+		return fmt.Errorf("error sync application [%s]: %w", t.applicationResource.Spec.Name, err)
+	}
+
+	application, err := t.findApplication(t.accountID)
+	if err != nil {
+		return err
+	}
+
+	if application == nil {
+		params := threescaleapi.Params{
+			"name":        t.applicationResource.Spec.Name,
+			"description": t.applicationResource.Spec.Description,
+		}
+		// Application doesn't exist yet - create it
+		a, err := t.threescaleAPIClient.CreateApplication(t.accountID, plan.Element.ID, t.applicationResource.Spec.Name, params)
+		if err != nil {
+			return fmt.Errorf("error sync application [%s]: %w", t.applicationResource.Spec.Name, err)
+		}
+		application = &a
+		t.applicationResource.Status.ID = &application.ID
+	}
+
+	applicationEntity := controllerhelper.NewApplicationEntity(application, t.threescaleAPIClient, t.logger)
+	t.applicationEntity = applicationEntity
+
 	params := threescaleapi.Params{}
 
 	if t.applicationEntity.AppName() != t.applicationResource.Spec.Name {
@@ -140,34 +135,29 @@ func (t *ApplicationThreescaleReconciler) syncApplication(_ interface{}) error {
 		params["description"] = t.applicationResource.Spec.Description
 	}
 
-	plan, err := t.findPlan(*t.productResource.Status.ID)
-	if err != nil {
-		return fmt.Errorf("error finding plan ID for plan : [%s]", t.applicationResource.Spec.ApplicationPlanName)
-	}
-
 	if t.applicationEntity.PlanID() != plan.Element.ID {
-		_, err := t.threescaleAPIClient.ChangeApplicationPlan(*t.accountResource.Status.ID, *t.applicationResource.Status.ID, plan.Element.ID)
+		_, err := t.threescaleAPIClient.ChangeApplicationPlan(t.accountID, applicationEntity.ID(), plan.Element.ID)
 		if err != nil {
-			return fmt.Errorf("error sync application [%s;%d]: %w", t.applicationResource.Spec.Name, t.applicationEntity.ID(), err)
+			return fmt.Errorf("error sync application [%s;%d]: %w", t.applicationResource.Spec.Name, applicationEntity.ID(), err)
 		}
 	}
 
 	if t.applicationResource.Spec.Suspend && t.applicationEntity.ApplicationState() == "live" {
-		_, err := t.threescaleAPIClient.ApplicationSuspend(*t.accountResource.Status.ID, t.applicationEntity.ID())
+		_, err := t.threescaleAPIClient.ApplicationSuspend(t.accountID, applicationEntity.ID())
 		if err != nil {
-			return fmt.Errorf("error sync application [%s;%d]: %w", t.applicationResource.Spec.Name, t.applicationEntity.ID(), err)
+			return fmt.Errorf("error sync application [%s;%d]: %w", t.applicationResource.Spec.Name, applicationEntity.ID(), err)
 		}
 	}
 
 	if !t.applicationResource.Spec.Suspend && t.applicationEntity.ApplicationState() == "suspended" {
-		_, err := t.threescaleAPIClient.ApplicationResume(*t.accountResource.Status.ID, t.applicationEntity.ID())
+		_, err := t.threescaleAPIClient.ApplicationResume(t.accountID, applicationEntity.ID())
 		if err != nil {
-			return fmt.Errorf("error sync application [%s;%d]: %w", t.applicationResource.Spec.Name, t.applicationEntity.ID(), err)
+			return fmt.Errorf("error sync application [%s;%d]: %w", t.applicationResource.Spec.Name, applicationEntity.ID(), err)
 		}
 	}
 
 	if len(params) > 0 {
-		_, err := t.threescaleAPIClient.UpdateApplication(*t.accountResource.Status.ID, *t.applicationResource.Status.ID, params)
+		_, err := t.threescaleAPIClient.UpdateApplication(t.accountID, applicationEntity.ID(), params)
 		if err != nil {
 			return fmt.Errorf("error sync application [%s;%d]: %w", t.applicationResource.Spec.Name, t.applicationEntity.ID(), err)
 		}

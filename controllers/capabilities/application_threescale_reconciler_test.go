@@ -168,8 +168,8 @@ func TestApplicationThreescaleReconciler_syncApplication(t1 *testing.T) {
 				BaseReconciler:      tt.fields.BaseReconciler,
 				applicationResource: tt.fields.applicationResource,
 				applicationEntity:   tt.fields.applicationEntity,
-				accountResource:     tt.fields.accountResource,
-				productResource:     tt.fields.productResource,
+				accountID:           *tt.fields.accountResource.Status.ID,
+				productID:           *tt.fields.productResource.Status.ID,
 				threescaleAPIClient: tt.fields.threescaleAPIClient,
 				logger:              tt.fields.logger,
 			}
