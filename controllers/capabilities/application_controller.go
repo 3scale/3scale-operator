@@ -54,12 +54,11 @@ const (
 // +kubebuilder:rbac:groups=capabilities.3scale.net,resources=applications/status,verbs=get;update;patch
 
 func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
 	reqLogger := r.Logger().WithValues("application", req.NamespacedName)
 	reqLogger.Info("Reconcile Application", "Operator version", version.Version)
 
 	application := &capabilitiesv1beta1.Application{}
-	err := r.Client().Get(context.TODO(), req.NamespacedName, application)
+	err := r.Client().Get(ctx, req.NamespacedName, application)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -119,17 +118,6 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 				return statusResult, nil
 			}
 		}
-	}
-
-	// get providerAccountRef from account
-	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), accountResource.Namespace, accountResource.Spec.ProviderAccountRef, r.Logger())
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(application.GetAnnotations())
-	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount, insecureSkipVerify)
-	if err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -148,8 +136,23 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, nil
 	}
 
-	statusReconciler, reconcileErr := r.applicationReconciler(application, req, threescaleAPIClient, providerAccount.AdminURLStr, accountResource)
+	// get providerAccountRef from account
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), accountResource.Namespace, accountResource.Spec.ProviderAccountRef, r.Logger())
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(application.GetAnnotations())
+	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount, insecureSkipVerify)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	applicationEntity, reconcileErr := r.applicationReconciler(application, accountResource, threescaleAPIClient)
+
+	statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, application, applicationEntity, providerAccount.AdminURLStr, reconcileErr)
 	statusResult, statusUpdateErr := statusReconciler.Reconcile()
+
 	if statusUpdateErr != nil {
 		if reconcileErr != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to sync application: %v. Failed to update application status: %w", reconcileErr, statusUpdateErr)
@@ -220,36 +223,28 @@ func (r *ApplicationReconciler) reconcileMetadata(application *capabilitiesv1bet
 	return changed, nil
 }
 
-func (r *ApplicationReconciler) applicationReconciler(applicationResource *capabilitiesv1beta1.Application, req ctrl.Request, threescaleAPIClient *threescaleapi.ThreeScaleClient, providerAccountAdminURLStr string, accountResource *capabilitiesv1beta1.DeveloperAccount) (*ApplicationStatusReconciler, error) {
+func (r *ApplicationReconciler) applicationReconciler(applicationResource *capabilitiesv1beta1.Application, accountResource *capabilitiesv1beta1.DeveloperAccount, threescaleAPIClient *threescaleapi.ThreeScaleClient) (*controllerhelper.ApplicationEntity, error) {
 	// get product
 	productResource := &capabilitiesv1beta1.Product{}
 	projectMeta := types.NamespacedName{
 		Name:      applicationResource.Spec.ProductCR.Name,
-		Namespace: req.Namespace,
+		Namespace: applicationResource.Namespace,
 	}
 
 	err := r.Client().Get(r.Context(), projectMeta, productResource)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, nil, "", err)
-			return statusReconciler, err
+			return nil, err
 		}
 	}
 
 	err = r.checkExternalResources(applicationResource, accountResource, productResource)
 	if err != nil {
-		statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, nil, "", err)
-		return statusReconciler, err
+		return nil, err
 	}
 
 	reconciler := NewApplicationReconciler(r.BaseReconciler, applicationResource, *accountResource.Status.ID, *productResource.Status.ID, threescaleAPIClient)
-	ApplicationEntity, err := reconciler.Reconcile()
-	if err != nil {
-		statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, nil, providerAccountAdminURLStr, err)
-		return statusReconciler, err
-	}
-	statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, ApplicationEntity, providerAccountAdminURLStr, err)
-	return statusReconciler, err
+	return reconciler.Reconcile()
 }
 
 func (r *ApplicationReconciler) removeApplicationFrom3scale(application *capabilitiesv1beta1.Application) error {

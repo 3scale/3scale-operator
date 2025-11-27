@@ -3,7 +3,6 @@ package controllers
 import (
 	"reflect"
 	"testing"
-	"time"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
@@ -72,75 +71,6 @@ func getApplicationCRSuspend() (CR *capabilitiesv1beta1.Application) {
 	return CR
 }
 
-func getUnknownPlanApplicationCR() (CR *capabilitiesv1beta1.Application) {
-	statusID := int64(3)
-	CR = &capabilitiesv1beta1.Application{
-		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test",
-			Namespace: "test",
-		},
-		Spec: capabilitiesv1beta1.ApplicationSpec{
-			AccountCR: &corev1.LocalObjectReference{
-				Name: "test",
-			},
-			ProductCR: &corev1.LocalObjectReference{
-				Name: "test",
-			},
-			ApplicationPlanName: "unknown",
-			Name:                "test",
-			Description:         "test",
-			Suspend:             false,
-		},
-		Status: capabilitiesv1beta1.ApplicationStatus{
-			ID: &statusID,
-		},
-	}
-	return CR
-}
-
-func getApplicationDeleteCR() (CR *capabilitiesv1beta1.Application) {
-	statusID := int64(3)
-	timestamp2 := time.Now()
-	timestamp := metav1.Time{Time: timestamp2}
-	CR = &capabilitiesv1beta1.Application{
-		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:                       "test",
-			GenerateName:               "",
-			Namespace:                  "test",
-			SelfLink:                   "",
-			UID:                        "",
-			ResourceVersion:            "",
-			Generation:                 0,
-			CreationTimestamp:          metav1.Time{},
-			DeletionTimestamp:          &timestamp,
-			DeletionGracePeriodSeconds: nil,
-			Labels:                     nil,
-			Annotations:                nil,
-			OwnerReferences:            nil,
-			Finalizers:                 nil,
-			ManagedFields:              nil,
-		},
-		Spec: capabilitiesv1beta1.ApplicationSpec{
-			AccountCR: &corev1.LocalObjectReference{
-				Name: "test",
-			},
-			ProductCR: &corev1.LocalObjectReference{
-				Name: "test",
-			},
-			ApplicationPlanName: "test",
-			Name:                "test",
-			Description:         "test",
-			Suspend:             false,
-		},
-		Status: capabilitiesv1beta1.ApplicationStatus{
-			ID: &statusID,
-		},
-	}
-	return CR
-}
-
 func getFailedApplicationCR() (CR *capabilitiesv1beta1.Application) {
 	CR = &capabilitiesv1beta1.Application{
 		TypeMeta: metav1.TypeMeta{},
@@ -154,29 +84,6 @@ func getFailedApplicationCR() (CR *capabilitiesv1beta1.Application) {
 			},
 			ProductCR: &corev1.LocalObjectReference{
 				Name: "unknown",
-			},
-			ApplicationPlanName: "",
-			Name:                "",
-			Description:         "",
-			Suspend:             false,
-		},
-	}
-	return CR
-}
-
-func unknowAccountApplicationCR() (CR *capabilitiesv1beta1.Application) {
-	CR = &capabilitiesv1beta1.Application{
-		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test",
-			Namespace: "test",
-		},
-		Spec: capabilitiesv1beta1.ApplicationSpec{
-			AccountCR: &corev1.LocalObjectReference{
-				Name: "unknown",
-			},
-			ProductCR: &corev1.LocalObjectReference{
-				Name: "test",
 			},
 			ApplicationPlanName: "",
 			Name:                "",
@@ -228,71 +135,6 @@ func getApplicationProductCR() (CR *capabilitiesv1beta1.Product) {
 		},
 	}
 	return CR
-}
-
-func getApplicationProductList() (productList *capabilitiesv1beta1.ProductList) {
-	// used for string pointer
-	test := "test"
-
-	productList = &capabilitiesv1beta1.ProductList{
-		TypeMeta: metav1.TypeMeta{},
-		ListMeta: metav1.ListMeta{},
-		Items: []capabilitiesv1beta1.Product{
-			{
-				TypeMeta: metav1.TypeMeta{},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test",
-					Namespace: "test",
-				},
-				Spec: capabilitiesv1beta1.ProductSpec{
-					Name:        "test",
-					SystemName:  "test",
-					Description: "test",
-					ApplicationPlans: map[string]capabilitiesv1beta1.ApplicationPlanSpec{
-						"test": {
-							Name: &test,
-							Limits: []capabilitiesv1beta1.LimitSpec{
-								{
-									Period: "month",
-									Value:  300,
-									MetricMethodRef: capabilitiesv1beta1.MetricMethodRefSpec{
-										SystemName:        "test",
-										BackendSystemName: &test,
-									},
-								},
-							},
-							Published: nil,
-						},
-					},
-				},
-				Status: capabilitiesv1beta1.ProductStatus{
-					ID:                  ptr.To(int64(3)),
-					ProviderAccountHost: "some string",
-					ObservedGeneration:  1,
-					Conditions:          nil,
-				},
-			},
-		},
-	}
-	return productList
-}
-
-func getProviderAccountRefSecret() (secret *corev1.Secret) {
-	secret = &corev1.Secret{
-		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test",
-			Namespace: "test",
-		},
-		Immutable: nil,
-		Data: map[string][]byte{
-			"adminURL": []byte("https://3scale-admin.test.3scale.net"),
-			"token":    []byte("token"),
-		},
-		StringData: nil,
-		Type:       "",
-	}
-	return secret
 }
 
 func getApplicationDeveloperAccount() (CR *capabilitiesv1beta1.DeveloperAccount) {
