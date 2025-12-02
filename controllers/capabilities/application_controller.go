@@ -243,7 +243,29 @@ func (r *ApplicationReconciler) applicationReconciler(applicationResource *capab
 		return nil, err
 	}
 
-	reconciler := NewApplicationReconciler(r.BaseReconciler, applicationResource, *accountResource.Status.ID, *productResource.Status.ID, threescaleAPIClient)
+	var authParams map[string]string
+	if applicationResource.Spec.AuthSecretRef != nil {
+		authSecretObj, err := helper.GetSecret(applicationResource.Spec.AuthSecretRef.Name, applicationResource.Namespace, r.Client())
+		if err != nil {
+			return nil, err
+		}
+
+		authMode, err := extractApplicationCredentialType(productResource)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := validateApplicationCrendentialSecret(authSecretObj, authMode); err != nil {
+			return nil, err
+		}
+
+		authParams, err = handleCredentials(authSecretObj, authMode)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	reconciler := NewApplicationReconciler(r.BaseReconciler, applicationResource, authParams, *accountResource.Status.ID, *productResource.Status.ID, threescaleAPIClient)
 	return reconciler.Reconcile()
 }
 

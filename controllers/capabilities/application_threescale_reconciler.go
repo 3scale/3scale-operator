@@ -17,16 +17,18 @@ type ApplicationThreescaleReconciler struct {
 	*reconcilers.BaseReconciler
 	applicationResource *capabilitiesv1beta1.Application
 	applicationEntity   *controllerhelper.ApplicationEntity
+	authParams          map[string]string
 	accountID           int64
 	productID           int64
 	threescaleAPIClient *threescaleapi.ThreeScaleClient
 	logger              logr.Logger
 }
 
-func NewApplicationReconciler(b *reconcilers.BaseReconciler, applicationResource *capabilitiesv1beta1.Application, accountID int64, productID int64, threescaleAPIClient *threescaleapi.ThreeScaleClient) *ApplicationThreescaleReconciler {
+func NewApplicationReconciler(b *reconcilers.BaseReconciler, applicationResource *capabilitiesv1beta1.Application, authParams map[string]string, accountID int64, productID int64, threescaleAPIClient *threescaleapi.ThreeScaleClient) *ApplicationThreescaleReconciler {
 	return &ApplicationThreescaleReconciler{
 		BaseReconciler:      b,
 		applicationResource: applicationResource,
+		authParams:          authParams,
 		accountID:           accountID,
 		productID:           productID,
 		threescaleAPIClient: threescaleAPIClient,
@@ -113,6 +115,12 @@ func (t *ApplicationThreescaleReconciler) syncApplication(_ any) error {
 			"name":        t.applicationResource.Spec.Name,
 			"description": t.applicationResource.Spec.Description,
 		}
+
+		if t.authParams != nil {
+			for key, value := range t.authParams {
+				params.AddParam(key, value)
+			}
+		}
 		// Application doesn't exist yet - create it
 		a, err := t.threescaleAPIClient.CreateApplication(t.accountID, plan.Element.ID, t.applicationResource.Spec.Name, params)
 		if err != nil {
@@ -131,6 +139,12 @@ func (t *ApplicationThreescaleReconciler) syncApplication(_ any) error {
 		params := threescaleapi.Params{
 			"name":        t.applicationResource.Spec.Name,
 			"description": t.applicationResource.Spec.Description,
+		}
+
+		if t.authParams != nil {
+			for key, value := range t.authParams {
+				params.AddParam(key, value)
+			}
 		}
 
 		// Application doesn't exist yet - create it
