@@ -1645,6 +1645,7 @@ Notes:
 
 * 3scale applications belong to some DeveloperAccount account.
 * 3scale applications are linked directly to a product and applicationPlan
+* Once set, you cannot modify the accountCR references. If you need to change the account reference, create a new ApplicationCR instead.
 
 Consider we have the following product which is connected to a backend
 ```yaml
