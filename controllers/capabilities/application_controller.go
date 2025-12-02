@@ -54,12 +54,11 @@ const (
 // +kubebuilder:rbac:groups=capabilities.3scale.net,resources=applications/status,verbs=get;update;patch
 
 func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
 	reqLogger := r.Logger().WithValues("application", req.NamespacedName)
 	reqLogger.Info("Reconcile Application", "Operator version", version.Version)
 
 	application := &capabilitiesv1beta1.Application{}
-	err := r.Client().Get(context.TODO(), req.NamespacedName, application)
+	err := r.Client().Get(ctx, req.NamespacedName, application)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -79,6 +78,26 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		}
 		reqLogger.V(1).Info(string(jsonData))
 	}
+
+	// Ignore deleted Applications, this can happen when foregroundDeletion is enabled
+	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
+	if application.GetDeletionTimestamp() != nil {
+		if controllerutil.ContainsFinalizer(application, applicationFinalizer) {
+			err = r.removeApplicationFrom3scale(application)
+			if err != nil {
+				r.EventRecorder().Eventf(application, corev1.EventTypeWarning, "Failed to delete application", "%v", err)
+				return ctrl.Result{}, err
+			}
+
+			if controllerutil.RemoveFinalizer(application, applicationFinalizer) {
+				if err = r.UpdateResource(application); err != nil {
+					return ctrl.Result{}, err
+				}
+			}
+		}
+		return ctrl.Result{}, nil
+	}
+
 	// get Account
 	accountResource := &capabilitiesv1beta1.DeveloperAccount{}
 	projectMeta := types.NamespacedName{
@@ -89,64 +108,17 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	err = r.Client().Get(r.Context(), projectMeta, accountResource)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			// If the application CR is marked for deletion and the dev account associated doesn't exist, remove the application CR since there is nothing else to do with application.
-			if application.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(application, applicationFinalizer) {
-				controllerutil.RemoveFinalizer(application, applicationFinalizer)
-				err = r.UpdateResource(application)
-				if err != nil {
-					return ctrl.Result{}, err
-				}
-
-				return ctrl.Result{}, nil
-			}
 			reqLogger.Error(err, "error developer account not found ")
 			statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, application, nil, "", err)
 			statusResult, statusUpdateErr := statusReconciler.Reconcile()
 			if statusUpdateErr != nil {
-				if err != nil {
-					return ctrl.Result{}, fmt.Errorf("failed to reconcile application: %v. Failed to update application status: %w", err, statusUpdateErr)
-				}
-
-				return ctrl.Result{}, fmt.Errorf("failed to update application status: %w", statusUpdateErr)
+				return ctrl.Result{}, fmt.Errorf("failed to reconcile application: %v. Failed to update application status: %w", err, statusUpdateErr)
 			}
 			if statusResult.Requeue {
 				return statusResult, nil
 			}
 		}
-	}
-
-	// get providerAccountRef from account
-	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), accountResource.Namespace, accountResource.Spec.ProviderAccountRef, r.Logger())
-	if err != nil {
 		return ctrl.Result{}, err
-	}
-
-	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(application.GetAnnotations())
-	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount, insecureSkipVerify)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	// Ignore deleted Applications, this can happen when foregroundDeletion is enabled
-	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
-	if application.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(application, applicationFinalizer) {
-		err = r.removeApplicationFrom3scale(application, req, *threescaleAPIClient)
-		if err != nil {
-			r.EventRecorder().Eventf(application, corev1.EventTypeWarning, "Failed to delete application", "%v", err)
-			return ctrl.Result{}, err
-		}
-
-		controllerutil.RemoveFinalizer(application, applicationFinalizer)
-		err = r.UpdateResource(application)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-
-		return ctrl.Result{}, nil
-	}
-
-	if application.GetDeletionTimestamp() != nil {
-		return ctrl.Result{}, nil
 	}
 
 	metadataUpdated, err := r.reconcileMetadata(application, accountResource)
@@ -164,8 +136,23 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, nil
 	}
 
-	statusReconciler, reconcileErr := r.applicationReconciler(application, req, threescaleAPIClient, providerAccount.AdminURLStr, accountResource)
+	// get providerAccountRef from account
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), accountResource.Namespace, accountResource.Spec.ProviderAccountRef, r.Logger())
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(application.GetAnnotations())
+	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount, insecureSkipVerify)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	applicationEntity, reconcileErr := r.applicationReconciler(application, accountResource, threescaleAPIClient)
+
+	statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, application, applicationEntity, providerAccount.AdminURLStr, reconcileErr)
 	statusResult, statusUpdateErr := statusReconciler.Reconcile()
+
 	if statusUpdateErr != nil {
 		if reconcileErr != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to sync application: %v. Failed to update application status: %w", reconcileErr, statusUpdateErr)
@@ -236,53 +223,47 @@ func (r *ApplicationReconciler) reconcileMetadata(application *capabilitiesv1bet
 	return changed, nil
 }
 
-func (r *ApplicationReconciler) applicationReconciler(applicationResource *capabilitiesv1beta1.Application, req ctrl.Request, threescaleAPIClient *threescaleapi.ThreeScaleClient, providerAccountAdminURLStr string, accountResource *capabilitiesv1beta1.DeveloperAccount) (*ApplicationStatusReconciler, error) {
+func (r *ApplicationReconciler) applicationReconciler(applicationResource *capabilitiesv1beta1.Application, accountResource *capabilitiesv1beta1.DeveloperAccount, threescaleAPIClient *threescaleapi.ThreeScaleClient) (*controllerhelper.ApplicationEntity, error) {
 	// get product
 	productResource := &capabilitiesv1beta1.Product{}
 	projectMeta := types.NamespacedName{
 		Name:      applicationResource.Spec.ProductCR.Name,
-		Namespace: req.Namespace,
+		Namespace: applicationResource.Namespace,
 	}
 
 	err := r.Client().Get(r.Context(), projectMeta, productResource)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, nil, "", err)
-			return statusReconciler, err
+			return nil, err
 		}
 	}
 
 	err = r.checkExternalResources(applicationResource, accountResource, productResource)
 	if err != nil {
-		statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, nil, "", err)
-		return statusReconciler, err
+		return nil, err
 	}
 
-	reconciler := NewApplicationReconciler(r.BaseReconciler, applicationResource, accountResource, productResource, threescaleAPIClient)
-	ApplicationEntity, err := reconciler.Reconcile()
-	if err != nil {
-		statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, nil, providerAccountAdminURLStr, err)
-		return statusReconciler, err
-	}
-	statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, ApplicationEntity, providerAccountAdminURLStr, err)
-	return statusReconciler, err
+	reconciler := NewApplicationReconciler(r.BaseReconciler, applicationResource, *accountResource.Status.ID, *productResource.Status.ID, threescaleAPIClient)
+	return reconciler.Reconcile()
 }
 
-func (r *ApplicationReconciler) removeApplicationFrom3scale(application *capabilitiesv1beta1.Application, req ctrl.Request, threescaleAPIClient threescaleapi.ThreeScaleClient) error {
+func (r *ApplicationReconciler) removeApplicationFrom3scale(application *capabilitiesv1beta1.Application) error {
 	logger := r.Logger().WithValues("application", client.ObjectKey{Name: application.Name, Namespace: application.Namespace})
 
 	// get Account
 	account := &capabilitiesv1beta1.DeveloperAccount{}
 	projectMeta := types.NamespacedName{
 		Name:      application.Spec.AccountCR.Name,
-		Namespace: req.Namespace,
+		Namespace: application.Namespace,
 	}
 
 	err := r.Client().Get(r.Context(), projectMeta, account)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Info("Account resource not found. Ignoring since object must have been deleted")
+			return nil
 		}
+		return err
 	}
 
 	// Attempt to remove application only if application.Status.ID is present
@@ -294,6 +275,18 @@ func (r *ApplicationReconciler) removeApplicationFrom3scale(application *capabil
 	if account.Status.ID == nil {
 		logger.Info("could not remove application because ID is missing in the status of developer account")
 		return fmt.Errorf("could not remove application because ID is missing in the satus of developer account %s", account.Name)
+	}
+
+	// get providerAccountRef from account
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), account.Namespace, account.Spec.ProviderAccountRef, r.Logger())
+	if err != nil {
+		return err
+	}
+
+	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(application.GetAnnotations())
+	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount, insecureSkipVerify)
+	if err != nil {
+		return err
 	}
 
 	err = threescaleAPIClient.DeleteApplication(*account.Status.ID, *application.Status.ID)

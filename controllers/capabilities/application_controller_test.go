@@ -1,110 +1,46 @@
 package controllers
 
 import (
-	"bytes"
-	"io"
-	"net/http"
-	"reflect"
+	"context"
+	"net/http/httptest"
 	"testing"
 
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	"github.com/3scale/3scale-operator/controllers/capabilities/mocks"
+	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-porta-go-client/client"
+	v1 "github.com/openshift/api/config/v1"
+	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	controllerruntime "sigs.k8s.io/controller-runtime"
+	fakeclientset "k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/ptr"
+	controllerruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
+	fakectrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
-
-func mockHttpClientApplication(listAapplicationPlanByProductJson *client.ApplicationPlanJSONList, applicationJson *client.Application) *http.Client {
-	// override httpClient
-	httpClient := NewTestClient(func(req *http.Request) *http.Response {
-		// ListApplicationPlanByProduct(productID)
-		if req.Method == "GET" && req.URL.Path == "/admin/api/services/3/application_plans.json" {
-			return &http.Response{
-				StatusCode: http.StatusOK,
-				Header:     make(http.Header),
-				Body:       io.NopCloser(bytes.NewBuffer(responseBody(listAapplicationPlanByProductJson))),
-			}
-		}
-		// Get Application
-		if req.Method == "GET" && req.URL.Path == "/admin/api/accounts/3/applications.json" {
-			return &http.Response{
-				StatusCode: http.StatusOK,
-				Header:     make(http.Header),
-				Body:       io.NopCloser(bytes.NewBuffer(responseBody(listAapplicationPlanByProductJson))),
-			}
-		}
-		// create application
-		if req.Method == "POST" && req.URL.Path == "/admin/api/accounts/3/applications.json" {
-			mockResponse := struct {
-				Application *client.Application `json:"application"`
-			}{
-				Application: applicationJson,
-			}
-			return &http.Response{
-				StatusCode: http.StatusCreated,
-				Header:     make(http.Header),
-				Body:       io.NopCloser(bytes.NewBuffer(responseBody(mockResponse))),
-			}
-		}
-		// ApplicationResume
-		if req.Method == "PUT" && req.URL.Path == "/admin/api/accounts/3/applications/0/resume.json" {
-			return &http.Response{
-				StatusCode: http.StatusOK,
-				Header:     make(http.Header),
-				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
-			}
-		}
-		// ApplicationSuspend
-		if req.Method == "PUT" && req.URL.Path == "/admin/api/accounts/3/applications/3/suspend.json" {
-			return &http.Response{
-				StatusCode: http.StatusOK,
-				Header:     make(http.Header),
-				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
-			}
-		}
-		if req.Method == "PUT" && req.URL.Path == "/admin/api/accounts/3/applications/3.json" {
-			return &http.Response{
-				StatusCode: http.StatusOK,
-				Header:     make(http.Header),
-				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
-			}
-		}
-		// delete application
-		if req.Method == "DELETE" && req.URL.Path == "/admin/api/accounts/3/applications/3.json" {
-			return &http.Response{
-				StatusCode: http.StatusOK,
-				Header:     make(http.Header),
-				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
-			}
-		}
-		// ChangeApplicationPlan(*t.accountResource.Status.ID, *t.applicationResource.Status.ID, planID)
-		if req.Method == "PUT" && req.URL.Path == "/admin/api/accounts/3/applications/3/change_plan.json" {
-			return &http.Response{
-				StatusCode: http.StatusOK,
-				Header:     make(http.Header),
-				Body:       io.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
-			}
-		}
-		return nil
-	})
-	return httpClient
-}
 
 func getApplicationPlanListByProductJson() *client.ApplicationPlanJSONList {
 	applicationPlanListByProductJson := &client.ApplicationPlanJSONList{
 		Plans: []client.ApplicationPlan{
 			{
 				Element: client.ApplicationPlanItem{
-					ID:         0,
+					ID:         1,
 					Name:       "test",
 					SystemName: "test",
 				},
 			},
 			{
 				Element: client.ApplicationPlanItem{
-					ID:         0,
-					Name:       "test",
-					SystemName: "test",
+					ID:         2,
+					Name:       "test2",
+					SystemName: "test2",
 				},
 			},
 		},
@@ -118,14 +54,14 @@ func getApplicationJson(state string) *client.Application {
 		CreatedAt:               "",
 		UpdatedAt:               "",
 		State:                   state,
-		UserAccountID:           "",
+		UserAccountID:           3,
 		FirstTrafficAt:          "",
 		FirstDailyTrafficAt:     "",
 		EndUserRequired:         false,
 		ServiceID:               0,
 		UserKey:                 "",
 		ProviderVerificationKey: "",
-		PlanID:                  0,
+		PlanID:                  1,
 		AppName:                 "test",
 		Description:             "test",
 		ExtraFields:             "",
@@ -134,174 +70,387 @@ func getApplicationJson(state string) *client.Application {
 	return applicationJson
 }
 
-func TestApplicationReconciler_applicationReconciler(t *testing.T) {
-	// admin portal
-	ap, _ := client.NewAdminPortalFromStr("https://3scale-admin.test.3scale.net")
-	type fields struct {
-		BaseReconciler *reconcilers.BaseReconciler
+func TestApplicationReconciler_Reconcile(t *testing.T) {
+	req := reconcile.Request{
+		NamespacedName: types.NamespacedName{
+			Namespace: "test",
+			Name:      "test",
+		},
 	}
-	type args struct {
-		applicationResource     *capabilitiesv1beta1.Application
-		req                     controllerruntime.Request
-		threescaleApiClient     *client.ThreeScaleClient
-		providerAccountAdminURL string
-		accountResource         *capabilitiesv1beta1.DeveloperAccount
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *ApplicationStatusReconciler
-		wantErr bool
+
+	testCases := []struct {
+		name               string
+		application        *capabilitiesv1beta1.Application
+		account            *capabilitiesv1beta1.DeveloperAccount
+		product            *capabilitiesv1beta1.Product
+		httpHandlerOptions []mocks.ApplicationAPIHandlerOpt
+		testBody           func(t *testing.T, reconciler *reconcilers.BaseReconciler, req reconcile.Request)
 	}{
+		{
+			name: "Account not found - reconciliation should fail",
+			application: &capabilitiesv1beta1.Application{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
+				},
+				Spec: capabilitiesv1beta1.ApplicationSpec{
+					AccountCR: &corev1.LocalObjectReference{
+						Name: "test",
+					},
+					ProductCR: &corev1.LocalObjectReference{
+						Name: "test",
+					},
+					ApplicationPlanName: "test",
+					Name:                "test",
+					Description:         "test",
+				},
+			},
+			product: getProductCR(),
+			testBody: func(t *testing.T, r *reconcilers.BaseReconciler, req reconcile.Request) {
+				applicationReconciler := ApplicationReconciler{BaseReconciler: r}
+				_, err := applicationReconciler.Reconcile(context.Background(), req)
+				// No error is returned
+				require.Error(t, err)
+				require.Equal(t, "developeraccounts.capabilities.3scale.net \"test\" not found", err.Error())
+
+				var currentApplication capabilitiesv1beta1.Application
+				require.NoError(t, r.Client().Get(context.Background(), req.NamespacedName, &currentApplication))
+				require.Empty(t, currentApplication.Status.ID)
+
+				condition := currentApplication.Status.Conditions.GetCondition(capabilitiesv1beta1.ApplicationReadyConditionType)
+				require.Equal(t, corev1.ConditionFalse, condition.Status)
+				require.Equal(t, "developeraccounts.capabilities.3scale.net \"test\" not found", condition.Message)
+			},
+		},
+		{
+			name: "Product not found - reconciliation should fail",
+			application: &capabilitiesv1beta1.Application{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
+				},
+				Spec: capabilitiesv1beta1.ApplicationSpec{
+					AccountCR: &corev1.LocalObjectReference{
+						Name: "test",
+					},
+					ProductCR: &corev1.LocalObjectReference{
+						Name: "test",
+					},
+					ApplicationPlanName: "test",
+					Name:                "test",
+					Description:         "test",
+				},
+			},
+			account: getApplicationDeveloperAccount(),
+			httpHandlerOptions: []mocks.ApplicationAPIHandlerOpt{
+				mocks.WithService(3, getApplicationPlanListByProductJson()),
+				mocks.WithAccount(3, &client.ApplicationList{Applications: []client.ApplicationElem{
+					{Application: *getApplicationJson("live")},
+				}}),
+			},
+			testBody: func(t *testing.T, r *reconcilers.BaseReconciler, req reconcile.Request) {
+				ctx := context.Background()
+				applicationReconciler := ApplicationReconciler{BaseReconciler: r}
+				_, err := applicationReconciler.Reconcile(ctx, req)
+				require.NoError(t, err)
+
+				// need to trigger the Reconcile again because the first one only updated the finalizers
+				_, err = applicationReconciler.Reconcile(ctx, req)
+				require.Error(t, err)
+
+				var currentApplication capabilitiesv1beta1.Application
+				require.NoError(t, r.Client().Get(context.Background(), req.NamespacedName, &currentApplication))
+				require.Empty(t, currentApplication.Status.ID)
+
+				condition := currentApplication.Status.Conditions.GetCondition(capabilitiesv1beta1.ApplicationReadyConditionType)
+				require.Equal(t, corev1.ConditionFalse, condition.Status)
+				require.Equal(t, "products.capabilities.3scale.net \"test\" not found", condition.Message)
+			},
+		},
+		{
+			name: "Account found - but with no ProviderAccountRef",
+			application: &capabilitiesv1beta1.Application{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
+				},
+				Spec: capabilitiesv1beta1.ApplicationSpec{
+					AccountCR: &corev1.LocalObjectReference{
+						Name: "test",
+					},
+					ProductCR: &corev1.LocalObjectReference{
+						Name: "test",
+					},
+					ApplicationPlanName: "test",
+					Name:                "test",
+					Description:         "test",
+				},
+			},
+			account: &capabilitiesv1beta1.DeveloperAccount{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
+				},
+				Spec: capabilitiesv1beta1.DeveloperAccountSpec{
+					OrgName:                "test",
+					MonthlyBillingEnabled:  nil,
+					MonthlyChargingEnabled: nil,
+				},
+				Status: capabilitiesv1beta1.DeveloperAccountStatus{
+					ID:                  ptr.To(int64(3)),
+					ProviderAccountHost: "some string",
+					Conditions: common.Conditions{
+						common.Condition{
+							Type:   capabilitiesv1beta1.DeveloperAccountInvalidConditionType,
+							Status: corev1.ConditionStatus(v1.ConditionFalse),
+						},
+					},
+				},
+			},
+			product: getProductCR(),
+			httpHandlerOptions: []mocks.ApplicationAPIHandlerOpt{
+				mocks.WithService(3, getApplicationPlanListByProductJson()),
+				mocks.WithAccount(3, &client.ApplicationList{Applications: []client.ApplicationElem{
+					{Application: *getApplicationJson("live")},
+				}}),
+			},
+			testBody: func(t *testing.T, r *reconcilers.BaseReconciler, req reconcile.Request) {
+				applicationReconciler := ApplicationReconciler{BaseReconciler: r}
+				_, err := applicationReconciler.Reconcile(context.Background(), req)
+				require.NoError(t, err)
+
+				// need to trigger the Reconcile again because the first one only updated the finalizers
+				_, err = applicationReconciler.Reconcile(context.Background(), req)
+				require.Error(t, err)
+				require.Equal(t, "LookupProviderAccount: no provider account found", err.Error())
+
+				var currentApplication capabilitiesv1beta1.Application
+				require.NoError(t, r.Client().Get(context.Background(), req.NamespacedName, &currentApplication))
+				require.Empty(t, currentApplication.Status.ID)
+			},
+		},
+		{
+			name: "Product found - but with invalid application plan",
+			application: &capabilitiesv1beta1.Application{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
+				},
+				Spec: capabilitiesv1beta1.ApplicationSpec{
+					AccountCR: &corev1.LocalObjectReference{
+						Name: "test",
+					},
+					ProductCR: &corev1.LocalObjectReference{
+						Name: "test",
+					},
+					ApplicationPlanName: "unknown",
+					Name:                "test",
+					Description:         "test",
+				},
+			},
+			account: getApplicationDeveloperAccount(),
+			product: getProductCR(),
+			httpHandlerOptions: []mocks.ApplicationAPIHandlerOpt{
+				mocks.WithService(3, getApplicationPlanListByProductJson()),
+				mocks.WithAccount(3, &client.ApplicationList{Applications: []client.ApplicationElem{
+					{Application: *getApplicationJson("live")},
+				}}),
+			},
+			testBody: func(t *testing.T, r *reconcilers.BaseReconciler, req reconcile.Request) {
+				ctx := context.Background()
+				applicationReconciler := ApplicationReconciler{BaseReconciler: r}
+				_, err := applicationReconciler.Reconcile(context.Background(), req)
+				// No error is returned
+				require.NoError(t, err)
+
+				// need to trigger the Reconcile again because the first one only updated the finalizers
+				_, err = applicationReconciler.Reconcile(ctx, req)
+				require.Error(t, err)
+
+				var currentApplication capabilitiesv1beta1.Application
+				require.NoError(t, r.Client().Get(context.Background(), req.NamespacedName, &currentApplication))
+				require.Empty(t, currentApplication.Status.ID)
+
+				condition := currentApplication.Status.Conditions.GetCondition(capabilitiesv1beta1.ApplicationReadyConditionType)
+				require.Equal(t, corev1.ConditionFalse, condition.Status)
+				require.Equal(t, `task failed SyncApplication: error sync application [test]: plan [unknown] doesnt exist in product [test]`, condition.Message)
+			},
+		},
 		{
 			name: "Create application successful",
-			fields: fields{
-				BaseReconciler: getBaseReconciler(getApplicationCR(), getProductList()),
-			},
-			args: args{
-				applicationResource: getApplicationCR(),
-				req: controllerruntime.Request{
-					NamespacedName: types.NamespacedName{
-						Name:      "test",
-						Namespace: "test",
-					},
+			application: &capabilitiesv1beta1.Application{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
 				},
-				threescaleApiClient:     client.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson("live"))),
-				providerAccountAdminURL: "https://3scale-admin.test.3scale.net",
-				accountResource:         getApplicationDeveloperAccount(),
-			},
-			want: NewApplicationStatusReconciler(
-				getBaseReconciler(getApplicationCR()),
-				getApplicationCR(),
-				getApplicationEntity(),
-				"https://3scale-admin.test.3scale.net",
-				nil),
-			wantErr: false,
-		},
-		{
-			name: "Attempt to create application with unknown Product and Account CR",
-			fields: fields{
-				BaseReconciler: getBaseReconciler(),
-			},
-			args: args{
-				applicationResource: getFailedApplicationCR(),
-				req: controllerruntime.Request{
-					NamespacedName: types.NamespacedName{
-						Name:      "test",
-						Namespace: "test",
+				Spec: capabilitiesv1beta1.ApplicationSpec{
+					AccountCR: &corev1.LocalObjectReference{
+						Name: "test",
 					},
-				},
-				threescaleApiClient:     client.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson("live"))),
-				providerAccountAdminURL: "https://3scale-admin.test.3scale.net",
-				accountResource:         getApplicationDeveloperAccount(),
-			},
-			wantErr: true,
-		},
-		{
-			name: "Attempt to create application with unknown Account CR name",
-			fields: fields{
-				BaseReconciler: getBaseReconciler(),
-			},
-			args: args{
-				applicationResource: unknowAccountApplicationCR(),
-				req: controllerruntime.Request{
-					NamespacedName: types.NamespacedName{
-						Name:      "test",
-						Namespace: "test",
+					ProductCR: &corev1.LocalObjectReference{
+						Name: "test",
 					},
+					Name:                "test",
+					Description:         "test",
+					ApplicationPlanName: "test",
 				},
-				threescaleApiClient:     client.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson("live"))),
-				providerAccountAdminURL: "https://3scale-admin.test.3scale.net",
-				accountResource:         getApplicationDeveloperAccount(),
 			},
-			wantErr: true,
-		},
-		{
-			name: "Attempt to create application with invalid applicacationPlanName",
-			fields: fields{
-				BaseReconciler: getBaseReconciler(),
+			account: getApplicationDeveloperAccount(),
+			product: getProductCR(),
+			httpHandlerOptions: []mocks.ApplicationAPIHandlerOpt{
+				mocks.WithService(3, getApplicationPlanListByProductJson()),
+				mocks.WithAccount(3, &client.ApplicationList{Applications: []client.ApplicationElem{
+					{Application: *getApplicationJson("live")},
+				}}),
 			},
-			args: args{
-				applicationResource: getUnknownPlanApplicationCR(),
-				req: controllerruntime.Request{
-					NamespacedName: types.NamespacedName{
-						Name:      "test",
-						Namespace: "test",
-					},
-				},
-				threescaleApiClient:     client.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson("live"))),
-				providerAccountAdminURL: "https://3scale-admin.test.3scale.net",
-				accountResource:         getApplicationDeveloperAccount(),
-			},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := &ApplicationReconciler{
-				BaseReconciler: tt.fields.BaseReconciler,
-			}
-			got, err := r.applicationReconciler(tt.args.applicationResource, tt.args.req, tt.args.threescaleApiClient, tt.args.providerAccountAdminURL, tt.args.accountResource)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("applicationReconciler() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if tt.want != nil {
-				if !reflect.DeepEqual(got.applicationResource, tt.want.applicationResource) {
-					t.Errorf("applicationReconciler() got = %v, want %v", got, tt.want)
-				}
-				if !reflect.DeepEqual(got.entity.ApplicationObj, tt.want.entity.ApplicationObj) {
-					t.Errorf("applicationReconciler() got = %v, want %v", got.entity.ApplicationObj, tt.want.entity.ApplicationObj)
-				}
-			}
-		})
-	}
-}
+			testBody: func(t *testing.T, r *reconcilers.BaseReconciler, req reconcile.Request) {
+				ctx := context.Background()
+				applicationReconciler := ApplicationReconciler{BaseReconciler: r}
+				_, err := applicationReconciler.Reconcile(ctx, req)
+				require.NoError(t, err)
 
-func TestApplicationReconciler_removeApplicationFrom3scale(t *testing.T) {
-	// admin portal
-	ap, _ := client.NewAdminPortalFromStr("https://3scale-admin.test.3scale.net")
-	type fields struct {
-		BaseReconciler *reconcilers.BaseReconciler
-	}
-	type args struct {
-		application         *capabilitiesv1beta1.Application
-		req                 controllerruntime.Request
-		threescaleAPIClient *client.ThreeScaleClient
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "Delete Application successfully",
-			fields: fields{
-				BaseReconciler: getBaseReconciler(getApplicationCR(), getProviderAccount(), getApiManger(), getApplicationProductList(), getApplicationDeveloperAccount(), getProviderAccountRefSecret()),
+				t.Log("verifying the Application gets finalizers assigned")
+				var application capabilitiesv1beta1.Application
+				require.NoError(t, r.Client().Get(ctx, req.NamespacedName, &application))
+				require.ElementsMatch(t, application.GetFinalizers(), []string{
+					applicationFinalizer,
+				})
+
+				// TODO: check owner reference
+
+				// need to trigger the Reconcile again because the first one only updated the finalizers
+				_, err = applicationReconciler.Reconcile(ctx, req)
+				require.NoError(t, err, "reconciliation returned an error")
+				// need to trigger the Reconcile again because the previous updated the Status
+				_, err = applicationReconciler.Reconcile(ctx, req)
+				require.NoError(t, err, "reconciliation returned an error")
+
+				var currentApplication capabilitiesv1beta1.Application
+				require.NoError(t, r.Client().Get(context.Background(), req.NamespacedName, &currentApplication))
+				// Check status ID
+				require.Equal(t, currentApplication.Status.ID, ptr.To(int64(3)))
+				// check annotation
+				require.Equal(t, currentApplication.Annotations[applicationIdAnnotation], "3")
+				// Check condition
+				condition := currentApplication.Status.Conditions.GetCondition(capabilitiesv1beta1.ApplicationReadyConditionType)
+				require.Equal(t, corev1.ConditionTrue, condition.Status)
 			},
-			args: args{
-				application: getApplicationDeleteCR(),
-				req: controllerruntime.Request{
-					NamespacedName: types.NamespacedName{
+		},
+		{
+			name: "Delete application successful",
+			application: &capabilitiesv1beta1.Application{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
+				},
+				Spec: capabilitiesv1beta1.ApplicationSpec{
+					AccountCR: &corev1.LocalObjectReference{
+						Name: "test",
+					},
+					ProductCR: &corev1.LocalObjectReference{
+						Name: "test",
+					},
+					Name:                "test",
+					Description:         "test",
+					ApplicationPlanName: "test",
+				},
+			},
+			account: getApplicationDeveloperAccount(),
+			product: getProductCR(),
+			httpHandlerOptions: []mocks.ApplicationAPIHandlerOpt{
+				mocks.WithService(3, getApplicationPlanListByProductJson()),
+				mocks.WithAccount(3, &client.ApplicationList{Applications: []client.ApplicationElem{
+					{Application: *getApplicationJson("live")},
+				}}),
+			},
+			testBody: func(t *testing.T, r *reconcilers.BaseReconciler, req reconcile.Request) {
+				ctx := context.Background()
+				applicationReconciler := ApplicationReconciler{BaseReconciler: r}
+				_, err := applicationReconciler.Reconcile(ctx, req)
+				require.NoError(t, err)
+
+				t.Log("verifying the Application gets finalizers assigned")
+				var application capabilitiesv1beta1.Application
+				require.NoError(t, r.Client().Get(ctx, req.NamespacedName, &application))
+				require.ElementsMatch(t, application.GetFinalizers(), []string{
+					applicationFinalizer,
+				})
+
+				// TODO: check owner reference
+
+				// need to trigger the Reconcile again because the first one only updated the finalizers
+				_, err = applicationReconciler.Reconcile(ctx, req)
+				require.NoError(t, err, "reconciliation returned an error")
+				// need to trigger the Reconcile again because the previous updated the Status
+				_, err = applicationReconciler.Reconcile(ctx, req)
+				require.NoError(t, err, "reconciliation returned an error")
+
+				// remove the cr
+				require.NoError(t, r.Client().Delete(ctx, &application))
+				_, err = applicationReconciler.Reconcile(ctx, req)
+				require.NoError(t, err, "reconciliation returned an error")
+
+				var currentApplication capabilitiesv1beta1.Application
+				err = r.Client().Get(context.Background(), req.NamespacedName, &currentApplication)
+				require.Error(t, err)
+				require.Equal(t, err.Error(), "applications.capabilities.3scale.net \"test\" not found")
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var httpServer *httptest.Server
+			objectsToAdd := []controllerruntimeclient.Object{
+				tc.application,
+			}
+			if tc.account != nil {
+				objectsToAdd = append(objectsToAdd, tc.account)
+			}
+			if tc.product != nil {
+				objectsToAdd = append(objectsToAdd, tc.product)
+			}
+
+			if tc.httpHandlerOptions != nil {
+				httpHandler := mocks.NewApplicationAPIHandler(tc.httpHandlerOptions...)
+				httpServer = httptest.NewServer(httpHandler)
+				defer httpServer.Close()
+
+				secret := &corev1.Secret{
+					TypeMeta: metav1.TypeMeta{},
+					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test",
 						Namespace: "test",
 					},
-				},
-				threescaleAPIClient: client.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson("live"))),
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := &ApplicationReconciler{
-				BaseReconciler: tt.fields.BaseReconciler,
+					Immutable: nil,
+					Data: map[string][]byte{
+						"adminURL": []byte(httpServer.URL),
+						"token":    []byte("token"),
+					},
+					StringData: nil,
+					Type:       "",
+				}
+
+				objectsToAdd = append(objectsToAdd, secret)
 			}
-			if err := r.removeApplicationFrom3scale(tt.args.application, tt.args.req, *tt.args.threescaleAPIClient); (err != nil) != tt.wantErr {
-				t.Errorf("removeApplicationFrom3scale() error = %v, wantErr %v", err, tt.wantErr)
-			}
+
+			s := scheme.Scheme
+			_ = capabilitiesv1beta1.AddToScheme(s)
+			_ = appsv1alpha1.AddToScheme(s)
+
+			fakeClient := fakectrlruntimeclient.
+				NewClientBuilder().
+				WithScheme(scheme.Scheme).
+				WithObjects(objectsToAdd...).
+				WithStatusSubresource(objectsToAdd...).
+				Build()
+
+			log := logf.Log.WithName("Application reconciler test")
+			clientset := fakeclientset.NewSimpleClientset()
+			recorder := record.NewFakeRecorder(10000)
+			baseReconciler := reconcilers.NewBaseReconciler(context.TODO(), fakeClient, s, fakeClient, log, clientset.Discovery(), recorder)
+			tc.testBody(t, baseReconciler, req)
 		})
 	}
 }

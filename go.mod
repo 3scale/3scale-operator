@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.10
 
 require (
-	github.com/3scale/3scale-porta-go-client v0.11.1-0.20250124150520-23225e662421
+	github.com/3scale/3scale-porta-go-client v0.12.0
 	github.com/RHsyseng/operator-utils v1.4.9
 	github.com/blang/semver/v4 v4.0.0
 	github.com/getkin/kin-openapi v0.94.0
