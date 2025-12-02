@@ -82,7 +82,7 @@ func TestApplicationReconciler_Reconcile(t *testing.T) {
 		name               string
 		application        *capabilitiesv1beta1.Application
 		account            *capabilitiesv1beta1.DeveloperAccount
-		product            *capabilitiesv1beta1.Product
+		product            []*capabilitiesv1beta1.Product
 		httpHandlerOptions []mocks.ApplicationAPIHandlerOpt
 		testBody           func(t *testing.T, reconciler *reconcilers.BaseReconciler, req reconcile.Request)
 	}{
@@ -105,7 +105,7 @@ func TestApplicationReconciler_Reconcile(t *testing.T) {
 					Description:         "test",
 				},
 			},
-			product: getProductCR(),
+			product: []*capabilitiesv1beta1.Product{getProductCR()},
 			testBody: func(t *testing.T, r *reconcilers.BaseReconciler, req reconcile.Request) {
 				applicationReconciler := ApplicationReconciler{BaseReconciler: r}
 				_, err := applicationReconciler.Reconcile(context.Background(), req)
@@ -208,7 +208,7 @@ func TestApplicationReconciler_Reconcile(t *testing.T) {
 					},
 				},
 			},
-			product: getProductCR(),
+			product: []*capabilitiesv1beta1.Product{getProductCR()},
 			httpHandlerOptions: []mocks.ApplicationAPIHandlerOpt{
 				mocks.WithService(3, getApplicationPlanListByProductJson()),
 				mocks.WithAccount(3, &client.ApplicationList{Applications: []client.ApplicationElem{
@@ -250,7 +250,7 @@ func TestApplicationReconciler_Reconcile(t *testing.T) {
 				},
 			},
 			account: getApplicationDeveloperAccount(),
-			product: getProductCR(),
+			product: []*capabilitiesv1beta1.Product{getProductCR()},
 			httpHandlerOptions: []mocks.ApplicationAPIHandlerOpt{
 				mocks.WithService(3, getApplicationPlanListByProductJson()),
 				mocks.WithAccount(3, &client.ApplicationList{Applications: []client.ApplicationElem{
@@ -297,8 +297,9 @@ func TestApplicationReconciler_Reconcile(t *testing.T) {
 				},
 			},
 			account: getApplicationDeveloperAccount(),
-			product: getProductCR(),
+			product: []*capabilitiesv1beta1.Product{getProductCR()},
 			httpHandlerOptions: []mocks.ApplicationAPIHandlerOpt{
+				mocks.WithInitAppID(3),
 				mocks.WithService(3, getApplicationPlanListByProductJson()),
 				mocks.WithAccount(3, &client.ApplicationList{Applications: []client.ApplicationElem{
 					{Application: *getApplicationJson("live")},
@@ -357,7 +358,7 @@ func TestApplicationReconciler_Reconcile(t *testing.T) {
 				},
 			},
 			account: getApplicationDeveloperAccount(),
-			product: getProductCR(),
+			product: []*capabilitiesv1beta1.Product{getProductCR()},
 			httpHandlerOptions: []mocks.ApplicationAPIHandlerOpt{
 				mocks.WithService(3, getApplicationPlanListByProductJson()),
 				mocks.WithAccount(3, &client.ApplicationList{Applications: []client.ApplicationElem{
@@ -397,6 +398,111 @@ func TestApplicationReconciler_Reconcile(t *testing.T) {
 				require.Equal(t, err.Error(), "applications.capabilities.3scale.net \"test\" not found")
 			},
 		},
+		{
+			name: "Update Product reference successful",
+			application: &capabilitiesv1beta1.Application{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
+				},
+				Spec: capabilitiesv1beta1.ApplicationSpec{
+					AccountCR: &corev1.LocalObjectReference{
+						Name: "test",
+					},
+					ProductCR: &corev1.LocalObjectReference{
+						Name: "test",
+					},
+					Name:                "test",
+					Description:         "test",
+					ApplicationPlanName: "test",
+				},
+			},
+			account: getApplicationDeveloperAccount(),
+			product: []*capabilitiesv1beta1.Product{
+				getProductCR(),
+				{
+					TypeMeta: metav1.TypeMeta{},
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test2",
+						Namespace: "test",
+					},
+					Spec: capabilitiesv1beta1.ProductSpec{
+						Name:        "test2",
+						SystemName:  "test2",
+						Description: "test2",
+					},
+					Status: capabilitiesv1beta1.ProductStatus{
+						ID:                  ptr.To(int64(4)),
+						ProviderAccountHost: "some string",
+						ObservedGeneration:  1,
+						Conditions: common.Conditions{common.Condition{
+							Type:   capabilitiesv1beta1.ProductSyncedConditionType,
+							Status: corev1.ConditionTrue,
+						}},
+					},
+				},
+			},
+			httpHandlerOptions: []mocks.ApplicationAPIHandlerOpt{
+				mocks.WithInitAppID(3),
+				mocks.WithService(3, getApplicationPlanListByProductJson()),
+				mocks.WithService(4, getApplicationPlanListByProductJson()),
+				mocks.WithAccount(3, &client.ApplicationList{Applications: []client.ApplicationElem{
+					{Application: *getApplicationJson("live")},
+				}}),
+			},
+			testBody: func(t *testing.T, r *reconcilers.BaseReconciler, req reconcile.Request) {
+				ctx := context.Background()
+				applicationReconciler := ApplicationReconciler{BaseReconciler: r}
+				_, err := applicationReconciler.Reconcile(ctx, req)
+				require.NoError(t, err)
+
+				t.Log("verifying the Application gets finalizers assigned")
+				var application capabilitiesv1beta1.Application
+				require.NoError(t, r.Client().Get(ctx, req.NamespacedName, &application))
+				require.ElementsMatch(t, application.GetFinalizers(), []string{
+					applicationFinalizer,
+				})
+
+				// TODO: check owner reference
+
+				// need to trigger the Reconcile again because the first one only updated the finalizers
+				_, err = applicationReconciler.Reconcile(ctx, req)
+				require.NoError(t, err, "reconciliation returned an error")
+				// need to trigger the Reconcile again because the previous updated the Status
+				_, err = applicationReconciler.Reconcile(ctx, req)
+				require.NoError(t, err, "reconciliation returned an error")
+
+				var currentApplication capabilitiesv1beta1.Application
+				require.NoError(t, r.Client().Get(context.Background(), req.NamespacedName, &currentApplication))
+
+				// Check status ID
+				require.Equal(t, currentApplication.Status.ID, ptr.To(int64(3)))
+				// check annotation
+				require.Equal(t, currentApplication.Annotations[applicationIdAnnotation], "3")
+				// Check condition
+				condition := currentApplication.Status.Conditions.GetCondition(capabilitiesv1beta1.ApplicationReadyConditionType)
+				require.Equal(t, corev1.ConditionTrue, condition.Status)
+
+				// Update productReference
+				currentApplication.Spec.ProductCR.Name = "test2"
+				require.NoError(t, r.Client().Update(context.Background(), &currentApplication))
+
+				_, err = applicationReconciler.Reconcile(ctx, req)
+				require.NoError(t, err, "reconciliation returned an error")
+
+				// AppID should increase to 4
+				require.NoError(t, r.Client().Get(context.Background(), req.NamespacedName, &currentApplication))
+				require.Equal(t, currentApplication.Status.ID, ptr.To(int64(4)))
+				condition = currentApplication.Status.Conditions.GetCondition(capabilitiesv1beta1.ApplicationReadyConditionType)
+				require.Equal(t, corev1.ConditionTrue, condition.Status)
+
+				// Reconcile one more time and check annotation
+				_, err = applicationReconciler.Reconcile(ctx, req)
+				require.NoError(t, err, "reconciliation returned an error")
+				require.NoError(t, r.Client().Get(context.Background(), req.NamespacedName, &currentApplication))
+				require.Equal(t, currentApplication.Annotations[applicationIdAnnotation], "4")
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -409,7 +515,9 @@ func TestApplicationReconciler_Reconcile(t *testing.T) {
 				objectsToAdd = append(objectsToAdd, tc.account)
 			}
 			if tc.product != nil {
-				objectsToAdd = append(objectsToAdd, tc.product)
+				for _, product := range tc.product {
+					objectsToAdd = append(objectsToAdd, product)
+				}
 			}
 
 			if tc.httpHandlerOptions != nil {

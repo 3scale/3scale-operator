@@ -12,9 +12,10 @@ import (
 )
 
 type ApplicationAPIHandler struct {
-	mux      *http.ServeMux
-	services map[int64]*client.ApplicationPlanJSONList
-	accounts map[int64]*client.ApplicationList
+	mux        *http.ServeMux
+	appIDCount int64
+	services   map[int64]*client.ApplicationPlanJSONList
+	accounts   map[int64]*client.ApplicationList
 }
 
 type ApplicationAPIHandlerOpt func(h *ApplicationAPIHandler)
@@ -28,6 +29,12 @@ func WithService(service int64, plans *client.ApplicationPlanJSONList) Applicati
 func WithAccount(account int64, applications *client.ApplicationList) ApplicationAPIHandlerOpt {
 	return func(m *ApplicationAPIHandler) {
 		m.accounts[account] = applications
+	}
+}
+
+func WithInitAppID(appID int64) ApplicationAPIHandlerOpt {
+	return func(m *ApplicationAPIHandler) {
+		m.appIDCount = appID
 	}
 }
 
@@ -139,7 +146,7 @@ func (m *ApplicationAPIHandler) applicationHandler(w http.ResponseWriter, r *htt
 		}
 
 		application := client.Application{
-			ID:            3,
+			ID:            m.appIDCount,
 			State:         "live",
 			UserAccountID: accountID,
 			ServiceID:     serviceID,
@@ -147,6 +154,9 @@ func (m *ApplicationAPIHandler) applicationHandler(w http.ResponseWriter, r *htt
 			AppName:       r.FormValue("name"),
 			Description:   r.FormValue("description"),
 		}
+
+		// Increase appIDCount
+		m.appIDCount++
 
 		elem := client.ApplicationElem{Application: application}
 

@@ -120,6 +120,27 @@ func (t *ApplicationThreescaleReconciler) syncApplication(_ any) error {
 		}
 		application = &a
 		t.applicationResource.Status.ID = &application.ID
+	} else if application.ServiceID != t.productID {
+		// Product reference has changed
+		err := t.threescaleAPIClient.DeleteApplication(t.accountID, application.ID)
+		if err != nil {
+			return fmt.Errorf("failed to delete application [%s] id:[%d] productID:[%d] - err: %w", t.applicationResource.Spec.Name, application.ID, application.ServiceID, err)
+		}
+
+		// Recreate the application
+		params := threescaleapi.Params{
+			"name":        t.applicationResource.Spec.Name,
+			"description": t.applicationResource.Spec.Description,
+		}
+
+		// Application doesn't exist yet - create it
+		a, err := t.threescaleAPIClient.CreateApplication(t.accountID, plan.Element.ID, t.applicationResource.Spec.Name, params)
+		if err != nil {
+			return fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.Name, err)
+		}
+
+		application = &a
+		t.applicationResource.Status.ID = &application.ID
 	}
 
 	applicationEntity := controllerhelper.NewApplicationEntity(application, t.threescaleAPIClient, t.logger)
