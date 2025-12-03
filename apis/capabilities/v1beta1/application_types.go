@@ -41,6 +41,7 @@ type ApplicationSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// AccountCRName name of account custom resource under which the application will be created
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="AccountCR reference is immutable once set"
 	AccountCR *corev1.LocalObjectReference `json:"accountCR"`
 
 	// ProductCRName of product custom resource from which the application plan will be used
