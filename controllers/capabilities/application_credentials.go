@@ -71,13 +71,13 @@ func validateSecretForAuthModeUserKey(s *corev1.Secret) error {
 
 func validateSecretForAuthModeAppIDAppKey(s *corev1.Secret) error {
 	if _, ok := s.Data[CredentialSecretKeyNameAppID]; !ok {
-		return fmt.Errorf("secret %s used as user-key authentication mode, but lacks %s key",
-			client.ObjectKeyFromObject(s), CredentialSecretKeyNameUserKey,
+		return fmt.Errorf("secret %s used as app-id/app-key authentication mode, but lacks %s key",
+			client.ObjectKeyFromObject(s), CredentialSecretKeyNameAppID,
 		)
 	}
 	if _, ok := s.Data[CredentialSecretKeyNameAppKey]; !ok {
-		return fmt.Errorf("secret %s used as user-key authentication mode, but lacks %s key",
-			client.ObjectKeyFromObject(s), CredentialSecretKeyNameUserKey,
+		return fmt.Errorf("secret %s used as app-id/app-key authentication mode, but lacks %s key",
+			client.ObjectKeyFromObject(s), CredentialSecretKeyNameAppKey,
 		)
 	}
 	return nil
@@ -85,13 +85,13 @@ func validateSecretForAuthModeAppIDAppKey(s *corev1.Secret) error {
 
 func validateSecretForAuthModeOIDC(s *corev1.Secret) error {
 	if _, ok := s.Data[CredentialSecretKeyNameClientID]; !ok {
-		return fmt.Errorf("secret %s used as user-key authentication mode, but lacks %s key",
-			client.ObjectKeyFromObject(s), CredentialSecretKeyNameUserKey,
+		return fmt.Errorf("secret %s used as oidc authentication mode, but lacks %s key",
+			client.ObjectKeyFromObject(s), CredentialSecretKeyNameClientID,
 		)
 	}
 	if _, ok := s.Data[CredentialSecretKeyNameClientSecret]; !ok {
-		return fmt.Errorf("secret %s used as user-key authentication mode, but lacks %s key",
-			client.ObjectKeyFromObject(s), CredentialSecretKeyNameUserKey,
+		return fmt.Errorf("secret %s used as oidc authentication mode, but lacks %s key",
+			client.ObjectKeyFromObject(s), CredentialSecretKeyNameClientSecret,
 		)
 	}
 	return nil
