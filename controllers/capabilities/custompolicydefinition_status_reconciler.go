@@ -75,17 +75,21 @@ func (s *CustomPolicyDefinitionStatusReconciler) Reconcile() (reconcile.Result, 
 }
 
 func (s *CustomPolicyDefinitionStatusReconciler) calculateStatus() (*capabilitiesv1beta1.CustomPolicyDefinitionStatus, error) {
-	newStatus := &capabilitiesv1beta1.CustomPolicyDefinitionStatus{}
+	newStatus := &capabilitiesv1beta1.CustomPolicyDefinitionStatus{
+		ID:                  s.resource.Status.ID,
+		ProviderAccountHost: s.resource.Status.ProviderAccountHost,
+		ObservedGeneration:  s.resource.Status.ObservedGeneration,
+		Conditions:          s.resource.Status.Conditions.Copy(),
+	}
 
 	if s.customPolicy != nil {
 		newStatus.ID = s.customPolicy.Element.ID
 	}
 
-	newStatus.ProviderAccountHost = s.providerAccountHost
+	if s.providerAccountHost != "" {
+		newStatus.ProviderAccountHost = s.providerAccountHost
+	}
 
-	newStatus.ObservedGeneration = s.resource.Status.ObservedGeneration
-
-	newStatus.Conditions = s.resource.Status.Conditions.Copy()
 	newStatus.Conditions.SetCondition(s.readyCondition())
 	newStatus.Conditions.SetCondition(s.invalidCondition())
 	newStatus.Conditions.SetCondition(s.failedCondition())
