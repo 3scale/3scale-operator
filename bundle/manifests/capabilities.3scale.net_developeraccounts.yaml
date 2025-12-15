@@ -42,7 +42,8 @@ spec:
             description: DeveloperAccountSpec defines the desired state of DeveloperAccount
             properties:
               monthlyBillingEnabled:
-                description: MonthlyBillingEnabled sets the billing status. Defaults to "true", ie., active
+                description: MonthlyBillingEnabled sets the billing status. Defaults
+                  to "true", ie., active
                 type: boolean
               monthlyChargingEnabled:
                 description: MonthlyChargingEnabled Defaults to "true"
@@ -121,11 +122,13 @@ spec:
               creditCardStored:
                 type: boolean
               observedGeneration:
-                description: ObservedGeneration reflects the generation of the most recently observed Backend Spec.
+                description: ObservedGeneration reflects the generation of the most
+                  recently observed Backend Spec.
                 format: int64
                 type: integer
               providerAccountHost:
-                description: ProviderAccountHost contains the 3scale account's provider URL
+                description: ProviderAccountHost contains the 3scale account's provider
+                  URL
                 type: string
             type: object
         type: object
