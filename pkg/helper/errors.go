@@ -1,8 +1,14 @@
 package helper
 
 import (
+	"errors"
+
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
+
+// ErrReferencedMethodIsBeingDeleted is an error type that is returned when
+// an active Metric entity references in Product or Backend which is being deleted.
+var ErrReferencedMethodIsBeingDeleted = errors.New("method is used by the latest gateway configuration, it will be removed from 3scale only once the promotion without the mapping rule that uses the deleted method is done")
 
 type FieldTypeError int
 

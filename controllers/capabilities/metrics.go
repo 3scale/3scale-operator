@@ -34,23 +34,6 @@ func (t *ProductThreescaleReconciler) syncMetrics(_ interface{}) error {
 	}
 
 	//
-	// Deleted existing and not desired metrics
-	//
-
-	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
-	t.logger.V(1).Info("syncMetrics", "notDesiredExistingKeys", notDesiredExistingKeys)
-	notDesiredMap := map[string]threescaleapi.MetricItem{}
-	for _, systemName := range notDesiredExistingKeys {
-		// key is expected to exist
-		// notDesiredExistingKeys is a subset of the existingMap key set
-		notDesiredMap[systemName] = existingMap[systemName]
-	}
-	err = t.processNotDesiredMetrics(notDesiredMap)
-	if err != nil {
-		return fmt.Errorf("Error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
-	}
-
-	//
 	// Reconcile existing and changed metrics
 	//
 
@@ -84,6 +67,23 @@ func (t *ProductThreescaleReconciler) syncMetrics(_ interface{}) error {
 	err = t.createNewMetrics(desiredNewMap)
 	if err != nil {
 		return fmt.Errorf("Error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
+	}
+
+	//
+	// Deleted existing and not desired metrics
+	//
+
+	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
+	t.logger.V(1).Info("syncMetrics", "notDesiredExistingKeys", notDesiredExistingKeys)
+	notDesiredMap := map[string]threescaleapi.MetricItem{}
+	for _, systemName := range notDesiredExistingKeys {
+		// key is expected to exist
+		// notDesiredExistingKeys is a subset of the existingMap key set
+		notDesiredMap[systemName] = existingMap[systemName]
+	}
+	err = t.processNotDesiredMetrics(notDesiredMap)
+	if err != nil {
+		return fmt.Errorf("error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
 	}
 
 	return nil
