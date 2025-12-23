@@ -55,6 +55,19 @@ spec:
               applicationPlanName:
                 description: ApplicationPlanName name of application plan that the application will use
                 type: string
+              authSecretRef:
+                description: |-
+                  AuthSecretRef reference to the API credentials secret. This secret is
+                  used only once when creating a new application
+                properties:
+                  name:
+                    description: |-
+                      Name of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
               description:
                 description: Description human-readable text of the application
                 type: string

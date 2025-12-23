@@ -59,6 +59,11 @@ type ApplicationSpec struct {
 	// Suspend application if true suspends application, if false resumes application.
 	//+optional
 	Suspend bool `json:"suspend,omitempty"`
+
+	// AuthSecretRef reference to the API credentials secret. This secret is
+	// used only once when creating a new application
+	//+optional
+	AuthSecretRef *corev1.LocalObjectReference `json:"authSecretRef"`
 }
 
 // ApplicationStatus defines the observed state of Application
