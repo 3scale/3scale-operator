@@ -19,7 +19,8 @@ spec:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: ProxyConfigPromote is the Schema for the proxyconfigpromotes API
+        description: ProxyConfigPromote is the Schema for the proxyconfigpromotes
+          API
         properties:
           apiVersion:
             description: |-
@@ -42,13 +43,15 @@ spec:
             description: ProxyConfigPromoteSpec defines the desired state of ProxyConfigPromote
             properties:
               deleteCR:
-                description: deleteCR  deletes this CR when it has successfully completed the promotion
+                description: deleteCR  deletes this CR when it has successfully completed
+                  the promotion
                 type: boolean
               productCRName:
                 description: Product CR metadata name
                 type: string
               production:
-                description: Environment you wish to promote to, if not present defaults to staging and if set to true promotes to production
+                description: Environment you wish to promote to, if not present defaults
+                  to staging and if set to true promotes to production
                 type: boolean
             required:
             - productCRName
