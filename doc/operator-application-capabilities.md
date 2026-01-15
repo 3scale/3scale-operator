@@ -1672,6 +1672,11 @@ spec:
             systemName: hits
             backend: backend1
   name: product1
+  deployment:
+    apicastHosted:
+      authentication:
+        appKeyAppID
+          appID: token
   backendUsages:
     backend1:
       path: /
@@ -1734,6 +1739,41 @@ status:
   providerAccountHost: 'https://3scale-admin.example.com'
   state: suspended
 ```
+
+By default, 3scale automatically generates a random and immutable ID for each application upon creation.
+
+If you require an application to have a predefined ID, you must supply an authentication secret.
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: authsecret
+type: Opaque
+stringData:
+  ApplicationID: "testApplicationID"
+  ApplicationKey: "testApplicationKey"
+```
+
+Reference the secret with `authSecretRef`
+
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Application
+metadata:
+  name: example
+spec:
+  accountCR:
+    name: developeraccount01
+  applicationPlanName: plan02
+  productCR:
+    name: product1-cr
+  name: testApp12
+  description: further testing12
+  suspend: true
+  authSecretRef: authsecret
+```
+
 [Application CRD reference](application-reference.md) for more info about fields.
 
 ### Application Custom Resource Status Fields
