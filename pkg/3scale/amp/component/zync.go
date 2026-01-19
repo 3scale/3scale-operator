@@ -679,6 +679,7 @@ func (zync *Zync) zyncInit(containerImage string) []v1.Container {
 							},
 						},
 					},
+					helper.EnvVarFromSecret("SECRET_KEY_BASE", "zync", "SECRET_KEY_BASE"),
 					helper.EnvVarFromSecretOptional("DATABASE_SSL_MODE", ZyncSecretName, "DATABASE_SSL_MODE"),
 					helper.EnvVarFromValue("DATABASE_SSL_CA", helper.TlsCertPresent("DATABASE_SSL_CA", ZyncSecretName, zync.Options.ZyncDbTLSEnabled)),
 					helper.EnvVarFromValue("DATABASE_SSL_CERT", helper.TlsCertPresent("DATABASE_SSL_CERT", ZyncSecretName, zync.Options.ZyncDbTLSEnabled)),
@@ -719,6 +720,7 @@ func (zync *Zync) zyncInit(containerImage string) []v1.Container {
 							},
 						},
 					},
+					helper.EnvVarFromSecret("SECRET_KEY_BASE", "zync", "SECRET_KEY_BASE"),
 				},
 			},
 		}
