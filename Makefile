@@ -1,10 +1,19 @@
-SHELL := /bin/bash
+# Setting SHELL to bash allows bash commands to be executed by recipes.
+# This is a requirement for 'setup-envtest.sh' in the test target.
+# Options are set to exit when a recipe line exits non-zero or a piped command fails.
+SHELL = /usr/bin/env bash -o pipefail
+.SHELLFLAGS = -ec
 # Current Operator version
 VERSION ?= 0.0.1
 # Current Threescale version
 THREESCALE_VERSION ?= 2.16
+# Address of the container registry
+REGISTRY = quay.io
+# Organization in container resgistry
+ORG ?= 3scale
 # Default bundle image tag
-BUNDLE_IMG ?= controller-bundle:$(VERSION)
+IMAGE_TAG_BASE ?= $(REGISTRY)/$(ORG)/3scale-operator
+BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 # Options for 'bundle-build'
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
@@ -14,13 +23,11 @@ BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
 endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
-OS := $(shell uname | awk '{print tolower($$0)}' | sed -e s/linux/linux-gnu/ )
-ARCH := $(shell uname -m)
+OS = $(shell go env GOOS)
+ARCH = $(shell go env GOARCH)
 
 # Image URL to use all building/pushing image targets
 IMG ?= quay.io/3scale/3scale-operator:master
-
-CRD_OPTIONS ?= "crd:crdVersions=v1"
 
 GO ?= go
 KUBECTL ?= kubectl
@@ -55,14 +62,17 @@ PROMETHEUS_RULES_TARGETS = $(foreach pr,$(PROMETHEUS_RULES),$(PROJECT_PATH)/doc/
 PROMETHEUS_RULES_DEPS = $(shell find $(PROJECT_PATH)/pkg/3scale/amp/component -name '*.go')
 PROMETHEUS_RULES_NAMESPACE ?= "__NAMESPACE__"
 
+.PHONY: all
 all: manager
 
 # Run all tests
+.PHONY: test
 test: test-unit test-e2e test-crds test-manifests-version
 
 # Run unit tests
 TEST_UNIT_PKGS = $(shell $(GO) list ./... | grep -E 'github.com/3scale/3scale-operator/pkg|github.com/3scale/3scale-operator/apis|github.com/3scale/3scale-operator/test/unitcontrollers|github.com/3scale/3scale-operator/controllers/capabilities')
 TEST_UNIT_COVERPKGS = $(shell $(GO) list ./... | grep -v github.com/3scale/3scale-operator/test | tr "\n" ",") # Exclude test directories as coverpkg does not accept only-tests packages
+.PHONY: test-unit
 test-unit: clean-cov generate fmt vet manifests
 	mkdir -p "$(PROJECT_PATH)/_output"
 	$(GO) test  -v $(TEST_UNIT_PKGS) -covermode=count -coverprofile $(PROJECT_PATH)/_output/unit.cov -coverpkg=$(TEST_UNIT_COVERPKGS)
@@ -71,11 +81,13 @@ $(PROJECT_PATH)/_output/unit.cov: test-unit
 
 # Run CRD tests
 TEST_CRD_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/crds')
+.PHONY: test-crds
 test-crds: generate fmt vet manifests
 	$(GO) test -v $(TEST_CRD_PKGS)
 
 TEST_MANIFESTS_VERSION_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/manifests-version')
 ## test-manifests-version: Run manifest version checks
+.PHONY: test-manifests-version
 test-manifests-version:
 	$(GO) test -v $(TEST_MANIFESTS_VERSION_PKGS)
 
@@ -83,6 +95,7 @@ test-manifests-version:
 TEST_E2E_PKGS_APPS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/controllers/apps')
 TEST_E2E_PKGS_CAPABILITIES = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/controllers/capabilities')
 ENVTEST_ASSETS_DIR=$(PROJECT_PATH)/testbin
+.PHONY: test-e2e
 test-e2e: generate fmt vet manifests
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f $(ENVTEST_ASSETS_DIR)/setup-envtest.sh || curl -sSLo $(ENVTEST_ASSETS_DIR)/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.0/hack/setup-envtest.sh
@@ -91,10 +104,12 @@ test-e2e: generate fmt vet manifests
 
 
 # Build manager binary
-manager: generate fmt vet
+.PHONY: manager
+manager: manifests generate fmt vet
 	$(GO) build -o bin/manager main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
+.PHONY: run
 run: export WATCH_NAMESPACE=$(LOCAL_RUN_NAMESPACE)
 run: export THREESCALE_DEBUG=1
 run: export PREFLIGHT_CHECKS_BYPASS=true
@@ -102,14 +117,37 @@ run: generate fmt vet manifests
 	@-oc process THREESCALE_VERSION=$(THREESCALE_VERSION) -f config/requirements/operator-requirements.yaml | oc apply -f - -n $(WATCH_NAMESPACE)
 	$(GO) run ./main.go --zap-devel 
 
-# find or download controller-gen
-# download controller-gen if necessary
-CONTROLLER_GEN=$(PROJECT_PATH)/bin/controller-gen
-$(CONTROLLER_GEN):
-	$(call go-bin-install,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0)
+##@ Build Dependencies
+
+## Location to install dependencies to
+LOCALBIN ?= $(shell pwd)/bin
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
+
+## Tool Binaries
+KUSTOMIZE ?= $(LOCALBIN)/kustomize
+CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
+ENVTEST ?= $(LOCALBIN)/setup-envtest
+
+## Tool Versions
+KUSTOMIZE_VERSION ?= v4.5.7
+CONTROLLER_TOOLS_VERSION ?= v0.14.0
+
+KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
+.PHONY: kustomize
+kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
+$(KUSTOMIZE): $(LOCALBIN)
+	test -s $(LOCALBIN)/kustomize || { curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(LOCALBIN); }
 
 .PHONY: controller-gen
-controller-gen: $(CONTROLLER_GEN)
+controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
+$(CONTROLLER_GEN): $(LOCALBIN)
+	test -s $(LOCALBIN)/controller-gen || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
+
+.PHONY: envtest
+envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
+$(ENVTEST): $(LOCALBIN)
+	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
 .PHONY: cluster/prepare/local
 cluster/prepare/local: kustomize cluster/prepare/project install cluster/create/system-redis cluster/create/backend-redis cluster/create/provision-database
@@ -153,19 +191,12 @@ endif
 cluster/prepare/project:
 	@ - oc new-project $(NAMESPACE)
 
-KUSTOMIZE=$(PROJECT_PATH)/bin/kustomize
-$(KUSTOMIZE):
-	$(call go-bin-install,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.5.7)
-
-.PHONY: kustomize
-kustomize: $(KUSTOMIZE)
-
 OPERATOR_SDK = $(PROJECT_PATH)/bin/operator-sdk
 # Note: release file patterns changed after v1.2.0
 # More info https://sdk.operatorframework.io/docs/installation/
-OPERATOR_SDK_VERSION=v1.2.0
+OPERATOR_SDK_VERSION=v1.36.1
 $(OPERATOR_SDK):
-	curl -sSL https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk-${OPERATOR_SDK_VERSION}-$(ARCH)-${OS} -o $(OPERATOR_SDK)
+	curl -sSL https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$(OS)_$(ARCH) -o $(OPERATOR_SDK)
 	chmod +x $(OPERATOR_SDK)
 
 .PHONY: operator-sdk
@@ -178,28 +209,44 @@ $(GO_BINDATA):
 .PHONY: go-bindata
 go-bindata: $(GO_BINDATA)
 
+##@ Deployment
+
+ifndef ignore-not-found
+  ignore-not-found = false
+endif
+
 # Install CRDs into a cluster
+.PHONY: install
 install: manifests $(KUSTOMIZE)
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) create -f - || $(KUSTOMIZE) build config/crd | $(KUBECTL) replace -f -
 
 # Uninstall CRDs from a cluster
+.PHONY: uninstall
 uninstall: manifests $(KUSTOMIZE)
-	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete -f -
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
+.PHONY: deploy
 deploy: manifests $(KUSTOMIZE)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 
+.PHONY: undeploy
+undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
+	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
+
 # Generate manifests e.g. CRD, RBAC etc.
+.PHONY: manifests
 manifests: $(CONTROLLER_GEN)
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 # Run go fmt against code
+.PHONY: fmt
 fmt:
 	$(GO) fmt ./...
 
 # Run go vet against code
+.PHONY: vet
 vet:
 	$(GO) vet ./...
 
@@ -228,6 +275,20 @@ docker-build: test docker-build-only
 .PHONY: docker-build-only
 docker-build-only:
 	$(DOCKER) build . -t ${IMG}
+
+# PLATFORMS defines the target platforms for  the manager image be build to provide support to multiple
+# architectures. (i.e. make docker-buildx IMG=myregistry/mypoperator:0.0.1). To use this option you need to:
+# - able to use docker buildx . More info: https://docs.docker.com/build/buildx/
+# - have enable BuildKit, More info: https://docs.docker.com/develop/develop-images/build_enhancements/
+# - be able to push the image for your registry (i.e. if you do not inform a valid value via IMG=<myregistry/image:<tag>> than the export will fail)
+# To properly provided solutions that supports more than one platform you should use this option.
+PLATFORMS ?= linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
+.PHONY: docker-buildx
+docker-buildx: ## Build and push docker image for the manager for cross-platform support
+	- docker buildx create --name project-v3-builder
+	docker buildx use project-v3-builder
+	- docker buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile .
+	- docker buildx rm project-v3-builder
 
 # Push the operator docker image
 .PHONY: operator-image-push
@@ -292,6 +353,32 @@ $(YQ):
 .PHONY: yq
 yq: $(YQ)
 
+OPM = ./bin/opm
+.PHONY: opm
+opm:
+ifeq (,$(wildcard $(OPM)))
+ifeq (,$(shell which opm 2>/dev/null))
+	@{ \
+	set -e ;\
+	mkdir -p $(dir $(OPM)) ;\
+	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.23.0/$(OS)-$(ARCH)-opm ;\
+	chmod +x $(OPM) ;\
+	}
+else 
+OPM = $(shell which opm)
+endif
+endif
+BUNDLE_IMGS ?= $(BUNDLE_IMG) 
+CATALOG_IMG ?= $(IMAGE_TAG_BASE)-catalog:v$(VERSION) ifneq ($(origin CATALOG_BASE_IMG), undefined) FROM_INDEX_OPT := --from-index $(CATALOG_BASE_IMG) endif 
+.PHONY: catalog-build
+catalog-build: opm
+	$(OPM) index add --container-tool docker --mode semver --tag $(CATALOG_IMG) --bundles $(BUNDLE_IMGS) $(FROM_INDEX_OPT)
+
+.PHONY: catalog-push
+catalog-push: ## Push the catalog image.
+	$(MAKE) docker-push IMG=$(CATALOG_IMG)
+
+.PHONY: download
 download:
 	@echo Download go.mod dependencies
 	@$(GO) mod download
@@ -305,6 +392,7 @@ endif
 	license_finder report --decisions-file=$(DEPENDENCY_DECISION_FILE) --quiet --format=xml > licenses.xml
 
 ## licenses-check: Check license compliance of dependencies
+.PHONY: licenses-check
 licenses-check:
 ifndef LICENSEFINDERBINARY
 	$(error "license-finder is not available please install: gem install license_finder --version 5.7.1")
@@ -335,9 +423,16 @@ clean-cov:
 bundle-validate: $(OPERATOR_SDK)
 	$(OPERATOR_SDK) bundle validate ./bundle
 
+# Since operator-sdk 1.26.0, `make bundle` changes the `createdAt` field from the bundle
+# even if it is patched:
+#   https://github.com/operator-framework/operator-sdk/pull/6136
+# This code checks if only the createdAt field. If is the only change, it is ignored.
+# Else, it will do nothing.
+# https://github.com/operator-framework/operator-sdk/issues/6285#issuecomment-1415350333
+# https://github.com/operator-framework/operator-sdk/issues/6285#issuecomment-1532150678
 .PHONY: bundle-update-test
 bundle-update-test:
-	git diff --exit-code ./bundle
+	git diff --quiet -I'^    createdAt: ' ./bundle && git checkout ./bundle || true
 	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./bundle)" ]
 
 $(PROMETHEUS_RULES_TARGETS): $(PROMETHEUS_RULES_DEPS)
@@ -370,3 +465,4 @@ endef
 
 # Include last to avoid changing MAKEFILE_LIST used above
 include $(PROJECT_PATH)/make/*.mk
+

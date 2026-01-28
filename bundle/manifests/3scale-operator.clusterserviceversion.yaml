@@ -240,12 +240,13 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/3scale/3scale-operator:master
-    createdAt: "2019-05-30T22:40:00Z"
+    createdAt: "2025-07-02T06:08:06Z"
     description: 3scale Operator to provision 3scale and publish/manage API
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
-    operators.openshift.io/valid-subscription: '["Red Hat Integration", "Red Hat 3scale API Management"]'
-    operators.operatorframework.io/builder: operator-sdk-v1.2.0
-    operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
+    operators.openshift.io/valid-subscription: '["Red Hat Integration", "Red Hat 3scale
+      API Management"]'
+    operators.operatorframework.io/builder: operator-sdk-v1.36.1
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/3scale/3scale-operator
     rht_backend_redis_requirements: 7.0.0
     rht_mysql_requirements: 8.0.0
@@ -326,7 +327,8 @@ spec:
       kind: Backend
       name: backends.capabilities.3scale.net
       version: v1beta1
-    - description: CustomPolicyDefinition is the Schema for the custompolicydefinitions API
+    - description: CustomPolicyDefinition is the Schema for the custompolicydefinitions
+        API
       displayName: Custom Policy Definition
       kind: CustomPolicyDefinition
       name: custompolicydefinitions.capabilities.3scale.net
@@ -514,7 +516,10 @@ spec:
           - watch
         serviceAccountName: 3scale-operator
       deployments:
-      - name: threescale-operator-controller-manager-v2
+      - label:
+          app: 3scale-api-management
+          control-plane: controller-manager
+        name: threescale-operator-controller-manager-v2
         spec:
           replicas: 1
           selector:
@@ -524,6 +529,8 @@ spec:
           strategy: {}
           template:
             metadata:
+              annotations:
+                kubectl.kubernetes.io/default-container: manager
               labels:
                 app: 3scale-api-management
                 com.company: Red_Hat
@@ -537,8 +544,8 @@ spec:
             spec:
               containers:
               - args:
-                - --metrics-addr=0.0.0.0:8080
-                - --enable-leader-election
+                - --metrics-bind-address=0.0.0.0:8080
+                - --leader-elect
                 command:
                 - /manager
                 env:
@@ -563,27 +570,39 @@ spec:
                 - name: RELATED_IMAGE_SYSTEM_SEARCHD
                   value: quay.io/3scale/searchd:latest
                 image: quay.io/3scale/3scale-operator:master
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: 8081
+                  initialDelaySeconds: 15
+                  periodSeconds: 20
                 name: manager
                 ports:
                 - containerPort: 8080
                   name: metrics
+                readinessProbe:
+                  httpGet:
+                    path: /readyz
+                    port: 8081
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
                 resources:
                   limits:
-                    cpu: 100m
+                    cpu: 200m
                     memory: 300Mi
                   requests:
                     cpu: 100m
                     memory: 300Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
               serviceAccountName: 3scale-operator
               terminationGracePeriodSeconds: 10
       permissions:
       - rules:
         - apiGroups:
           - ""
-          - coordination.k8s.io
           resources:
           - configmaps
-          - leases
           verbs:
           - get
           - list
@@ -593,13 +612,10 @@ spec:
           - patch
           - delete
         - apiGroups:
-          - ""
+          - coordination.k8s.io
           resources:
-          - configmaps/status
-          verbs:
-          - get
-          - update
-          - patch
+          - leases
+          verbs: null
         - apiGroups:
           - ""
           resources:
@@ -1117,4 +1133,21 @@ spec:
   maturity: stable
   provider:
     name: Red Hat
+  relatedImages:
+  - image: quay.io/3scale/apisonator:latest
+    name: backend
+  - image: quay.io/3scale/apicast:latest
+    name: apicast
+  - image: quay.io/3scale/porta:latest
+    name: system
+  - image: quay.io/3scale/zync:latest
+    name: zync
+  - image: mirror.gcr.io/library/memcached:1.5
+    name: system-memcached
+  - image: quay.io/sclorg/postgresql-13-c8s
+    name: zync-postgresql
+  - image: quay.io/openshift/origin-cli:4.7
+    name: oc-cli
+  - image: quay.io/3scale/searchd:latest
+    name: system-searchd
   version: 0.0.1

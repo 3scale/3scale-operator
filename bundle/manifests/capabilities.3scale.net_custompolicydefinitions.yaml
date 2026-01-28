@@ -29,7 +29,8 @@ spec:
     name: v1beta1
     schema:
       openAPIV3Schema:
-        description: CustomPolicyDefinition is the Schema for the custompolicydefinitions API
+        description: CustomPolicyDefinition is the Schema for the custompolicydefinitions
+          API
         properties:
           apiVersion:
             description: |-
@@ -69,14 +70,17 @@ spec:
                 description: Schema is the schema of the custom policy
                 properties:
                   $schema:
-                    description: Schema the $schema keyword is used to declare that this is a JSON Schema.
+                    description: Schema the $schema keyword is used to declare that
+                      this is a JSON Schema.
                     type: string
                   configuration:
-                    description: Configuration defines the structural schema for the policy
+                    description: Configuration defines the structural schema for the
+                      policy
                     type: object
                     x-kubernetes-preserve-unknown-fields: true
                   description:
-                    description: Description is an array of description messages for the custom policy schema
+                    description: Description is an array of description messages for
+                      the custom policy schema
                     items:
                       type: string
                     type: array
@@ -105,7 +109,8 @@ spec:
             - version
             type: object
           status:
-            description: CustomPolicyDefinitionStatus defines the observed state of CustomPolicyDefinition
+            description: CustomPolicyDefinitionStatus defines the observed state of
+              CustomPolicyDefinition
             properties:
               conditions:
                 description: |-
@@ -154,7 +159,8 @@ spec:
                   type: object
                 type: array
               observedGeneration:
-                description: ObservedGeneration reflects the generation of the most recently observed Backend Spec.
+                description: ObservedGeneration reflects the generation of the most
+                  recently observed Backend Spec.
                 format: int64
                 type: integer
               policyID:
@@ -162,7 +168,8 @@ spec:
                 format: int64
                 type: integer
               providerAccountHost:
-                description: ProviderAccountHost contains the 3scale account's provider URL
+                description: ProviderAccountHost contains the 3scale account's provider
+                  URL
                 type: string
             type: object
         type: object

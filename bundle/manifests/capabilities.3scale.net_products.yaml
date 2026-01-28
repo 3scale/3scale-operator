@@ -43,7 +43,8 @@ spec:
             properties:
               applicationPlans:
                 additionalProperties:
-                  description: ApplicationPlanSpec defines the desired state of Product's Application Plan
+                  description: ApplicationPlanSpec defines the desired state of Product's
+                    Application Plan
                   properties:
                     appsRequireApproval:
                       description: |-
@@ -70,7 +71,8 @@ spec:
                                   Backend reference must be used by the product
                                 type: string
                               systemName:
-                                description: SystemName identifies uniquely the metric or methods
+                                description: SystemName identifies uniquely the metric
+                                  or methods
                                 type: string
                             required:
                             - systemName
@@ -116,7 +118,8 @@ spec:
                                   Backend reference must be used by the product
                                 type: string
                               systemName:
-                                description: SystemName identifies uniquely the metric or methods
+                                description: SystemName identifies uniquely the metric
+                                  or methods
                                 type: string
                             required:
                             - systemName
@@ -155,7 +158,8 @@ spec:
                 type: object
               backendUsages:
                 additionalProperties:
-                  description: BackendUsageSpec defines the desired state of Product's Backend Usages
+                  description: BackendUsageSpec defines the desired state of Product's
+                    Backend Usages
                   properties:
                     path:
                       type: string
@@ -176,10 +180,12 @@ spec:
                   - apicastSelfManaged
                 properties:
                   apicastHosted:
-                    description: ApicastHostedSpec defines the desired state of Product Apicast Hosted
+                    description: ApicastHostedSpec defines the desired state of Product
+                      Apicast Hosted
                     properties:
                       authentication:
-                        description: AuthenticationSpec defines the desired state of Product Authentication
+                        description: AuthenticationSpec defines the desired state
+                          of Product Authentication
                         oneOf:
                         - required:
                           - userkey
@@ -189,13 +195,16 @@ spec:
                           - oidc
                         properties:
                           appKeyAppID:
-                            description: AppKeyAppIDAuthenticationSpec defines the desired state of AppKey&AppId Authentication
+                            description: AppKeyAppIDAuthenticationSpec defines the
+                              desired state of AppKey&AppId Authentication
                             properties:
                               appID:
-                                description: AppID is the name of the parameter that acts of behalf of app id
+                                description: AppID is the name of the parameter that
+                                  acts of behalf of app id
                                 type: string
                               appKey:
-                                description: AppKey is the name of the parameter that acts of behalf of app key
+                                description: AppKey is the name of the parameter that
+                                  acts of behalf of app key
                                 type: string
                               credentials:
                                 description: |-
@@ -209,54 +218,73 @@ spec:
                                 - authorization
                                 type: string
                               gatewayResponse:
-                                description: GatewayResponseSpec defines the desired gateway response configuration
+                                description: GatewayResponseSpec defines the desired
+                                  gateway response configuration
                                 properties:
                                   errorAuthFailed:
-                                    description: ErrorAuthFailed specifies the response body when authentication fails
+                                    description: ErrorAuthFailed specifies the response
+                                      body when authentication fails
                                     type: string
                                   errorAuthMissing:
-                                    description: ErrorAuthMissing specifies the response body when authentication is missing
+                                    description: ErrorAuthMissing specifies the response
+                                      body when authentication is missing
                                     type: string
                                   errorHeadersAuthFailed:
-                                    description: ErrorHeadersAuthFailed specifies the Content-Type header when authentication fails
+                                    description: ErrorHeadersAuthFailed specifies
+                                      the Content-Type header when authentication
+                                      fails
                                     type: string
                                   errorHeadersAuthMissing:
-                                    description: ErrorHeadersAuthMissing specifies the Content-Type header when authentication is missing
+                                    description: ErrorHeadersAuthMissing specifies
+                                      the Content-Type header when authentication
+                                      is missing
                                     type: string
                                   errorHeadersLimitsExceeded:
-                                    description: ErrorHeadersLimitsExceeded specifies the Content-Type header when usage limit exceeded
+                                    description: ErrorHeadersLimitsExceeded specifies
+                                      the Content-Type header when usage limit exceeded
                                     type: string
                                   errorHeadersNoMatch:
-                                    description: ErrorHeadersNoMatch specifies the Content-Type header when no match error
+                                    description: ErrorHeadersNoMatch specifies the
+                                      Content-Type header when no match error
                                     type: string
                                   errorLimitsExceeded:
-                                    description: ErrorLimitsExceeded specifies the response body when usage limit exceeded
+                                    description: ErrorLimitsExceeded specifies the
+                                      response body when usage limit exceeded
                                     type: string
                                   errorNoMatch:
-                                    description: ErrorNoMatch specifies the response body when no match error
+                                    description: ErrorNoMatch specifies the response
+                                      body when no match error
                                     type: string
                                   errorStatusAuthFailed:
-                                    description: ErrorStatusAuthFailed specifies the response code when authentication fails
+                                    description: ErrorStatusAuthFailed specifies the
+                                      response code when authentication fails
                                     format: int32
                                     type: integer
                                   errorStatusAuthMissing:
-                                    description: ErrorStatusAuthMissing specifies the response code when authentication is missing
+                                    description: ErrorStatusAuthMissing specifies
+                                      the response code when authentication is missing
                                     format: int32
                                     type: integer
                                   errorStatusLimitsExceeded:
-                                    description: ErrorStatusLimitsExceeded specifies the response code when usage limit exceeded
+                                    description: ErrorStatusLimitsExceeded specifies
+                                      the response code when usage limit exceeded
                                     format: int32
                                     type: integer
                                   errorStatusNoMatch:
-                                    description: ErrorStatusNoMatch specifies the response code when no match error
+                                    description: ErrorStatusNoMatch specifies the
+                                      response code when no match error
                                     format: int32
                                     type: integer
                                 type: object
                               security:
-                                description: SecuritySpec defines the desired state of Authentication Security
+                                description: SecuritySpec defines the desired state
+                                  of Authentication Security
                                 properties:
                                   hostHeader:
-                                    description: HostHeader Lets you define a custom Host request header. This is needed if your API backend only accepts traffic from a specific host.
+                                    description: HostHeader Lets you define a custom
+                                      Host request header. This is needed if your
+                                      API backend only accepts traffic from a specific
+                                      host.
                                     type: string
                                   secretToken:
                                     description: |-
@@ -267,10 +295,12 @@ spec:
                                 type: object
                             type: object
                           oidc:
-                            description: OIDCSpec defines the desired configuration of OpenID Connect Authentication
+                            description: OIDCSpec defines the desired configuration
+                              of OpenID Connect Authentication
                             properties:
                               authenticationFlow:
-                                description: AuthenticationFlow specifies OAuth2.0 authorization grant type
+                                description: AuthenticationFlow specifies OAuth2.0
+                                  authorization grant type
                                 properties:
                                   directAccessGrantsEnabled:
                                     type: boolean
@@ -299,46 +329,61 @@ spec:
                                 - authorization
                                 type: string
                               gatewayResponse:
-                                description: GatewayResponseSpec defines the desired gateway response configuration
+                                description: GatewayResponseSpec defines the desired
+                                  gateway response configuration
                                 properties:
                                   errorAuthFailed:
-                                    description: ErrorAuthFailed specifies the response body when authentication fails
+                                    description: ErrorAuthFailed specifies the response
+                                      body when authentication fails
                                     type: string
                                   errorAuthMissing:
-                                    description: ErrorAuthMissing specifies the response body when authentication is missing
+                                    description: ErrorAuthMissing specifies the response
+                                      body when authentication is missing
                                     type: string
                                   errorHeadersAuthFailed:
-                                    description: ErrorHeadersAuthFailed specifies the Content-Type header when authentication fails
+                                    description: ErrorHeadersAuthFailed specifies
+                                      the Content-Type header when authentication
+                                      fails
                                     type: string
                                   errorHeadersAuthMissing:
-                                    description: ErrorHeadersAuthMissing specifies the Content-Type header when authentication is missing
+                                    description: ErrorHeadersAuthMissing specifies
+                                      the Content-Type header when authentication
+                                      is missing
                                     type: string
                                   errorHeadersLimitsExceeded:
-                                    description: ErrorHeadersLimitsExceeded specifies the Content-Type header when usage limit exceeded
+                                    description: ErrorHeadersLimitsExceeded specifies
+                                      the Content-Type header when usage limit exceeded
                                     type: string
                                   errorHeadersNoMatch:
-                                    description: ErrorHeadersNoMatch specifies the Content-Type header when no match error
+                                    description: ErrorHeadersNoMatch specifies the
+                                      Content-Type header when no match error
                                     type: string
                                   errorLimitsExceeded:
-                                    description: ErrorLimitsExceeded specifies the response body when usage limit exceeded
+                                    description: ErrorLimitsExceeded specifies the
+                                      response body when usage limit exceeded
                                     type: string
                                   errorNoMatch:
-                                    description: ErrorNoMatch specifies the response body when no match error
+                                    description: ErrorNoMatch specifies the response
+                                      body when no match error
                                     type: string
                                   errorStatusAuthFailed:
-                                    description: ErrorStatusAuthFailed specifies the response code when authentication fails
+                                    description: ErrorStatusAuthFailed specifies the
+                                      response code when authentication fails
                                     format: int32
                                     type: integer
                                   errorStatusAuthMissing:
-                                    description: ErrorStatusAuthMissing specifies the response code when authentication is missing
+                                    description: ErrorStatusAuthMissing specifies
+                                      the response code when authentication is missing
                                     format: int32
                                     type: integer
                                   errorStatusLimitsExceeded:
-                                    description: ErrorStatusLimitsExceeded specifies the response code when usage limit exceeded
+                                    description: ErrorStatusLimitsExceeded specifies
+                                      the response code when usage limit exceeded
                                     format: int32
                                     type: integer
                                   errorStatusNoMatch:
-                                    description: ErrorStatusNoMatch specifies the response code when no match error
+                                    description: ErrorStatusNoMatch specifies the
+                                      response code when no match error
                                     format: int32
                                     type: integer
                                 type: object
@@ -346,13 +391,16 @@ spec:
                                 description: Issuer is the OIDC issuer
                                 type: string
                               issuerEndpointRef:
-                                description: IssuerEndpointRef  is the reference to OIDC issuer Secret that contains IssuerEndpoint
+                                description: IssuerEndpointRef  is the reference to
+                                  OIDC issuer Secret that contains IssuerEndpoint
                                 properties:
                                   name:
-                                    description: name is unique within a namespace to reference a secret resource.
+                                    description: name is unique within a namespace
+                                      to reference a secret resource.
                                     type: string
                                   namespace:
-                                    description: namespace defines the space within which the secret name must be unique.
+                                    description: namespace defines the space within
+                                      which the secret name must be unique.
                                     type: string
                                 type: object
                                 x-kubernetes-map-type: atomic
@@ -363,19 +411,27 @@ spec:
                                 - rest
                                 type: string
                               jwtClaimWithClientID:
-                                description: JwtClaimWithClientID is the JSON Web Token (JWT) Claim with ClientID that contains the clientID. Defaults to 'azp'.
+                                description: JwtClaimWithClientID is the JSON Web
+                                  Token (JWT) Claim with ClientID that contains the
+                                  clientID. Defaults to 'azp'.
                                 type: string
                               jwtClaimWithClientIDType:
-                                description: JwtClaimWithClientIDType sets to process the ClientID Token Claim value as a string or as a liquid template.
+                                description: JwtClaimWithClientIDType sets to process
+                                  the ClientID Token Claim value as a string or as
+                                  a liquid template.
                                 enum:
                                 - plain
                                 - liquid
                                 type: string
                               security:
-                                description: SecuritySpec defines the desired state of Authentication Security
+                                description: SecuritySpec defines the desired state
+                                  of Authentication Security
                                 properties:
                                   hostHeader:
-                                    description: HostHeader Lets you define a custom Host request header. This is needed if your API backend only accepts traffic from a specific host.
+                                    description: HostHeader Lets you define a custom
+                                      Host request header. This is needed if your
+                                      API backend only accepts traffic from a specific
+                                      host.
                                     type: string
                                   secretToken:
                                     description: |-
@@ -388,7 +444,8 @@ spec:
                             - issuerType
                             type: object
                           userkey:
-                            description: UserKeyAuthenticationSpec defines the desired state of User Key Authentication
+                            description: UserKeyAuthenticationSpec defines the desired
+                              state of User Key Authentication
                             properties:
                               authUserKey:
                                 type: string
@@ -404,54 +461,73 @@ spec:
                                 - authorization
                                 type: string
                               gatewayResponse:
-                                description: GatewayResponseSpec defines the desired gateway response configuration
+                                description: GatewayResponseSpec defines the desired
+                                  gateway response configuration
                                 properties:
                                   errorAuthFailed:
-                                    description: ErrorAuthFailed specifies the response body when authentication fails
+                                    description: ErrorAuthFailed specifies the response
+                                      body when authentication fails
                                     type: string
                                   errorAuthMissing:
-                                    description: ErrorAuthMissing specifies the response body when authentication is missing
+                                    description: ErrorAuthMissing specifies the response
+                                      body when authentication is missing
                                     type: string
                                   errorHeadersAuthFailed:
-                                    description: ErrorHeadersAuthFailed specifies the Content-Type header when authentication fails
+                                    description: ErrorHeadersAuthFailed specifies
+                                      the Content-Type header when authentication
+                                      fails
                                     type: string
                                   errorHeadersAuthMissing:
-                                    description: ErrorHeadersAuthMissing specifies the Content-Type header when authentication is missing
+                                    description: ErrorHeadersAuthMissing specifies
+                                      the Content-Type header when authentication
+                                      is missing
                                     type: string
                                   errorHeadersLimitsExceeded:
-                                    description: ErrorHeadersLimitsExceeded specifies the Content-Type header when usage limit exceeded
+                                    description: ErrorHeadersLimitsExceeded specifies
+                                      the Content-Type header when usage limit exceeded
                                     type: string
                                   errorHeadersNoMatch:
-                                    description: ErrorHeadersNoMatch specifies the Content-Type header when no match error
+                                    description: ErrorHeadersNoMatch specifies the
+                                      Content-Type header when no match error
                                     type: string
                                   errorLimitsExceeded:
-                                    description: ErrorLimitsExceeded specifies the response body when usage limit exceeded
+                                    description: ErrorLimitsExceeded specifies the
+                                      response body when usage limit exceeded
                                     type: string
                                   errorNoMatch:
-                                    description: ErrorNoMatch specifies the response body when no match error
+                                    description: ErrorNoMatch specifies the response
+                                      body when no match error
                                     type: string
                                   errorStatusAuthFailed:
-                                    description: ErrorStatusAuthFailed specifies the response code when authentication fails
+                                    description: ErrorStatusAuthFailed specifies the
+                                      response code when authentication fails
                                     format: int32
                                     type: integer
                                   errorStatusAuthMissing:
-                                    description: ErrorStatusAuthMissing specifies the response code when authentication is missing
+                                    description: ErrorStatusAuthMissing specifies
+                                      the response code when authentication is missing
                                     format: int32
                                     type: integer
                                   errorStatusLimitsExceeded:
-                                    description: ErrorStatusLimitsExceeded specifies the response code when usage limit exceeded
+                                    description: ErrorStatusLimitsExceeded specifies
+                                      the response code when usage limit exceeded
                                     format: int32
                                     type: integer
                                   errorStatusNoMatch:
-                                    description: ErrorStatusNoMatch specifies the response code when no match error
+                                    description: ErrorStatusNoMatch specifies the
+                                      response code when no match error
                                     format: int32
                                     type: integer
                                 type: object
                               security:
-                                description: SecuritySpec defines the desired state of Authentication Security
+                                description: SecuritySpec defines the desired state
+                                  of Authentication Security
                                 properties:
                                   hostHeader:
-                                    description: HostHeader Lets you define a custom Host request header. This is needed if your API backend only accepts traffic from a specific host.
+                                    description: HostHeader Lets you define a custom
+                                      Host request header. This is needed if your
+                                      API backend only accepts traffic from a specific
+                                      host.
                                     type: string
                                   secretToken:
                                     description: |-
@@ -464,10 +540,12 @@ spec:
                         type: object
                     type: object
                   apicastSelfManaged:
-                    description: ApicastSelfManagedSpec defines the desired state of Product Apicast Self Managed
+                    description: ApicastSelfManagedSpec defines the desired state
+                      of Product Apicast Self Managed
                     properties:
                       authentication:
-                        description: AuthenticationSpec defines the desired state of Product Authentication
+                        description: AuthenticationSpec defines the desired state
+                          of Product Authentication
                         oneOf:
                         - required:
                           - userkey
@@ -477,13 +555,16 @@ spec:
                           - oidc
                         properties:
                           appKeyAppID:
-                            description: AppKeyAppIDAuthenticationSpec defines the desired state of AppKey&AppId Authentication
+                            description: AppKeyAppIDAuthenticationSpec defines the
+                              desired state of AppKey&AppId Authentication
                             properties:
                               appID:
-                                description: AppID is the name of the parameter that acts of behalf of app id
+                                description: AppID is the name of the parameter that
+                                  acts of behalf of app id
                                 type: string
                               appKey:
-                                description: AppKey is the name of the parameter that acts of behalf of app key
+                                description: AppKey is the name of the parameter that
+                                  acts of behalf of app key
                                 type: string
                               credentials:
                                 description: |-
@@ -497,54 +578,73 @@ spec:
                                 - authorization
                                 type: string
                               gatewayResponse:
-                                description: GatewayResponseSpec defines the desired gateway response configuration
+                                description: GatewayResponseSpec defines the desired
+                                  gateway response configuration
                                 properties:
                                   errorAuthFailed:
-                                    description: ErrorAuthFailed specifies the response body when authentication fails
+                                    description: ErrorAuthFailed specifies the response
+                                      body when authentication fails
                                     type: string
                                   errorAuthMissing:
-                                    description: ErrorAuthMissing specifies the response body when authentication is missing
+                                    description: ErrorAuthMissing specifies the response
+                                      body when authentication is missing
                                     type: string
                                   errorHeadersAuthFailed:
-                                    description: ErrorHeadersAuthFailed specifies the Content-Type header when authentication fails
+                                    description: ErrorHeadersAuthFailed specifies
+                                      the Content-Type header when authentication
+                                      fails
                                     type: string
                                   errorHeadersAuthMissing:
-                                    description: ErrorHeadersAuthMissing specifies the Content-Type header when authentication is missing
+                                    description: ErrorHeadersAuthMissing specifies
+                                      the Content-Type header when authentication
+                                      is missing
                                     type: string
                                   errorHeadersLimitsExceeded:
-                                    description: ErrorHeadersLimitsExceeded specifies the Content-Type header when usage limit exceeded
+                                    description: ErrorHeadersLimitsExceeded specifies
+                                      the Content-Type header when usage limit exceeded
                                     type: string
                                   errorHeadersNoMatch:
-                                    description: ErrorHeadersNoMatch specifies the Content-Type header when no match error
+                                    description: ErrorHeadersNoMatch specifies the
+                                      Content-Type header when no match error
                                     type: string
                                   errorLimitsExceeded:
-                                    description: ErrorLimitsExceeded specifies the response body when usage limit exceeded
+                                    description: ErrorLimitsExceeded specifies the
+                                      response body when usage limit exceeded
                                     type: string
                                   errorNoMatch:
-                                    description: ErrorNoMatch specifies the response body when no match error
+                                    description: ErrorNoMatch specifies the response
+                                      body when no match error
                                     type: string
                                   errorStatusAuthFailed:
-                                    description: ErrorStatusAuthFailed specifies the response code when authentication fails
+                                    description: ErrorStatusAuthFailed specifies the
+                                      response code when authentication fails
                                     format: int32
                                     type: integer
                                   errorStatusAuthMissing:
-                                    description: ErrorStatusAuthMissing specifies the response code when authentication is missing
+                                    description: ErrorStatusAuthMissing specifies
+                                      the response code when authentication is missing
                                     format: int32
                                     type: integer
                                   errorStatusLimitsExceeded:
-                                    description: ErrorStatusLimitsExceeded specifies the response code when usage limit exceeded
+                                    description: ErrorStatusLimitsExceeded specifies
+                                      the response code when usage limit exceeded
                                     format: int32
                                     type: integer
                                   errorStatusNoMatch:
-                                    description: ErrorStatusNoMatch specifies the response code when no match error
+                                    description: ErrorStatusNoMatch specifies the
+                                      response code when no match error
                                     format: int32
                                     type: integer
                                 type: object
                               security:
-                                description: SecuritySpec defines the desired state of Authentication Security
+                                description: SecuritySpec defines the desired state
+                                  of Authentication Security
                                 properties:
                                   hostHeader:
-                                    description: HostHeader Lets you define a custom Host request header. This is needed if your API backend only accepts traffic from a specific host.
+                                    description: HostHeader Lets you define a custom
+                                      Host request header. This is needed if your
+                                      API backend only accepts traffic from a specific
+                                      host.
                                     type: string
                                   secretToken:
                                     description: |-
@@ -555,10 +655,12 @@ spec:
                                 type: object
                             type: object
                           oidc:
-                            description: OIDCSpec defines the desired configuration of OpenID Connect Authentication
+                            description: OIDCSpec defines the desired configuration
+                              of OpenID Connect Authentication
                             properties:
                               authenticationFlow:
-                                description: AuthenticationFlow specifies OAuth2.0 authorization grant type
+                                description: AuthenticationFlow specifies OAuth2.0
+                                  authorization grant type
                                 properties:
                                   directAccessGrantsEnabled:
                                     type: boolean
@@ -587,46 +689,61 @@ spec:
                                 - authorization
                                 type: string
                               gatewayResponse:
-                                description: GatewayResponseSpec defines the desired gateway response configuration
+                                description: GatewayResponseSpec defines the desired
+                                  gateway response configuration
                                 properties:
                                   errorAuthFailed:
-                                    description: ErrorAuthFailed specifies the response body when authentication fails
+                                    description: ErrorAuthFailed specifies the response
+                                      body when authentication fails
                                     type: string
                                   errorAuthMissing:
-                                    description: ErrorAuthMissing specifies the response body when authentication is missing
+                                    description: ErrorAuthMissing specifies the response
+                                      body when authentication is missing
                                     type: string
                                   errorHeadersAuthFailed:
-                                    description: ErrorHeadersAuthFailed specifies the Content-Type header when authentication fails
+                                    description: ErrorHeadersAuthFailed specifies
+                                      the Content-Type header when authentication
+                                      fails
                                     type: string
                                   errorHeadersAuthMissing:
-                                    description: ErrorHeadersAuthMissing specifies the Content-Type header when authentication is missing
+                                    description: ErrorHeadersAuthMissing specifies
+                                      the Content-Type header when authentication
+                                      is missing
                                     type: string
                                   errorHeadersLimitsExceeded:
-                                    description: ErrorHeadersLimitsExceeded specifies the Content-Type header when usage limit exceeded
+                                    description: ErrorHeadersLimitsExceeded specifies
+                                      the Content-Type header when usage limit exceeded
                                     type: string
                                   errorHeadersNoMatch:
-                                    description: ErrorHeadersNoMatch specifies the Content-Type header when no match error
+                                    description: ErrorHeadersNoMatch specifies the
+                                      Content-Type header when no match error
                                     type: string
                                   errorLimitsExceeded:
-                                    description: ErrorLimitsExceeded specifies the response body when usage limit exceeded
+                                    description: ErrorLimitsExceeded specifies the
+                                      response body when usage limit exceeded
                                     type: string
                                   errorNoMatch:
-                                    description: ErrorNoMatch specifies the response body when no match error
+                                    description: ErrorNoMatch specifies the response
+                                      body when no match error
                                     type: string
                                   errorStatusAuthFailed:
-                                    description: ErrorStatusAuthFailed specifies the response code when authentication fails
+                                    description: ErrorStatusAuthFailed specifies the
+                                      response code when authentication fails
                                     format: int32
                                     type: integer
                                   errorStatusAuthMissing:
-                                    description: ErrorStatusAuthMissing specifies the response code when authentication is missing
+                                    description: ErrorStatusAuthMissing specifies
+                                      the response code when authentication is missing
                                     format: int32
                                     type: integer
                                   errorStatusLimitsExceeded:
-                                    description: ErrorStatusLimitsExceeded specifies the response code when usage limit exceeded
+                                    description: ErrorStatusLimitsExceeded specifies
+                                      the response code when usage limit exceeded
                                     format: int32
                                     type: integer
                                   errorStatusNoMatch:
-                                    description: ErrorStatusNoMatch specifies the response code when no match error
+                                    description: ErrorStatusNoMatch specifies the
+                                      response code when no match error
                                     format: int32
                                     type: integer
                                 type: object
@@ -634,13 +751,16 @@ spec:
                                 description: Issuer is the OIDC issuer
                                 type: string
                               issuerEndpointRef:
-                                description: IssuerEndpointRef  is the reference to OIDC issuer Secret that contains IssuerEndpoint
+                                description: IssuerEndpointRef  is the reference to
+                                  OIDC issuer Secret that contains IssuerEndpoint
                                 properties:
                                   name:
-                                    description: name is unique within a namespace to reference a secret resource.
+                                    description: name is unique within a namespace
+                                      to reference a secret resource.
                                     type: string
                                   namespace:
-                                    description: namespace defines the space within which the secret name must be unique.
+                                    description: namespace defines the space within
+                                      which the secret name must be unique.
                                     type: string
                                 type: object
                                 x-kubernetes-map-type: atomic
@@ -651,19 +771,27 @@ spec:
                                 - rest
                                 type: string
                               jwtClaimWithClientID:
-                                description: JwtClaimWithClientID is the JSON Web Token (JWT) Claim with ClientID that contains the clientID. Defaults to 'azp'.
+                                description: JwtClaimWithClientID is the JSON Web
+                                  Token (JWT) Claim with ClientID that contains the
+                                  clientID. Defaults to 'azp'.
                                 type: string
                               jwtClaimWithClientIDType:
-                                description: JwtClaimWithClientIDType sets to process the ClientID Token Claim value as a string or as a liquid template.
+                                description: JwtClaimWithClientIDType sets to process
+                                  the ClientID Token Claim value as a string or as
+                                  a liquid template.
                                 enum:
                                 - plain
                                 - liquid
                                 type: string
                               security:
-                                description: SecuritySpec defines the desired state of Authentication Security
+                                description: SecuritySpec defines the desired state
+                                  of Authentication Security
                                 properties:
                                   hostHeader:
-                                    description: HostHeader Lets you define a custom Host request header. This is needed if your API backend only accepts traffic from a specific host.
+                                    description: HostHeader Lets you define a custom
+                                      Host request header. This is needed if your
+                                      API backend only accepts traffic from a specific
+                                      host.
                                     type: string
                                   secretToken:
                                     description: |-
@@ -676,7 +804,8 @@ spec:
                             - issuerType
                             type: object
                           userkey:
-                            description: UserKeyAuthenticationSpec defines the desired state of User Key Authentication
+                            description: UserKeyAuthenticationSpec defines the desired
+                              state of User Key Authentication
                             properties:
                               authUserKey:
                                 type: string
@@ -692,54 +821,73 @@ spec:
                                 - authorization
                                 type: string
                               gatewayResponse:
-                                description: GatewayResponseSpec defines the desired gateway response configuration
+                                description: GatewayResponseSpec defines the desired
+                                  gateway response configuration
                                 properties:
                                   errorAuthFailed:
-                                    description: ErrorAuthFailed specifies the response body when authentication fails
+                                    description: ErrorAuthFailed specifies the response
+                                      body when authentication fails
                                     type: string
                                   errorAuthMissing:
-                                    description: ErrorAuthMissing specifies the response body when authentication is missing
+                                    description: ErrorAuthMissing specifies the response
+                                      body when authentication is missing
                                     type: string
                                   errorHeadersAuthFailed:
-                                    description: ErrorHeadersAuthFailed specifies the Content-Type header when authentication fails
+                                    description: ErrorHeadersAuthFailed specifies
+                                      the Content-Type header when authentication
+                                      fails
                                     type: string
                                   errorHeadersAuthMissing:
-                                    description: ErrorHeadersAuthMissing specifies the Content-Type header when authentication is missing
+                                    description: ErrorHeadersAuthMissing specifies
+                                      the Content-Type header when authentication
+                                      is missing
                                     type: string
                                   errorHeadersLimitsExceeded:
-                                    description: ErrorHeadersLimitsExceeded specifies the Content-Type header when usage limit exceeded
+                                    description: ErrorHeadersLimitsExceeded specifies
+                                      the Content-Type header when usage limit exceeded
                                     type: string
                                   errorHeadersNoMatch:
-                                    description: ErrorHeadersNoMatch specifies the Content-Type header when no match error
+                                    description: ErrorHeadersNoMatch specifies the
+                                      Content-Type header when no match error
                                     type: string
                                   errorLimitsExceeded:
-                                    description: ErrorLimitsExceeded specifies the response body when usage limit exceeded
+                                    description: ErrorLimitsExceeded specifies the
+                                      response body when usage limit exceeded
                                     type: string
                                   errorNoMatch:
-                                    description: ErrorNoMatch specifies the response body when no match error
+                                    description: ErrorNoMatch specifies the response
+                                      body when no match error
                                     type: string
                                   errorStatusAuthFailed:
-                                    description: ErrorStatusAuthFailed specifies the response code when authentication fails
+                                    description: ErrorStatusAuthFailed specifies the
+                                      response code when authentication fails
                                     format: int32
                                     type: integer
                                   errorStatusAuthMissing:
-                                    description: ErrorStatusAuthMissing specifies the response code when authentication is missing
+                                    description: ErrorStatusAuthMissing specifies
+                                      the response code when authentication is missing
                                     format: int32
                                     type: integer
                                   errorStatusLimitsExceeded:
-                                    description: ErrorStatusLimitsExceeded specifies the response code when usage limit exceeded
+                                    description: ErrorStatusLimitsExceeded specifies
+                                      the response code when usage limit exceeded
                                     format: int32
                                     type: integer
                                   errorStatusNoMatch:
-                                    description: ErrorStatusNoMatch specifies the response code when no match error
+                                    description: ErrorStatusNoMatch specifies the
+                                      response code when no match error
                                     format: int32
                                     type: integer
                                 type: object
                               security:
-                                description: SecuritySpec defines the desired state of Authentication Security
+                                description: SecuritySpec defines the desired state
+                                  of Authentication Security
                                 properties:
                                   hostHeader:
-                                    description: HostHeader Lets you define a custom Host request header. This is needed if your API backend only accepts traffic from a specific host.
+                                    description: HostHeader Lets you define a custom
+                                      Host request header. This is needed if your
+                                      API backend only accepts traffic from a specific
+                                      host.
                                     type: string
                                   secretToken:
                                     description: |-
@@ -766,7 +914,8 @@ spec:
                   Mapping Rules
                   Array: MappingRule Spec
                 items:
-                  description: MappingRuleSpec defines the desired state of Product's MappingRule
+                  description: MappingRuleSpec defines the desired state of Product's
+                    MappingRule
                   properties:
                     httpMethod:
                       enum:
@@ -845,13 +994,16 @@ spec:
                       type: object
                       x-kubernetes-preserve-unknown-fields: true
                     configurationRef:
-                      description: ConfigurationRef Secret reference containing policy configuration
+                      description: ConfigurationRef Secret reference containing policy
+                        configuration
                       properties:
                         name:
-                          description: name is unique within a namespace to reference a secret resource.
+                          description: name is unique within a namespace to reference
+                            a secret resource.
                           type: string
                         namespace:
-                          description: namespace defines the space within which the secret name must be unique.
+                          description: namespace defines the space within which the
+                            secret name must be unique.
                           type: string
                       type: object
                       x-kubernetes-map-type: atomic
@@ -939,7 +1091,8 @@ spec:
                   type: object
                 type: array
               observedGeneration:
-                description: ObservedGeneration reflects the generation of the most recently observed Product Spec.
+                description: ObservedGeneration reflects the generation of the most
+                  recently observed Product Spec.
                 format: int64
                 type: integer
               productId:

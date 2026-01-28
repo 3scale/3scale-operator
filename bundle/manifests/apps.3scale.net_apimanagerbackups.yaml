@@ -45,7 +45,8 @@ spec:
                 description: Backup data destination configuration
                 properties:
                   persistentVolumeClaim:
-                    description: PersistentVolumeClaim as backup data destination configuration
+                    description: PersistentVolumeClaim as backup data destination
+                      configuration
                     properties:
                       resources:
                         description: |-
@@ -84,7 +85,8 @@ spec:
             description: APIManagerBackupStatus defines the observed state of APIManagerBackup
             properties:
               apiManagerSourceName:
-                description: Name of the APIManager from which the backup has been performed
+                description: Name of the APIManager from which the backup has been
+                  performed
                 type: string
               backupPersistentVolumeClaimName:
                 description: |-
@@ -95,7 +97,8 @@ spec:
                 description: Set to true when backup has been completed
                 type: boolean
               completionTime:
-                description: Backup completion time. It is represented in RFC3339 form and is in UTC.
+                description: Backup completion time. It is represented in RFC3339
+                  form and is in UTC.
                 format: date-time
                 type: string
               mainStepsCompleted:
@@ -105,7 +108,8 @@ spec:
                   post-backup tasks are pending (cleanup, ...)
                 type: boolean
               startTime:
-                description: Backup start time. It is represented in RFC3339 form and is in UTC.
+                description: Backup start time. It is represented in RFC3339 form
+                  and is in UTC.
                 format: date-time
                 type: string
             type: object
