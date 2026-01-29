@@ -173,22 +173,47 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	var preHookJob *v1.Job
 	if imageChanged {
 		// Version upgrades, or image changes, occur before the Deployment is
-		// updated, so the revision version remains unchanged.
-		// Delete the old job so we can trigger a new one
-		if !revisionChanged {
+		// updated, so the revision version of job is increased by 1.
+		//   - Job revision == (Deployment revision + 1) <=> We're mid-upgrade, preserve the job
+		//   - Job revision == 0 <=> Job does not exist, don't try deleting
+		targetRevision := currentAppDeploymentRevision + 1
+		currentJobRevision, err := helper.GetAppRevision(component.SystemAppPreHookJobName, currentNameSpace, r.Client())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		// Delete the old job if it exists and doesn't match the target revision
+		// This handles:
+		// - Normal upgrades (job exists with same revision)
+		// - Edge cases (deployment revision updated externally)
+		// - Job deleted (currentJobRevision = 0)
+		// - Unknown state (job exists without annotation, currentJobRevision = -1)
+		if currentJobRevision != 0 && currentJobRevision != targetRevision {
 			err = helper.DeleteJob(r.Context(), component.SystemAppPreHookJobName, currentNameSpace, r.Client())
 			if err != nil {
+				// If job is still running, requeue and wait for it to complete
+				if helper.IsJobStillRunning(err) {
+					r.Logger().Info("Cannot delete PreHook job because it is still running, will requeue")
+					return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+				}
 				return reconcile.Result{}, err
 			}
+			if currentJobRevision == -1 {
+				r.Logger().Info("Deleted PreHook job that was missing revision annotation")
+			}
 		}
-		// Increase revision version by 1 to avoid rerun the job once the Deployment
-		// is updated with the new image
-		preHookJob = system.AppPreHookJob(ampImages.Options.SystemImage, currentNameSpace, currentAppDeploymentRevision+1)
+
+		preHookJob = system.AppPreHookJob(ampImages.Options.SystemImage, currentNameSpace, targetRevision)
 	} else {
-		// normal rollout
+		// Normal rollout path - supports re-running the job if needed
 		if revisionChanged {
 			err = helper.DeleteJob(r.Context(), component.SystemAppPreHookJobName, currentNameSpace, r.Client())
 			if err != nil {
+				// If job is still running, requeue and wait for it to complete
+				if helper.IsJobStillRunning(err) {
+					r.Logger().Info("Cannot delete PreHook job because it is still running, will requeue")
+					return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+				}
 				return reconcile.Result{}, err
 			}
 		}
@@ -261,6 +286,11 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	if revisionChanged {
 		err = helper.DeleteJob(r.Context(), component.SystemAppPostHookJobName, currentNameSpace, r.Client())
 		if err != nil {
+			// If job is still running, requeue and wait for it to complete
+			if helper.IsJobStillRunning(err) {
+				r.Logger().Info("Cannot delete PostHook job because it is still running, will requeue")
+				return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+			}
 			return reconcile.Result{}, err
 		}
 	}
