@@ -16,8 +16,23 @@ import (
 )
 
 const (
-	SystemAppRevisionAnnotation = "system-app-deployment-generation"
+	SystemAppRevisionAnnotation = "apimanager.apps.3scale.net/system-app-deployment-revision"
 )
+
+// JobStillRunningError is returned when attempting to delete a job that hasn't completed yet
+type JobStillRunningError struct {
+	JobName string
+}
+
+func (e *JobStillRunningError) Error() string {
+	return fmt.Sprintf("job %s is still running and cannot be deleted", e.JobName)
+}
+
+// IsJobStillRunning checks if an error is a JobStillRunningError
+func IsJobStillRunning(err error) bool {
+	_, ok := err.(*JobStillRunningError)
+	return ok
+}
 
 // UIDBasedJobName returns a Job name that is compromised of the provided prefix,
 // a hyphen and the provided uid: "<prefix>-<uid>". The returned name is a
@@ -74,39 +89,23 @@ func HasJobCompleted(ctx context.Context, job k8sclient.Object, client k8sclient
 
 // HasAppRevisionChanged returns true if the system-app Deployment's revision doesn't match the Job's annotation tracking it
 func HasAppRevisionChanged(jName string, revision int64, namespace string, client k8sclient.Client) (bool, error) {
-	job := &batchv1.Job{}
-	err := client.Get(context.TODO(), k8sclient.ObjectKey{
-		Namespace: namespace,
-		Name:      jName,
-	}, job)
-	// Return error if can't get Job
-	if err != nil && !k8serr.IsNotFound(err) {
-		return false, fmt.Errorf("error getting job %s: %w", job.Name, err)
+	trackedRevision, err := GetAppRevision(jName, namespace, client)
+	if err != nil {
+		return false, err
 	}
-	// Return false if the Job doesn't exist yet
-	if k8serr.IsNotFound(err) {
+
+	// Job doesn't exist - no change
+	if trackedRevision == 0 {
 		return false, nil
 	}
 
-	// Parse the Job's observed Deployment revision from its annotations
-	var trackedRevision int64 = 1
-	if job.Annotations != nil {
-		for key, val := range job.Annotations {
-			if key == SystemAppRevisionAnnotation {
-				trackedRevision, err = strconv.ParseInt(val, 10, 64)
-				if err != nil {
-					return false, fmt.Errorf("failed to parse system-app Deployment's revision from job %s annotations: %w", job.Name, err)
-				}
-			}
-		}
+	// Job exists but has no annotation - default to revision 1
+	if trackedRevision == -1 {
+		trackedRevision = 1
 	}
 
 	// Return true if the Deployment's version doesn't match the version tracked in the Job's annotation
-	if trackedRevision != revision {
-		return true, nil
-	}
-
-	return false, nil
+	return trackedRevision != revision, nil
 }
 
 func DeleteJob(ctx context.Context, jName string, jNamespace string, client k8sclient.Client) error {
@@ -124,9 +123,9 @@ func DeleteJob(ctx context.Context, jName string, jNamespace string, client k8sc
 		return fmt.Errorf("error getting job %s: %v", job.Name, err)
 	}
 
-	// Return error if Job is currently running
+	// Return specific error if Job is currently running
 	if !HasJobCompleted(ctx, job, client) {
-		return fmt.Errorf("won't delete job %s because it's still running", job.Name)
+		return &JobStillRunningError{JobName: jName}
 	}
 
 	deleteOptions := []k8sclient.DeleteOption{
@@ -157,4 +156,41 @@ func JobExists(ctx context.Context, job k8sclient.Object, client k8sclient.Clien
 	}
 
 	return false, err
+}
+
+// GetAppRevision returns the revision annotation value from a job
+// Returns 0 if the job doesn't exist
+// Returns -1 if the job exists but has no revision annotation (corrupted/unknown state)
+// Returns the revision number if annotation exists
+func GetAppRevision(jobName, namespace string, client k8sclient.Client) (int64, error) {
+	job := &batchv1.Job{}
+	err := client.Get(context.TODO(), k8sclient.ObjectKey{
+		Namespace: namespace,
+		Name:      jobName,
+	}, job)
+
+	// Return 0 if the Job doesn't exist
+	if k8serr.IsNotFound(err) {
+		return 0, nil
+	}
+
+	// Return error if can't get Job
+	if err != nil {
+		return 0, fmt.Errorf("error getting job %s: %w", jobName, err)
+	}
+
+	// Parse the revision from job annotations
+	if job.Annotations != nil {
+		if revisionStr, ok := job.Annotations[SystemAppRevisionAnnotation]; ok {
+			revision, err := strconv.ParseInt(revisionStr, 10, 64)
+			if err != nil {
+				return 0, fmt.Errorf("failed to parse revision from job %s annotations: %w", jobName, err)
+			}
+			return revision, nil
+		}
+	}
+
+	// Return -1 if job exists but has no revision annotation
+	// This signals corrupted/unknown state that needs deletion and recreation
+	return -1, nil
 }
