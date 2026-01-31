@@ -218,79 +218,11 @@ func deploymentExists(t *testing.T, client k8sclient.Client, name, namespace str
 	return true
 }
 
-// createCompletedJob creates a job fixture that is marked as completed
-func createCompletedJob(name, namespace, image string, revision int64) *batchv1.Job {
-	job := &batchv1.Job{
+func createJob(name, namespace, image string) *batchv1.Job {
+	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
-			Annotations: map[string]string{
-				helper.SystemAppRevisionAnnotation: strconv.FormatInt(revision, 10),
-			},
-		},
-		Spec: batchv1.JobSpec{
-			Template: v1.PodTemplateSpec{
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
-						{
-							Name:  "hook",
-							Image: image,
-						},
-					},
-					RestartPolicy: v1.RestartPolicyNever,
-				},
-			},
-		},
-		Status: batchv1.JobStatus{
-			Conditions: []batchv1.JobCondition{
-				{
-					Type:   batchv1.JobComplete,
-					Status: v1.ConditionTrue,
-				},
-			},
-		},
-	}
-	return job
-}
-
-// createIncompleteJob creates a job fixture that is still running
-func createIncompleteJob(name, namespace, image string, revision int64) *batchv1.Job {
-	job := &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			Annotations: map[string]string{
-				helper.SystemAppRevisionAnnotation: strconv.FormatInt(revision, 10),
-			},
-		},
-		Spec: batchv1.JobSpec{
-			Template: v1.PodTemplateSpec{
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
-						{
-							Name:  "hook",
-							Image: image,
-						},
-					},
-					RestartPolicy: v1.RestartPolicyNever,
-				},
-			},
-		},
-		Status: batchv1.JobStatus{
-			// No completion condition - job is still running
-		},
-	}
-	return job
-}
-
-// createJobWithoutAnnotation creates a job fixture without revision annotation
-// This simulates jobs created manually or by older operator versions
-func createJobWithoutAnnotation(name, namespace, image string, completed bool) *batchv1.Job {
-	job := &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			// No annotations!
 		},
 		Spec: batchv1.JobSpec{
 			Template: v1.PodTemplateSpec{
@@ -307,6 +239,42 @@ func createJobWithoutAnnotation(name, namespace, image string, completed bool) *
 		},
 		Status: batchv1.JobStatus{},
 	}
+}
+
+// createCompletedJob creates a job fixture that is marked as completed
+func createCompletedJob(name, namespace, image string, revision int64) *batchv1.Job {
+	job := createJob(name, namespace, image)
+
+	// this fixture simulates a completed job already on the cluster created by a
+	// specific version of the operator - the annotation must be set as a literal string
+	job.Annotations = map[string]string{
+		"apimanager.apps.3scale.net/system-app-deployment-revision": strconv.FormatInt(revision, 10),
+	}
+	job.Status.Conditions = []batchv1.JobCondition{
+		{
+			Type:   batchv1.JobComplete,
+			Status: v1.ConditionTrue,
+		},
+	}
+
+	return job
+}
+
+// createIncompleteJob creates a job fixture that is still running
+func createIncompleteJob(name, namespace, image string, revision int64) *batchv1.Job {
+	job := createJob(name, namespace, image)
+
+	job.Annotations = map[string]string{
+		helper.SystemAppRevisionAnnotation: strconv.FormatInt(revision, 10),
+	}
+
+	return job
+}
+
+// createJobWithoutAnnotation creates a job fixture without revision annotation
+// This simulates jobs created manually or by older operator versions
+func createJobWithoutAnnotation(name, namespace, image string, completed bool) *batchv1.Job {
+	job := createJob(name, namespace, image)
 
 	if completed {
 		job.Status.Conditions = []batchv1.JobCondition{
