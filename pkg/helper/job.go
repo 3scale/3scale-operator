@@ -87,27 +87,6 @@ func HasJobCompleted(ctx context.Context, job k8sclient.Object, client k8sclient
 	return false
 }
 
-// HasAppRevisionChanged returns true if the system-app Deployment's revision doesn't match the Job's annotation tracking it
-func HasAppRevisionChanged(jName string, revision int64, namespace string, client k8sclient.Client) (bool, error) {
-	trackedRevision, err := GetAppRevision(jName, namespace, client)
-	if err != nil {
-		return false, err
-	}
-
-	// Job doesn't exist - no change
-	if trackedRevision == 0 {
-		return false, nil
-	}
-
-	// Job exists but has no annotation - default to revision 1
-	if trackedRevision == -1 {
-		trackedRevision = 1
-	}
-
-	// Return true if the Deployment's version doesn't match the version tracked in the Job's annotation
-	return trackedRevision != revision, nil
-}
-
 func DeleteJob(ctx context.Context, jName string, jNamespace string, client k8sclient.Client) error {
 	job := &batchv1.Job{}
 	err := client.Get(context.TODO(), k8sclient.ObjectKey{
