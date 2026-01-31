@@ -179,15 +179,13 @@ func TestSystemReconciler_Replicas(t *testing.T) {
 }
 
 // TestSystemReconciler_PreHookJobOrchestration tests the PreHook job creation and lifecycle
-// across three scenarios: fresh install, normal reconcile, and upgrades
 func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 	const testNamespace = "operator-unittest"
 	ctx := context.TODO()
 
 	tests := []struct {
 		name               string
-		scenario           string // For documentation: "fresh-install", "normal-reconcile", "upgrade", ...
-		existingObjects    []runtime.Object
+		additionalObjects  []runtime.Object
 		expectedJobExists  bool
 		expectedDeployment bool
 		expectedRequeue    bool
@@ -195,8 +193,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 		validateDeployment func(t *testing.T, client k8sclient.Client)
 	}{
 		{
-			name:     "FRESH INSTALL: PreHook job created with revision=1 when no deployment exists",
-			scenario: "fresh-install",
+			name: "FRESH INSTALL: PreHook job created with revision=1 when no deployment exists",
 			// Preconditions:
 			// - No deployment exists (triggers fresh install path)
 			// - No PreHook job exists
@@ -205,10 +202,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			// - getSystemAppDeploymentRevision() returns 1 (default for new install)
 			// - Job created with revision=1
 			// - Deployment NOT created (blocked until job completes)
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
+			additionalObjects: []runtime.Object{
 				// Explicitly NO deployment - this is fresh install
 			},
 			expectedJobExists:  true,
@@ -230,19 +224,15 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "FRESH INSTALL: Deployment created after PreHook completes",
-			scenario: "fresh-install",
+			name: "FRESH INSTALL: Deployment created after PreHook completes",
 			// Preconditions:
 			// - No deployment exists yet (fresh install continues)
 			// - PreHook job exists and is completed
 			// Expected behavior:
 			// - Deployment gets created
 			// - Still requeues (deployment needs to become available for PostHook)
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
-				createCompletedJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 1),
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 1),
 				// Still no deployment - it will be created by reconciler
 			},
 			expectedJobExists:  true,
@@ -260,18 +250,14 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "FRESH INSTALL: Deployment blocked while PreHook is running",
-			scenario: "fresh-install",
+			name: "FRESH INSTALL: Deployment blocked while PreHook is running",
 			// Preconditions:
 			// - No deployment exists (fresh install)
 			// - PreHook job exists but is NOT completed
 			// Expected behavior:
 			// - Deployment NOT created (blocked by incomplete job)
 			// - Requeues to wait for job completion
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
+			additionalObjects: []runtime.Object{
 				createIncompleteJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 1),
 			},
 			expectedJobExists:  true,
@@ -289,8 +275,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "NORMAL RECONCILE: PreHook job recreated when deployment revision changes",
-			scenario: "normal-reconcile",
+			name: "NORMAL RECONCILE: PreHook job recreated when deployment revision changes",
 			// Preconditions:
 			// - Deployment exists with SAME image (normal reconcile, not upgrade)
 			// - Deployment revision is 2 (changed externally, e.g., by kubectl rollout restart)
@@ -299,11 +284,8 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			// - hasSystemImageChanged() returns false (same image)
 			// - Old job deleted (revision mismatch)
 			// - New job created for revision 2
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
-				createCompletedJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 1),
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 1),
 				createSystemAppDeployment(testNamespace, SystemImageURL(), 2, 2, true, false),
 			},
 			expectedJobExists:  true,
@@ -327,8 +309,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "NORMAL RECONCILE: PreHook job not recreated when current",
-			scenario: "normal-reconcile",
+			name: "NORMAL RECONCILE: PreHook job not recreated when current",
 			// Preconditions:
 			// - Deployment exists with SAME image as APIManager
 			// - Deployment revision is 1
@@ -338,11 +319,8 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			// - getSystemAppDeploymentRevision() returns 1
 			// - Job already exists for current revision - NOT recreated
 			// - No requeue needed (everything ready for PostHook)
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
-				createCompletedJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 1),
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 1),
 				createSystemAppDeployment(testNamespace, SystemImageURL(), 1, 2, true, false),
 			},
 			expectedJobExists:  true,
@@ -371,8 +349,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "UPGRADE: PreHook job recreated with incremented revision on image change",
-			scenario: "upgrade",
+			name: "UPGRADE: PreHook job recreated with incremented revision on image change",
 			// Preconditions:
 			// - Deployment exists with OLD image (old-image:v1)
 			// - PreHook job exists for OLD image
@@ -381,11 +358,8 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			// - hasSystemImageChanged() returns true (old-image:v1 != SystemImageURL())
 			// - Old job deleted
 			// - New job created with revision+1 (becomes 2)
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
-				createCompletedJob(component.SystemAppPreHookJobName, testNamespace, "old-image:v1", 1),
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, "old-image:v1", 1),
 				createSystemAppDeployment(testNamespace, "old-image:v1", 1, 2, true, false),
 			},
 			expectedJobExists:  true,
@@ -403,8 +377,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "UPGRADE: Running PreHook job is NOT deleted, reconciler requeues",
-			scenario: "upgrade",
+			name: "UPGRADE: Running PreHook job is NOT deleted, reconciler requeues",
 			// Preconditions:
 			// - Deployment exists with OLD image at revision 1
 			// - PreHook job exists for OLD image at revision 1 but is STILL RUNNING
@@ -416,10 +389,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			// - DeleteJob refuses because job is still running
 			// - Reconciler requeues instead of failing
 			// - Job is preserved (not deleted)
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
+			additionalObjects: []runtime.Object{
 				createIncompleteJob(component.SystemAppPreHookJobName, testNamespace, "old-image:v1", 1),
 				createSystemAppDeployment(testNamespace, "old-image:v1", 1, 2, true, false),
 			},
@@ -452,8 +422,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "UPGRADE: Job already created with correct revision - preserved during upgrade",
-			scenario: "upgrade-mid-flight",
+			name: "UPGRADE: Job already created with correct revision - preserved during upgrade",
 			// Preconditions:
 			// - Deployment exists at revision 1 with OLD image (not updated yet)
 			// - PreHook job ALREADY created with revision 2 and NEW image (from previous reconcile)
@@ -471,12 +440,9 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			// - Deletion condition: 2 != 0 && 2 != 2 -> TRUE && FALSE -> NO deletion ✓
 			// - Job is preserved (not deleted and recreated)
 			// - Reconciler requeues if job running, or proceeds to deployment if completed
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
+			additionalObjects: []runtime.Object{
 				// Job already created with NEW image and target revision during previous reconcile
-				createCompletedJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 2),
+				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 2),
 				// Deployment still has OLD image (hasn't been updated yet)
 				createSystemAppDeployment(testNamespace, "old-image:v1", 1, 2, true, false),
 			},
@@ -518,8 +484,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "UPGRADE: Job exists without annotation during upgrade - deleted and recreated",
-			scenario: "missing-annotation-fixed",
+			name: "UPGRADE: Job exists without annotation during upgrade - deleted and recreated",
 			// Preconditions:
 			// - Deployment exists at revision 2 with OLD image
 			// - Job exists with OLD image but NO REVISION ANNOTATION
@@ -534,10 +499,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			// - Old job is DELETED
 			// - New job created for revision 3 with NEW image
 			// - Reconciler requeues waiting for new job to complete
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
+			additionalObjects: []runtime.Object{
 				createJobWithoutAnnotation(component.SystemAppPreHookJobName, testNamespace, "old-image:v1", true),
 				createSystemAppDeployment(testNamespace, "old-image:v1", 2, 2, true, false),
 			},
@@ -573,8 +535,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "UPGRADE: Job doesn't exist - creates job for first time (tests GetAppRevision default)",
-			scenario: "upgrade-no-job",
+			name: "UPGRADE: Job doesn't exist - creates job for first time (tests GetAppRevision default)",
 			// Preconditions:
 			// - Deployment exists at revision 1 with OLD image
 			// - Job does NOT exist (manually deleted, or never created)
@@ -594,10 +555,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			// - No deletion (0 != 0 is false)
 			// - New job created with revision 2
 			// - Reconciler requeues waiting for job to complete
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
+			additionalObjects: []runtime.Object{
 				// NO JOB - this is the key difference
 				createSystemAppDeployment(testNamespace, "old-image:v1", 1, 2, true, false),
 			},
@@ -633,8 +591,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "EDGE CASE: Both image AND revision changed - old job deleted and new one created",
-			scenario: "edge-case",
+			name: "EDGE CASE: Both image AND revision changed - old job deleted and new one created",
 			// Preconditions:
 			// - Deployment exists at revision 2 with OLD image (old-image:v1)
 			// - PreHook job exists for revision 1 with OLD image (completed)
@@ -653,11 +610,8 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			// - Since currentJobRevision (1) != targetRevision (3), old job is deleted
 			// - New job created for revision 3 with new image
 			// - Reconciler requeues waiting for new job to complete
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
-				createCompletedJob(component.SystemAppPreHookJobName, testNamespace, "old-image:v1", 1),
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, "old-image:v1", 1),
 				createSystemAppDeployment(testNamespace, "old-image:v1", 2, 2, true, false),
 			},
 			expectedJobExists:  true,
@@ -692,8 +646,14 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			apimanager := tt.existingObjects[0].(*appsv1alpha1.APIManager)
-			reconciler, client := setupTestReconciler(t, ctx, apimanager, tt.existingObjects)
+			apimanager := createSystemAPIManager(nil, nil)
+			reconciler, client := setupTestReconciler(t, ctx, apimanager, append(
+				[]runtime.Object{
+					apimanager,
+					createSystemDBSecret(testNamespace),
+					createSystemRedisSecret(testNamespace),
+				},
+				tt.additionalObjects...))
 
 			result, err := reconciler.Reconcile()
 			if err != nil {
@@ -748,15 +708,13 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 
 	tests := []struct {
 		name              string
-		scenario          string
-		existingObjects   []runtime.Object
+		additionalObjects []runtime.Object
 		expectedJobExists bool
 		expectedRequeue   bool
 		validateJob       func(t *testing.T, client k8sclient.Client)
 	}{
 		{
-			name:     "PostHook blocked - Deployment not ready (progressing)",
-			scenario: "deployment-progressing",
+			name: "PostHook blocked - Deployment not ready (progressing)",
 			// Preconditions:
 			// - PreHook completed for revision 1
 			// - Deployment exists at revision 1, Available=True, but Progressing=True
@@ -766,11 +724,8 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 			// - IsDeploymentProgressing() returns true
 			// - systemComponentsReady = false
 			// - PostHook should NOT be created
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
-				createCompletedJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 1),
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 1),
 				createSystemAppDeployment(testNamespace, SystemImageURL(), 1, 2, true, true), // available=true, progressing=true
 			},
 			expectedJobExists: false,
@@ -782,8 +737,7 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "PostHook blocked - Deployment not available",
-			scenario: "deployment-unavailable",
+			name: "PostHook blocked - Deployment not available",
 			// Preconditions:
 			// - PreHook completed
 			// - Deployment exists but Available=False
@@ -792,11 +746,8 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 			// - !IsDeploymentAvailable() returns true
 			// - systemComponentsReady = false
 			// - PostHook should NOT be created
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
-				createCompletedJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 1),
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 1),
 				createSystemAppDeployment(testNamespace, SystemImageURL(), 1, 2, false, false), // available=false
 			},
 			expectedJobExists: false,
@@ -808,8 +759,7 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "PostHook blocked - PreHook not completed",
-			scenario: "prehook-running",
+			name: "PostHook blocked - PreHook not completed",
 			// Preconditions:
 			// - PreHook job exists but is RUNNING (not completed)
 			// - Deployment ready and available
@@ -819,10 +769,7 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 			// - finished = false
 			// - systemComponentsReady = false (via !finished check at line 277)
 			// - PostHook should NOT be created
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
+			additionalObjects: []runtime.Object{
 				createIncompleteJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 1), // PreHook running
 				createSystemAppDeployment(testNamespace, SystemImageURL(), 1, 2, true, false),
 			},
@@ -835,8 +782,7 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "PostHook blocked - Deployment missing",
-			scenario: "deployment-missing",
+			name: "PostHook blocked - Deployment missing",
 			// Preconditions:
 			// - PreHook completed
 			// - Deployment does NOT exist
@@ -845,11 +791,8 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 			// - k8serr.IsNotFound(err) returns true
 			// - systemComponentsReady = false
 			// - PostHook should NOT be created
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
-				createCompletedJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 1),
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 1),
 				// No deployment!
 			},
 			expectedJobExists: false,
@@ -861,8 +804,7 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "PostHook created - All conditions met",
-			scenario: "normal-reconcile",
+			name: "PostHook created - All conditions met",
 			// Preconditions:
 			// - PreHook completed for revision 1
 			// - Deployment at revision 1, Available=True, Progressing=False
@@ -872,11 +814,8 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 			// - All blocking conditions false
 			// - systemComponentsReady = true
 			// - PostHook created with current deployment revision (1)
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
-				createCompletedJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 1),
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 1),
 				createSystemAppDeployment(testNamespace, SystemImageURL(), 1, 2, true, false), // Ready
 			},
 			expectedJobExists: true,
@@ -904,8 +843,7 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "PostHook recreated on revision change",
-			scenario: "revision-change",
+			name: "PostHook recreated on revision change",
 			// Preconditions:
 			// - PostHook exists for revision 1 (completed)
 			// - Deployment updated to revision 2 (e.g., kubectl rollout restart)
@@ -916,12 +854,9 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 			// - HasAppRevisionChanged() returns true
 			// - Old PostHook deleted
 			// - New PostHook created for revision 2
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
-				createCompletedJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 2),
-				createCompletedJob(component.SystemAppPostHookJobName, testNamespace, SystemImageURL(), 1), // Old PostHook
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 2),
+				createCompletedJob("system-app-post", testNamespace, SystemImageURL(), 1), // Old PostHook
 				createSystemAppDeployment(testNamespace, SystemImageURL(), 2, 2, true, false),
 			},
 			expectedJobExists: true,
@@ -948,28 +883,21 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
-			name:     "PostHook without annotation - deleted and recreated",
-			scenario: "missing-annotation",
+			name: "PostHook without annotation - deleted and recreated",
 			// Preconditions:
 			// - PostHook exists WITHOUT revision annotation (manual creation, old operator version, etc.)
-			// - Deployment at revision 2, ready and available
-			// - PreHook completed with revision 2
+			// - Deployment at revision 1, ready and available
+			// - PreHook completed with revision 1
 			// - Images match (no upgrade)
 			//
 			// Expected behavior (self-healing):
 			// - imageChanged = false (normal reconcile path)
-			// - GetAppRevision() returns -1 (no annotation)
-			// - HasAppRevisionChanged() defaults -1 to revision 1
-			// - 1 != 2 -> true (revision changed)
 			// - Old job is DELETED
-			// - New job created for revision 2 with annotation
-			existingObjects: []runtime.Object{
-				createSystemAPIManager(nil, nil),
-				createSystemDBSecret(testNamespace),
-				createSystemRedisSecret(testNamespace),
-				createCompletedJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 2),
-				createJobWithoutAnnotation(component.SystemAppPostHookJobName, testNamespace, SystemImageURL(), true),
-				createSystemAppDeployment(testNamespace, SystemImageURL(), 2, 2, true, false),
+			// - New job created for revision 1 with annotation
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 1),
+				createJobWithoutAnnotation("system-app-post", testNamespace, SystemImageURL(), true),
+				createSystemAppDeployment(testNamespace, SystemImageURL(), 1, 1, true, false),
 			},
 			expectedJobExists: true,
 			expectedRequeue:   false,
@@ -981,8 +909,8 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 				job := getJob(t, client, component.SystemAppPostHookJobName, testNamespace)
 
 				// Verify job was recreated with correct annotation
-				if job.Annotations[helper.SystemAppRevisionAnnotation] != "2" {
-					t.Errorf("expected PostHook job with revision '2', got %v", job.Annotations)
+				if job.Annotations[helper.SystemAppRevisionAnnotation] != "1" {
+					t.Errorf("expected PostHook job with revision '1', got %v", job.Annotations)
 				}
 			},
 		},
@@ -990,8 +918,14 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			apimanager := tt.existingObjects[0].(*appsv1alpha1.APIManager)
-			reconciler, client := setupTestReconciler(t, ctx, apimanager, tt.existingObjects)
+			apimanager := createSystemAPIManager(nil, nil)
+			reconciler, client := setupTestReconciler(t, ctx, apimanager, append(
+				[]runtime.Object{
+					apimanager,
+					createSystemDBSecret(testNamespace),
+					createSystemRedisSecret(testNamespace),
+				},
+				tt.additionalObjects...))
 
 			result, err := reconciler.Reconcile()
 			if err != nil {
@@ -1362,7 +1296,7 @@ func createSystemDBSecret(namespace string) *v1.Secret {
 
 // createCompletedPreHookJob creates a completed PreHook job fixture for testing
 func createCompletedPreHookJob(namespace string) *batchv1.Job {
-	return createCompletedJob(component.SystemAppPreHookJobName, namespace, SystemImageURL(), 1)
+	return createCompletedJob("system-app-pre", namespace, SystemImageURL(), 1)
 }
 
 // setupTestReconciler creates a SystemReconciler with the provided objects for testing
