@@ -163,12 +163,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// If the system-app Deployment revision has changed, delete the PreHook/PostHook Jobs so they can be recreated
-	revisionChanged, err := helper.HasAppRevisionChanged(component.SystemAppPreHookJobName, currentAppDeploymentRevision, currentNameSpace, r.Client())
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
 	// SystemApp PreHook Job
 	var preHookJob *v1.Job
 	if imageChanged {
@@ -205,8 +199,13 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 
 		preHookJob = system.AppPreHookJob(ampImages.Options.SystemImage, currentNameSpace, targetRevision)
 	} else {
-		// Normal rollout path - supports re-running the job if needed
-		if revisionChanged {
+		// Normal rollout path
+		rerunPreHook, err := needAppHookJobRerun(component.SystemAppPreHookJobName, currentAppDeploymentRevision, currentNameSpace, r.Client())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		if rerunPreHook {
 			err = helper.DeleteJob(r.Context(), component.SystemAppPreHookJobName, currentNameSpace, r.Client())
 			if err != nil {
 				// If job is still running, requeue and wait for it to complete
@@ -278,18 +277,18 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		systemComponentsReady = false
 	}
 
-	revisionChanged, err = helper.HasAppRevisionChanged(component.SystemAppPostHookJobName, currentAppDeploymentRevision, currentNameSpace, r.Client())
+	rerunPostHook, err := needAppHookJobRerun(component.SystemAppPostHookJobName, currentAppDeploymentRevision, currentNameSpace, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	if revisionChanged {
+	if rerunPostHook {
 		err = helper.DeleteJob(r.Context(), component.SystemAppPostHookJobName, currentNameSpace, r.Client())
 		if err != nil {
 			// If job is still running, requeue and wait for it to complete
 			if helper.IsJobStillRunning(err) {
 				r.Logger().Info("Cannot delete PostHook job because it is still running, will requeue")
-				return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+				return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
 			}
 			return reconcile.Result{}, err
 		}
@@ -460,6 +459,28 @@ func hasSystemImageChanged(namespace string, desiredImage string, client k8sclie
 	}
 
 	return false, nil
+}
+
+// needAppHookJobRerun returns true if the system-app Deployment's revision doesn't match the Job's annotation tracking it
+func needAppHookJobRerun(jName string, revision int64, namespace string, client k8sclient.Client) (bool, error) {
+	trackedRevision, err := helper.GetAppRevision(jName, namespace, client)
+	if err != nil {
+		return false, err
+	}
+
+	// Job doesn't exist - we don't need a rerun (that would try to delete the job)
+	if trackedRevision == 0 {
+		return false, nil
+	}
+
+	// Job exists but has no annotation - rerun
+	if trackedRevision == -1 {
+		return true, nil
+	}
+
+	// Return true if the Deployment's version doesn't match the version tracked in the Job's annotation
+	// This allows users to rerun hook jobs on demand
+	return trackedRevision != revision, nil
 }
 
 func (r *SystemReconciler) systemAppDeploymentResourceMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
