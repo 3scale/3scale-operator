@@ -115,27 +115,27 @@ controller-gen: $(CONTROLLER_GEN)
 cluster/prepare/local: kustomize cluster/prepare/project install cluster/create/system-redis cluster/create/backend-redis cluster/create/provision-database
 
 .PHONY: cluster/create/system-redis
-cluster/create/system-redis:
+cluster/create/system-redis: $(KUSTOMIZE)
 	sed "s/\$$(NAMESPACE)/$(NAMESPACE)/g" ./config/dev-databases/system-redis/secret.yaml > ./config/dev-databases/system-redis/secret-processed.yaml
-	kustomize build ./config/dev-databases/system-redis | kubectl apply -f -
+	$(KUSTOMIZE) build ./config/dev-databases/system-redis | kubectl apply -f -
 	rm ./config/dev-databases/system-redis/secret-processed.yaml
 
 .PHONY: cluster/create/backend-redis
-cluster/create/backend-redis:
+cluster/create/backend-redis: $(KUSTOMIZE)
 	sed "s/\$$(NAMESPACE)/$(NAMESPACE)/g" ./config/dev-databases/backend-redis/secret.yaml > ./config/dev-databases/backend-redis/secret-processed.yaml
-	kustomize build ./config/dev-databases/backend-redis | kubectl apply -f -
+	$(KUSTOMIZE) build ./config/dev-databases/backend-redis | kubectl apply -f -
 	rm ./config/dev-databases/backend-redis/secret-processed.yaml
 
 .PHONY: cluster/create/system-postgres
-cluster/create/system-postgres:
+cluster/create/system-postgres: $(KUSTOMIZE)
 	sed "s/\$$(NAMESPACE)/$(NAMESPACE)/g" ./config/dev-databases/system-postgresql/secret.yaml > ./config/dev-databases/system-postgresql/secret-processed.yaml
-	kustomize build ./config/dev-databases/system-postgresql | kubectl apply -f -
+	$(KUSTOMIZE) build ./config/dev-databases/system-postgresql | kubectl apply -f -
 	rm ./config/dev-databases/system-postgresql/secret-processed.yaml
 
 .PHONY: cluster/create/system-mysql
-cluster/create/system-mysql:
+cluster/create/system-mysql: $(KUSTOMIZE)
 	sed "s/\$$(NAMESPACE)/$(NAMESPACE)/g" ./config/dev-databases/system-mysql/secret.yaml > ./config/dev-databases/system-mysql/secret-processed.yaml
-	kustomize build ./config/dev-databases/system-mysql | kubectl apply -f -
+	$(KUSTOMIZE) build ./config/dev-databases/system-mysql | kubectl apply -f -
 	rm ./config/dev-databases/system-mysql/secret-processed.yaml
 
 
