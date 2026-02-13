@@ -5,8 +5,8 @@ import (
 )
 
 var (
-	Version           = "0.13.2"
-	threescaleRelease = "2.16.2"
+	Version           = "0.13.3"
+	threescaleRelease = "2.16.3"
 )
 
 func ThreescaleVersionMajorMinor() string {
