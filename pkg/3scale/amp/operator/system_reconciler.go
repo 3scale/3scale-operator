@@ -169,8 +169,8 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		// When mid-upgrade the job targetRevision is set to future revision
 		targetRevision = currentAppDeploymentRevision + 1
 	}
-	preHookJob := system.AppPreHookJob(ampImages.Options.SystemImage, currentNameSpace, targetRevision)
-	result, err := r.ReconcileSystemAppHookJob(preHookJob)
+	preHookJob := system.AppPreHookJob(ampImages.Options.SystemImage, currentNameSpace)
+	result, err := r.ReconcileSystemAppHookJob(preHookJob, targetRevision)
 	if result.RequeueAfter > 0 || err != nil {
 		return result, err
 	}
@@ -230,8 +230,8 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 
 	// SystemApp PostHook Job
 	if systemComponentsReady {
-		postHookJob := system.AppPostHookJob(ampImages.Options.SystemImage, currentNameSpace, currentAppDeploymentRevision)
-		result, err = r.ReconcileSystemAppHookJob(postHookJob)
+		postHookJob := system.AppPostHookJob(ampImages.Options.SystemImage, currentNameSpace)
+		result, err = r.ReconcileSystemAppHookJob(postHookJob, currentAppDeploymentRevision)
 		if result.RequeueAfter > 0 || err != nil {
 			return result, err
 		}
@@ -369,24 +369,27 @@ func getSystemAppDeploymentRevision(namespace string, client k8sclient.Client) (
 // When system app deployment revision changes, job will be re-created to
 // chase the deployment version - this will allow customers to re-trigger
 // hook jobs by rolling restart of the system-app deployment.
-func (r *SystemReconciler) ReconcileSystemAppHookJob(desired *batchv1.Job) (reconcile.Result, error) {
-	targetRevision, err := component.ParseSystemAppHookRevision(desired)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
+func (r *SystemReconciler) ReconcileSystemAppHookJob(desired *batchv1.Job, targetRevision int64) (reconcile.Result, error) {
+	component.SetSystemAppHookRevision(desired, targetRevision)
 
-	found, err := helper.JobExists(r.Context(), desired, r.Client())
+	lookup, err := helper.LookupJob(r.Context(), desired, r.Client())
+
 	if err != nil {
+		// Always create the hook job if it doesn't exist - we use its annotation to record reconciliation state
+		if k8serr.IsNotFound(err) {
+			err = r.ReconcileJob(desired, reconcilers.CreateOnlyMutator)
+			return reconcile.Result{}, err
+		}
 		return reconcile.Result{}, fmt.Errorf("error checking job %s exists: %w", desired.GetName(), err)
 	}
 
-	// Always create the hook job if it doesn't exist - we use its annotation to record reconciliation state
-	if !found {
-		err = r.ReconcileJob(desired, reconcilers.CreateOnlyMutator)
-		return reconcile.Result{}, err
+	// Always delete previous job if an image need to change
+	imageMatch := checkAllDesiredImagesMatch(desired, lookup)
+	if !imageMatch {
+		return r.recreateSystemAppHookJob(desired)
 	}
 
-	trackedRevision, err := getSystemAppRevision(r.Context(), desired, r.Client())
+	trackedRevision, err := component.ParseSystemAppHookRevision(lookup)
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("error getting app revision of %s: %w", desired.GetName(), err)
 	}
@@ -396,36 +399,47 @@ func (r *SystemReconciler) ReconcileSystemAppHookJob(desired *batchv1.Job) (reco
 		return reconcile.Result{}, nil
 	}
 
+	if trackedRevision == -1 {
+		r.Logger().Info("Job will be deleted - missing revision annotation", "name", desired.GetName(), "namespace", desired.GetNamespace())
+	}
+
+	return r.recreateSystemAppHookJob(desired)
+}
+
+// hard recreate given job without checking anything
+func (r *SystemReconciler) recreateSystemAppHookJob(desired *batchv1.Job) (reconcile.Result, error) {
 	// Delete previous job - the job reconciler doesn't do this
-	err = helper.DeleteJob(r.Context(), desired, r.Client())
+	err := helper.DeleteJob(r.Context(), desired, r.Client())
 	if err != nil {
 		// If job is still running, requeue and wait for it to complete
 		if helper.IsJobStillRunning(err) {
-			r.Logger().Info("Cannot delete PreHook job because it is still running, will requeue")
+			r.Logger().Info("Cannot delete job because it is still running, will requeue", "name", desired.GetName(), "namespace", desired.GetNamespace())
 			return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
 		}
 		return reconcile.Result{}, err
-	}
-	if trackedRevision == -1 {
-		r.Logger().Info("Deleted PreHook job that was missing revision annotation")
 	}
 
 	err = r.ReconcileJob(desired, reconcilers.CreateOnlyMutator)
 	return reconcile.Result{}, err
 }
 
-// GetAppRevision returns the revision annotation value from a job
-// Returns error if the job doesn't exist
-// Returns -1 if the job exists but has no revision annotation (corrupted/unknown state)
-// Returns the revision number if annotation exists
-func getSystemAppRevision(ctx context.Context, job k8sclient.Object, client k8sclient.Client) (int64, error) {
-	lookup, err := helper.LookupJob(ctx, job, client)
-
-	if err != nil {
-		return 0, fmt.Errorf("error getting job %s: %w", job.GetName(), err)
+// check all desired images are set and match in the lookup
+func checkAllDesiredImagesMatch(desired *batchv1.Job, lookup *batchv1.Job) bool {
+	lookupImages := map[string]string{}
+	for _, lookupContainer := range lookup.Spec.Template.Spec.Containers {
+		lookupImages[lookupContainer.Name] = lookupContainer.Image
+	}
+	for _, desiredContainer := range desired.Spec.Template.Spec.Containers {
+		lookupImage, ok := lookupImages[desiredContainer.Name]
+		if !ok {
+			return false
+		}
+		if desiredContainer.Image != lookupImage {
+			return false
+		}
 	}
 
-	return component.ParseSystemAppHookRevision(lookup)
+	return true
 }
 
 // hasSystemImageChanged checks if the system image has changed compared to the currently deployed image

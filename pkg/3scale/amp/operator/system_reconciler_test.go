@@ -641,6 +641,58 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 				}
 			},
 		},
+		{
+			name: "EDGE CASE: image changed AND revision matches future deployment",
+			// Preconditions:
+			// - Deployment exists at revision 2 with OLD image (old-image:v1)
+			// - PreHook job exists for revision 3 with OLD image (completed)
+			// - APIManager now specifies NEW image (SystemImageURL())
+			// - image changed (old -> new) AND revision of the job matches future deployment
+			//
+			// This represents an edge case that violates the expected state machine:
+			// - Normally: image changes -> job created -> job completes -> deployment updates
+			// - Here: old job already exists that looks like "upgrade in progress"
+			// - This could happen from job annotation being updated manually prior to upgrade
+			//
+			// Expected behavior:
+			// - hasSystemImageChanged() returns true (old-image:v1 != SystemImageURL())
+			// - targetRevision = currentAppDeploymentRevision + 1 = 3
+			// - currentJobRevision = 3 (from job annotation)
+			// - Job reconciliation deletes the job on the basis of image mismatch
+			// - New job created for revision 3 with new image
+			// - Reconciler requeues waiting for new job to complete
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, "old-image:v1", 3),
+				createSystemAppDeployment(testNamespace, "old-image:v1", 2, 2, true, false),
+			},
+			expectedJobExists:  true,
+			expectedDeployment: true,
+			expectedRequeue:    true, // New job is not completed yet, so requeue
+			validateJob: func(t *testing.T, client k8sclient.Client) {
+				if !jobExists(t, client, component.SystemAppPreHookJobName, testNamespace) {
+					t.Error("PreHook job should exist")
+				}
+				job := getJob(t, client, component.SystemAppPreHookJobName, testNamespace)
+				// New job should be created for revision 3 (deployment rev 2 + 1)
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "3" {
+					t.Errorf("expected new job with revision '3', got %q",
+						job.Annotations[component.SystemAppRevisionAnnotation])
+				}
+				// New job should have the NEW image (not old image)
+				if len(job.Spec.Template.Spec.Containers) > 0 {
+					actualImage := job.Spec.Template.Spec.Containers[0].Image
+					if actualImage != SystemImageURL() {
+						t.Errorf("new job should have new image %q, got %q", SystemImageURL(), actualImage)
+					}
+				}
+				// New job should NOT be marked as completed (it's a fresh job)
+				for _, condition := range job.Status.Conditions {
+					if condition.Type == batchv1.JobComplete && condition.Status == v1.ConditionTrue {
+						t.Error("new job should not be marked as complete")
+					}
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -1462,6 +1514,25 @@ func TestReconcileSystemAppHookJob_JobCreation(t *testing.T) {
 				}
 			},
 		},
+		{
+			name:            "matching revision & change in images - recreates job",
+			existingJob:     createCompletedJob(component.SystemAppPreHookJobName, testNamespace, "old-image:v1", 3),
+			desiredJobRev:   3,
+			expectedRequeue: false,
+			validateResult: func(t *testing.T, cl k8sclient.Client) {
+				job := getJob(t, cl, component.SystemAppPreHookJobName, testNamespace)
+				// New job should have new revision
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "3" {
+					t.Errorf("expected job revision=1 (recreated), got=%s", job.Annotations[component.SystemAppRevisionAnnotation])
+				}
+				// Newly created job should not be completed
+				for _, cond := range job.Status.Conditions {
+					if cond.Type == batchv1.JobComplete && cond.Status == v1.ConditionTrue {
+						t.Error("newly created job should not be marked as complete")
+					}
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -1481,30 +1552,8 @@ func TestReconcileSystemAppHookJob_JobCreation(t *testing.T) {
 			reconciler, cl := setupTestReconciler(t, ctx, apimanager, objs)
 
 			// Create desired job with specified revision
-			desiredJob := &batchv1.Job{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      component.SystemAppPreHookJobName,
-					Namespace: testNamespace,
-					Annotations: map[string]string{
-						component.SystemAppRevisionAnnotation: strconv.FormatInt(tt.desiredJobRev, 10),
-					},
-				},
-				Spec: batchv1.JobSpec{
-					Template: v1.PodTemplateSpec{
-						Spec: v1.PodSpec{
-							Containers: []v1.Container{
-								{
-									Name:  "hook",
-									Image: SystemImageURL(),
-								},
-							},
-							RestartPolicy: v1.RestartPolicyNever,
-						},
-					},
-				},
-			}
-
-			result, err := reconciler.ReconcileSystemAppHookJob(desiredJob)
+			desiredJob := createJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL())
+			result, err := reconciler.ReconcileSystemAppHookJob(desiredJob, tt.desiredJobRev)
 
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
