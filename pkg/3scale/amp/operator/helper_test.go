@@ -229,7 +229,7 @@ func createJob(name, namespace, image string) *batchv1.Job {
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
 						{
-							Name:  "hook",
+							Name:  name,
 							Image: image,
 						},
 					},
@@ -263,10 +263,7 @@ func createCompletedJob(name, namespace, image string, revision int64) *batchv1.
 // createIncompleteJob creates a job fixture that is still running
 func createIncompleteJob(name, namespace, image string, revision int64) *batchv1.Job {
 	job := createJob(name, namespace, image)
-
-	job.Annotations = map[string]string{
-		component.SystemAppRevisionAnnotation: strconv.FormatInt(revision, 10),
-	}
+	component.SetSystemAppHookRevision(job, revision)
 
 	return job
 }

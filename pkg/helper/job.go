@@ -113,17 +113,3 @@ func DeleteJob(ctx context.Context, job k8sclient.Object, client k8sclient.Clien
 
 	return nil
 }
-
-func JobExists(ctx context.Context, job k8sclient.Object, client k8sclient.Client) (bool, error) {
-	_, err := LookupJob(ctx, job, client)
-
-	if err == nil {
-		return true, nil
-	}
-
-	if k8serr.IsNotFound(err) {
-		return false, nil
-	}
-
-	return false, err
-}
