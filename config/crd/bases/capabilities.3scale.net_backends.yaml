@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: backends.capabilities.3scale.net
 spec:
   group: capabilities.3scale.net
@@ -122,10 +122,13 @@ spec:
                 description: ProviderAccountRef references account provider credentials
                 properties:
                   name:
+                    default: ""
                     description: |-
                       Name of the referent.
+                      This field is effectively required, but due to backwards compatibility is
+                      allowed to be empty. Instances of this type with an empty value here are
+                      almost certainly wrong.
                       More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Add other useful fields. apiVersion, kind, uid?
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
@@ -157,7 +160,6 @@ spec:
                     extension mechanism intended to be used when the details of an observation
                     are not a priori known or would not apply to all instances of a given Kind.
 
-
                     Conditions should be added to explicitly convey properties that users and
                     components care about rather than requiring those properties to be inferred
                     from other observations. Once defined, the meaning of a Condition can not be
@@ -182,7 +184,6 @@ spec:
                       description: |-
                         ConditionType is the type of the condition and is typically a CamelCased
                         word or short phrase.
-
 
                         Condition types should indicate state in the "abnormal-true" polarity. For
                         example, if the condition indicates when a policy is invalid, the "is valid"
