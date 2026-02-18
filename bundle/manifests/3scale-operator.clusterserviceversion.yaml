@@ -409,45 +409,7 @@ spec:
           - capabilities.3scale.net
           resources:
           - applicationauths
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
-          - applicationauths/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
           - applications
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
-          - applications/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
           - proxyconfigpromotes
           verbs:
           - create
@@ -460,6 +422,8 @@ spec:
         - apiGroups:
           - capabilities.3scale.net
           resources:
+          - applicationauths/status
+          - applications/status
           - proxyconfigpromotes/status
           verbs:
           - get
@@ -608,6 +572,33 @@ spec:
           - create
           - patch
         - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          - endpoints
+          - events
+          - persistentvolumeclaims
+          - pods
+          - replicationcontrollers
+          - secrets
+          - serviceaccounts
+          - services
+          - services/finalizers
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - pods/exec
+          verbs:
+          - create
+        - apiGroups:
           - apps
           resources:
           - daemonsets
@@ -632,81 +623,10 @@ spec:
           - apps.3scale.net
           resources:
           - apimanagerbackups
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - apps.3scale.net
-          resources:
           - apimanagerbackups/finalizers
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - apps.3scale.net
-          resources:
-          - apimanagerbackups/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - apps.3scale.net
-          resources:
           - apimanagerrestores
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - apps.3scale.net
-          resources:
           - apimanagerrestores/finalizers
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - apps.3scale.net
-          resources:
-          - apimanagerrestores/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - apps.3scale.net
-          resources:
           - apimanagers
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - apps.3scale.net
-          resources:
           - apimanagers/finalizers
           verbs:
           - create
@@ -719,6 +639,8 @@ spec:
         - apiGroups:
           - apps.3scale.net
           resources:
+          - apimanagerbackups/status
+          - apimanagerrestores/status
           - apimanagers/status
           verbs:
           - get
@@ -749,217 +671,18 @@ spec:
           - capabilities.3scale.net
           resources:
           - activedocs
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
-          - activedocs/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
           - backends
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
           - backends/finalizers
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
-          - backends/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
           - custompolicydefinitions
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
-          - custompolicydefinitions/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
           - developeraccounts
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
           - developeraccounts/finalizers
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
-          - developeraccounts/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
           - developerusers
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
           - developerusers/finalizers
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
-          - developerusers/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
           - openapis
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
           - openapis/finalizers
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
-          - openapis/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
           - products
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
           - products/finalizers
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
-          - products/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
           - tenants
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
           - tenants/finalizers
           verbs:
           - create
@@ -972,50 +695,20 @@ spec:
         - apiGroups:
           - capabilities.3scale.net
           resources:
+          - activedocs/status
+          - backends/status
+          - custompolicydefinitions/status
+          - developeraccounts/status
+          - developerusers/status
+          - openapis/status
+          - products/status
           - tenants/status
           verbs:
           - get
           - patch
           - update
         - apiGroups:
-          - ""
-          resources:
-          - configmaps
-          - endpoints
-          - events
-          - persistentvolumeclaims
-          - pods
-          - replicationcontrollers
-          - secrets
-          - serviceaccounts
-          - services
-          - services/finalizers
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - ""
-          resources:
-          - pods/exec
-          verbs:
-          - create
-        - apiGroups:
           - grafana.integreatly.org
-          resources:
-          - grafanadashboards
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - update
-          - watch
-        - apiGroups:
           - integreatly.org
           resources:
           - grafanadashboards
