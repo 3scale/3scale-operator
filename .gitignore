@@ -94,7 +94,4 @@ _output
 *.swo
 *~
 
-# controller-runtime testenv binaries
-testbin/*
-
 3scale-operator
