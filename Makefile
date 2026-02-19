@@ -46,6 +46,12 @@ endif
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 PROJECT_PATH := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
 
+## Location to install dependencies to
+LOCALBIN ?= $(PROJECT_PATH)/bin
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
+
+
 LICENSEFINDERBINARY := $(shell command -v license_finder 2> /dev/null)
 DEPENDENCY_DECISION_FILE = $(PROJECT_PATH)/doc/dependency_decisions.yml
 CURRENT_DATE=$(shell date +%s)
@@ -82,12 +88,9 @@ test-manifests-version:
 # Run e2e tests
 TEST_E2E_PKGS_APPS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/controllers/apps')
 TEST_E2E_PKGS_CAPABILITIES = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/controllers/capabilities')
-ENVTEST_ASSETS_DIR=$(PROJECT_PATH)/testbin
-test-e2e: generate fmt vet manifests
-	mkdir -p ${ENVTEST_ASSETS_DIR}
-	test -f $(ENVTEST_ASSETS_DIR)/setup-envtest.sh || curl -sSLo $(ENVTEST_ASSETS_DIR)/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.0/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); USE_EXISTING_CLUSTER=true $(GO) test $(TEST_E2E_PKGS_APPS) -coverprofile cover.out -ginkgo.v -v -timeout 0
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); USE_EXISTING_CLUSTER=true $(GO) test $(TEST_E2E_PKGS_CAPABILITIES) -coverprofile cover.out -v -timeout 0
+test-e2e: generate fmt vet manifests setup-envtest
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" USE_EXISTING_CLUSTER=true $(GO) test $(TEST_E2E_PKGS_APPS) -coverprofile cover.out -ginkgo.v -v -timeout 0
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" USE_EXISTING_CLUSTER=true $(GO) test $(TEST_E2E_PKGS_CAPABILITIES) -coverprofile cover.out -v -timeout 0
 
 
 # Build manager binary
@@ -104,12 +107,12 @@ run: generate fmt vet manifests
 
 # find or download controller-gen
 # download controller-gen if necessary
-CONTROLLER_GEN=$(PROJECT_PATH)/bin/controller-gen
-$(CONTROLLER_GEN):
-	$(call go-bin-install,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0)
-
+CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
+CONTROLLER_TOOLS_VERSION = v0.14.0
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN)
+$(CONTROLLER_GEN): $(LOCALBIN)
+	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION))
 
 .PHONY: cluster/prepare/local
 cluster/prepare/local: kustomize cluster/prepare/project install cluster/create/system-redis cluster/create/backend-redis cluster/create/provision-database
@@ -153,12 +156,31 @@ endif
 cluster/prepare/project:
 	@ - oc new-project $(NAMESPACE)
 
-KUSTOMIZE=$(PROJECT_PATH)/bin/kustomize
-$(KUSTOMIZE):
-	$(call go-bin-install,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.5.7)
-
+KUSTOMIZE ?= $(LOCALBIN)/kustomize
+KUSTOMIZE_VERSION ?= v4.5.7
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE)
+$(KUSTOMIZE): $(LOCALBIN)
+	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4,$(KUSTOMIZE_VERSION))
+
+ENVTEST ?= $(LOCALBIN)/setup-envtest
+#ENVTEST_VERSION is the version of controller-runtime release branch to fetch the envtest setup script (i.e. release-0.20)
+ENVTEST_VERSION ?= release-0.19 ## pinning to 0.19 to match golang 1.22 in CI environment
+#ENVTEST_K8S_VERSION is the version of Kubernetes to use for setting up ENVTEST binaries (i.e. 1.31)
+ENVTEST_K8S_VERSION ?= $(shell go list -m -f "{{ .Version }}" k8s.io/api | awk -F'[v.]' '{printf "1.%d", $$3}')
+
+.PHONY: setup-envtest
+setup-envtest: envtest ## Download the binaries required for ENVTEST in the local bin directory.
+	@echo "Setting up envtest binaries for Kubernetes version $(ENVTEST_K8S_VERSION)..."
+	@$(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path || { \
+		echo "Error: Failed to set up envtest binaries for version $(ENVTEST_K8S_VERSION)."; \
+		exit 1; \
+	}
+
+.PHONY: envtest
+envtest: $(ENVTEST) ## Download setup-envtest locally if necessary.
+$(ENVTEST): $(LOCALBIN)
+	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,$(ENVTEST_VERSION))
 
 OPERATOR_SDK = $(PROJECT_PATH)/bin/operator-sdk
 # Note: release file patterns changed after v1.2.0
@@ -172,8 +194,9 @@ $(OPERATOR_SDK):
 operator-sdk: $(OPERATOR_SDK)
 
 GO_BINDATA=$(PROJECT_PATH)/bin/go-bindata
+GO_BINDATA_VERSION = v3.1.3
 $(GO_BINDATA):
-	$(call go-bin-install,$(GO_BINDATA),github.com/go-bindata/go-bindata/v3/...@v3.1.3)
+	$(call go-install-tool,$(GO_BINDATA),github.com/go-bindata/go-bindata/v3/...,$(GO_BINDATA_VERSION))
 
 .PHONY: go-bindata
 go-bindata: $(GO_BINDATA)
@@ -285,12 +308,12 @@ bundle-run: $(OPERATOR_SDK)
 
 # find or download yq
 # download yq if necessary
-YQ=$(PROJECT_PATH)/bin/yq
-$(YQ):
-	$(call go-bin-install,$(YQ),github.com/mikefarah/yq/v4@latest)
-
+YQ ?= $(LOCALBIN)/yq
+YQ_VERSION ?= latest
 .PHONY: yq
 yq: $(YQ)
+$(YQ): $(LOCALBIN)
+	$(call go-install-tool,$(YQ),github.com/mikefarah/yq/v4,$(YQ_VERSION))
 
 download:
 	@echo Download go.mod dependencies
@@ -355,17 +378,20 @@ prometheusrules-update-test: prometheus-rules
 	git diff --exit-code ./doc/prometheusrules
 	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./doc/prometheusrules)" ]
 
-# go-bin-install will 'go get' any package $2 and install it to $1.
-define go-bin-install
-@[ -f $(1) ] || { \
-set -e ;\
-TMP_DIR=$$(mktemp -d) ;\
-cd $$TMP_DIR ;\
-go mod init tmp ;\
-echo "Downloading $(2)" ;\
-GOBIN=$(PROJECT_PATH)/bin go install $(2) ;\
-rm -rf $$TMP_DIR ;\
-}
+# go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
+# $1 - target path with name of binary
+# $2 - package url which can be installed
+# $3 - specific version of package
+define go-install-tool
+@[ -f "$(1)-$(3)" ] || { \
+set -e; \
+package=$(2)@$(3) ;\
+echo "Downloading $${package}" ;\
+rm -f $(1) || true ;\
+GOBIN=$(LOCALBIN) go install $${package} ;\
+mv $(1) $(1)-$(3) ;\
+} ;\
+ln -sf $(1)-$(3) $(1)
 endef
 
 # Include last to avoid changing MAKEFILE_LIST used above
