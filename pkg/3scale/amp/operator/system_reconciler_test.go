@@ -7,7 +7,6 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	k8sappsv1 "k8s.io/api/apps/v1"
@@ -213,8 +212,8 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 					t.Error("PreHook job should exist after first reconcile")
 				}
 				job := getJob(t, client, component.SystemAppPreHookJobName, testNamespace)
-				if job.Annotations[helper.SystemAppRevisionAnnotation] != "1" {
-					t.Errorf("fresh install should use revision=1, got %q", job.Annotations[helper.SystemAppRevisionAnnotation])
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "1" {
+					t.Errorf("fresh install should use revision=1, got %q", job.Annotations[component.SystemAppRevisionAnnotation])
 				}
 			},
 			validateDeployment: func(t *testing.T, client k8sclient.Client) {
@@ -297,8 +296,8 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 				}
 				job := getJob(t, client, component.SystemAppPreHookJobName, testNamespace)
 				// Job should be recreated for revision 2
-				if job.Annotations[helper.SystemAppRevisionAnnotation] != "2" {
-					t.Errorf("expected job revision annotation to be '2', got %q", job.Annotations[helper.SystemAppRevisionAnnotation])
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "2" {
+					t.Errorf("expected job revision annotation to be '2', got %q", job.Annotations[component.SystemAppRevisionAnnotation])
 				}
 				// New job should not be completed yet
 				for _, condition := range job.Status.Conditions {
@@ -332,8 +331,8 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 				}
 				job := getJob(t, client, component.SystemAppPreHookJobName, testNamespace)
 				// Job should remain with revision 1
-				if job.Annotations[helper.SystemAppRevisionAnnotation] != "1" {
-					t.Errorf("expected job revision annotation to remain '1', got %q", job.Annotations[helper.SystemAppRevisionAnnotation])
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "1" {
+					t.Errorf("expected job revision annotation to remain '1', got %q", job.Annotations[component.SystemAppRevisionAnnotation])
 				}
 				// Job should remain completed
 				completed := false
@@ -371,8 +370,8 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 				}
 				job := getJob(t, client, component.SystemAppPreHookJobName, testNamespace)
 				// On image change, revision should be incremented to 2
-				if job.Annotations[helper.SystemAppRevisionAnnotation] != "2" {
-					t.Errorf("expected job revision annotation to be '2' for upgrade, got %q", job.Annotations[helper.SystemAppRevisionAnnotation])
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "2" {
+					t.Errorf("expected job revision annotation to be '2' for upgrade, got %q", job.Annotations[component.SystemAppRevisionAnnotation])
 				}
 			},
 		},
@@ -402,9 +401,9 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 				}
 				job := getJob(t, client, component.SystemAppPreHookJobName, testNamespace)
 				// Job should still be at revision 1 (not recreated)
-				if job.Annotations[helper.SystemAppRevisionAnnotation] != "1" {
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "1" {
 					t.Errorf("running job should be preserved with original revision=1, got %q",
-						job.Annotations[helper.SystemAppRevisionAnnotation])
+						job.Annotations[component.SystemAppRevisionAnnotation])
 				}
 				// Job should still be incomplete (running)
 				for _, condition := range job.Status.Conditions {
@@ -457,9 +456,9 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 				job := getJob(t, client, component.SystemAppPreHookJobName, testNamespace)
 
 				// Verify job has correct revision (should be preserved)
-				if job.Annotations[helper.SystemAppRevisionAnnotation] != "2" {
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "2" {
 					t.Errorf("expected job to have revision '2' (preserved), got %q",
-						job.Annotations[helper.SystemAppRevisionAnnotation])
+						job.Annotations[component.SystemAppRevisionAnnotation])
 				}
 
 				// Verify job still has NEW image (not changed)
@@ -514,7 +513,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 				job := getJob(t, client, component.SystemAppPreHookJobName, testNamespace)
 
 				// Verify job has correct annotation
-				if job.Annotations == nil || job.Annotations[helper.SystemAppRevisionAnnotation] != "3" {
+				if job.Annotations == nil || job.Annotations[component.SystemAppRevisionAnnotation] != "3" {
 					t.Errorf("expected job to have revision annotation '3', got %v", job.Annotations)
 				}
 
@@ -570,7 +569,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 				job := getJob(t, client, component.SystemAppPreHookJobName, testNamespace)
 
 				// Verify job has correct revision annotation
-				if job.Annotations == nil || job.Annotations[helper.SystemAppRevisionAnnotation] != "2" {
+				if job.Annotations == nil || job.Annotations[component.SystemAppRevisionAnnotation] != "2" {
 					t.Errorf("expected job to have revision annotation '2', got %v", job.Annotations)
 				}
 
@@ -623,9 +622,9 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 				}
 				job := getJob(t, client, component.SystemAppPreHookJobName, testNamespace)
 				// New job should be created for revision 3 (deployment rev 2 + 1)
-				if job.Annotations[helper.SystemAppRevisionAnnotation] != "3" {
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "3" {
 					t.Errorf("expected new job with revision '3', got %q",
-						job.Annotations[helper.SystemAppRevisionAnnotation])
+						job.Annotations[component.SystemAppRevisionAnnotation])
 				}
 				// New job should have the NEW image (not old image)
 				if len(job.Spec.Template.Spec.Containers) > 0 {
@@ -828,9 +827,9 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 				job := getJob(t, client, component.SystemAppPostHookJobName, testNamespace)
 
 				// Verify job has correct revision (matches deployment)
-				if job.Annotations[helper.SystemAppRevisionAnnotation] != "1" {
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "1" {
 					t.Errorf("expected PostHook job with revision '1', got %q",
-						job.Annotations[helper.SystemAppRevisionAnnotation])
+						job.Annotations[component.SystemAppRevisionAnnotation])
 				}
 
 				// Verify job has correct image
@@ -869,9 +868,9 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 				job := getJob(t, client, component.SystemAppPostHookJobName, testNamespace)
 
 				// Verify job was recreated with new revision
-				if job.Annotations[helper.SystemAppRevisionAnnotation] != "2" {
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "2" {
 					t.Errorf("expected PostHook job with revision '2', got %q",
-						job.Annotations[helper.SystemAppRevisionAnnotation])
+						job.Annotations[component.SystemAppRevisionAnnotation])
 				}
 
 				// New job should not be completed yet
@@ -909,7 +908,7 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 				job := getJob(t, client, component.SystemAppPostHookJobName, testNamespace)
 
 				// Verify job was recreated with correct annotation
-				if job.Annotations[helper.SystemAppRevisionAnnotation] != "1" {
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "1" {
 					t.Errorf("expected PostHook job with revision '1', got %v", job.Annotations)
 				}
 			},
@@ -1373,4 +1372,158 @@ func createSystemAppDeployment(namespace, image string, revision int64, replicas
 	}
 
 	return deployment
+}
+
+// TestReconcileSystemAppHookJob_JobCreation tests job creation scenarios
+func TestReconcileSystemAppHookJob_JobCreation(t *testing.T) {
+	const testNamespace = "operator-unittest"
+	ctx := context.TODO()
+
+	tests := []struct {
+		name            string
+		existingJob     *batchv1.Job
+		desiredJobRev   int64
+		expectedRequeue bool
+		validateResult  func(t *testing.T, cl k8sclient.Client)
+	}{
+		{
+			name:          "job doesn't exist - creates new job",
+			existingJob:   nil,
+			desiredJobRev: 1,
+			validateResult: func(t *testing.T, cl k8sclient.Client) {
+				if !jobExists(t, cl, component.SystemAppPreHookJobName, testNamespace) {
+					t.Error("job should be created")
+				}
+				job := getJob(t, cl, component.SystemAppPreHookJobName, testNamespace)
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "1" {
+					t.Errorf("expected job revision=1, got=%s", job.Annotations[component.SystemAppRevisionAnnotation])
+				}
+			},
+		},
+		{
+			name:            "running job - requeues without deletion",
+			existingJob:     createIncompleteJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 1),
+			desiredJobRev:   2,
+			expectedRequeue: true,
+			validateResult: func(t *testing.T, cl k8sclient.Client) {
+				job := getJob(t, cl, component.SystemAppPreHookJobName, testNamespace)
+				// Old job should be preserved with original revision
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "1" {
+					t.Errorf("expected job revision=1 (old job preserved), got=%s", job.Annotations[component.SystemAppRevisionAnnotation])
+				}
+				// Job should still be incomplete
+				for _, cond := range job.Status.Conditions {
+					if cond.Type == batchv1.JobComplete && cond.Status == v1.ConditionTrue {
+						t.Error("job should remain incomplete (not completed)")
+					}
+				}
+			},
+		},
+		{
+			name:            "completed job with different revision - recreates job",
+			existingJob:     createCompletedJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 1),
+			desiredJobRev:   2,
+			expectedRequeue: false,
+			validateResult: func(t *testing.T, cl k8sclient.Client) {
+				job := getJob(t, cl, component.SystemAppPreHookJobName, testNamespace)
+				// New job should have new revision
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "2" {
+					t.Errorf("expected job revision=2 (recreated), got=%s", job.Annotations[component.SystemAppRevisionAnnotation])
+				}
+				// Newly created job should not be completed
+				for _, cond := range job.Status.Conditions {
+					if cond.Type == batchv1.JobComplete && cond.Status == v1.ConditionTrue {
+						t.Error("newly created job should not be marked as complete")
+					}
+				}
+			},
+		},
+		{
+			name:            "completed job with matching revision - no action",
+			existingJob:     createCompletedJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 3),
+			desiredJobRev:   3,
+			expectedRequeue: false,
+			validateResult: func(t *testing.T, cl k8sclient.Client) {
+				job := getJob(t, cl, component.SystemAppPreHookJobName, testNamespace)
+				// Job should remain at same revision
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "3" {
+					t.Errorf("expected job revision=3 (unchanged), got=%s", job.Annotations[component.SystemAppRevisionAnnotation])
+				}
+				// Job should remain completed
+				completed := false
+				for _, cond := range job.Status.Conditions {
+					if cond.Type == batchv1.JobComplete && cond.Status == v1.ConditionTrue {
+						completed = true
+						break
+					}
+				}
+				if !completed {
+					t.Error("job should remain completed")
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			apimanager := createSystemAPIManager(nil, nil)
+			objs := []runtime.Object{
+				apimanager,
+				createSystemDBSecret(testNamespace),
+				createSystemRedisSecret(testNamespace),
+			}
+
+			// Add existing job if provided
+			if tt.existingJob != nil {
+				objs = append(objs, tt.existingJob)
+			}
+
+			reconciler, cl := setupTestReconciler(t, ctx, apimanager, objs)
+
+			// Create desired job with specified revision
+			desiredJob := &batchv1.Job{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      component.SystemAppPreHookJobName,
+					Namespace: testNamespace,
+					Annotations: map[string]string{
+						component.SystemAppRevisionAnnotation: strconv.FormatInt(tt.desiredJobRev, 10),
+					},
+				},
+				Spec: batchv1.JobSpec{
+					Template: v1.PodTemplateSpec{
+						Spec: v1.PodSpec{
+							Containers: []v1.Container{
+								{
+									Name:  "hook",
+									Image: SystemImageURL(),
+								},
+							},
+							RestartPolicy: v1.RestartPolicyNever,
+						},
+					},
+				},
+			}
+
+			result, err := reconciler.ReconcileSystemAppHookJob(desiredJob)
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			// Validate requeue behavior
+			if tt.expectedRequeue {
+				if result.RequeueAfter == 0 && !result.Requeue {
+					t.Error("expected requeue but got none")
+				}
+			} else {
+				if result.Requeue || result.RequeueAfter != 0 {
+					t.Errorf("expected no requeue, got Requeue=%v, RequeueAfter=%v", result.Requeue, result.RequeueAfter)
+				}
+			}
+
+			if tt.validateResult != nil {
+				tt.validateResult(t, cl)
+			}
+		})
+	}
 }

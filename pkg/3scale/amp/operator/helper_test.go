@@ -265,7 +265,7 @@ func createIncompleteJob(name, namespace, image string, revision int64) *batchv1
 	job := createJob(name, namespace, image)
 
 	job.Annotations = map[string]string{
-		helper.SystemAppRevisionAnnotation: strconv.FormatInt(revision, 10),
+		component.SystemAppRevisionAnnotation: strconv.FormatInt(revision, 10),
 	}
 
 	return job

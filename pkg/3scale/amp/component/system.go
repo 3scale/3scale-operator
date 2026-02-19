@@ -2,6 +2,7 @@ package component
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strconv"
 
@@ -147,6 +148,10 @@ const (
 	backendRedisPrivateKeyPath = "/tls/backend-redis/backend-redis-private.key"
 
 	SystemRedisSecretResverAnnotation = "apimanager.apps.3scale.net/system-redis-secret-resource-version"
+)
+
+const (
+	SystemAppRevisionAnnotation = "apimanager.apps.3scale.net/system-app-deployment-revision"
 )
 
 type System struct {
@@ -899,7 +904,7 @@ func (system *System) AppPreHookJob(containerImage string, namespace string, cur
 			Namespace: namespace,
 			Labels:    system.Options.CommonAppLabels,
 			Annotations: map[string]string{
-				helper.SystemAppRevisionAnnotation: strconv.FormatInt(currentSystemAppRevision, 10),
+				SystemAppRevisionAnnotation: strconv.FormatInt(currentSystemAppRevision, 10),
 			},
 		},
 		Spec: batchv1.JobSpec{
@@ -941,7 +946,7 @@ func (system *System) AppPostHookJob(containerImage string, namespace string, cu
 			Namespace: namespace,
 			Labels:    system.Options.CommonAppLabels,
 			Annotations: map[string]string{
-				helper.SystemAppRevisionAnnotation: strconv.FormatInt(currentSystemAppRevision, 10),
+				SystemAppRevisionAnnotation: strconv.FormatInt(currentSystemAppRevision, 10),
 			},
 		},
 		Spec: batchv1.JobSpec{
@@ -1747,4 +1752,22 @@ func (system *System) backendRedisTlsVolumeMount() v1.VolumeMount {
 		ReadOnly:  false,
 		MountPath: "/tls/backend-redis",
 	}
+}
+
+// ParseSystemAppHookRevision returns deployment version annotation from given job or -1 if annotation does not exist
+func ParseSystemAppHookRevision(job *batchv1.Job) (int64, error) {
+	// Parse the revision from job annotations
+	if job.Annotations != nil {
+		if revisionStr, ok := job.Annotations[SystemAppRevisionAnnotation]; ok {
+			revision, err := strconv.ParseInt(revisionStr, 10, 64)
+			if err != nil {
+				return 0, fmt.Errorf("failed to parse revision from job %s annotations: %w", job.GetName(), err)
+			}
+			return revision, nil
+		}
+	}
+
+	// Return -1 if job exists but has no revision annotation
+	// This signals corrupted/unknown state that needs deletion and recreation
+	return -1, nil
 }

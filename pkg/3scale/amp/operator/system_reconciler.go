@@ -15,7 +15,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	k8sappsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/batch/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -164,64 +164,15 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// SystemApp PreHook Job
-	var preHookJob *v1.Job
+	targetRevision := currentAppDeploymentRevision
 	if imageChanged {
-		// Version upgrades, or image changes, occur before the Deployment is
-		// updated, so the revision version of job is increased by 1.
-		//   - Job revision == (Deployment revision + 1) <=> We're mid-upgrade, preserve the job
-		//   - Job revision == 0 <=> Job does not exist, don't try deleting
-		targetRevision := currentAppDeploymentRevision + 1
-		currentJobRevision, err := helper.GetAppRevision(component.SystemAppPreHookJobName, currentNameSpace, r.Client())
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		// Delete the old job if it exists and doesn't match the target revision
-		// This handles:
-		// - Normal upgrades (job exists with same revision)
-		// - Edge cases (deployment revision updated externally)
-		// - Job deleted (currentJobRevision = 0)
-		// - Unknown state (job exists without annotation, currentJobRevision = -1)
-		if currentJobRevision != 0 && currentJobRevision != targetRevision {
-			err = helper.DeleteJob(r.Context(), component.SystemAppPreHookJobName, currentNameSpace, r.Client())
-			if err != nil {
-				// If job is still running, requeue and wait for it to complete
-				if helper.IsJobStillRunning(err) {
-					r.Logger().Info("Cannot delete PreHook job because it is still running, will requeue")
-					return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
-				}
-				return reconcile.Result{}, err
-			}
-			if currentJobRevision == -1 {
-				r.Logger().Info("Deleted PreHook job that was missing revision annotation")
-			}
-		}
-
-		preHookJob = system.AppPreHookJob(ampImages.Options.SystemImage, currentNameSpace, targetRevision)
-	} else {
-		// Normal rollout path
-		rerunPreHook, err := needAppHookJobRerun(component.SystemAppPreHookJobName, currentAppDeploymentRevision, currentNameSpace, r.Client())
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		if rerunPreHook {
-			err = helper.DeleteJob(r.Context(), component.SystemAppPreHookJobName, currentNameSpace, r.Client())
-			if err != nil {
-				// If job is still running, requeue and wait for it to complete
-				if helper.IsJobStillRunning(err) {
-					r.Logger().Info("Cannot delete PreHook job because it is still running, will requeue")
-					return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
-				}
-				return reconcile.Result{}, err
-			}
-		}
-		preHookJob = system.AppPreHookJob(ampImages.Options.SystemImage, currentNameSpace, currentAppDeploymentRevision)
+		// When mid-upgrade the job targetRevision is set to future revision
+		targetRevision = currentAppDeploymentRevision + 1
 	}
-
-	err = r.ReconcileJob(preHookJob, reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
+	preHookJob := system.AppPreHookJob(ampImages.Options.SystemImage, currentNameSpace, targetRevision)
+	result, err := r.ReconcileSystemAppHookJob(preHookJob)
+	if result.RequeueAfter > 0 || err != nil {
+		return result, err
 	}
 
 	// Block reconciling system-app Deployment until PreHook Job has completed
@@ -277,28 +228,12 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		systemComponentsReady = false
 	}
 
-	rerunPostHook, err := needAppHookJobRerun(component.SystemAppPostHookJobName, currentAppDeploymentRevision, currentNameSpace, r.Client())
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	if rerunPostHook {
-		err = helper.DeleteJob(r.Context(), component.SystemAppPostHookJobName, currentNameSpace, r.Client())
-		if err != nil {
-			// If job is still running, requeue and wait for it to complete
-			if helper.IsJobStillRunning(err) {
-				r.Logger().Info("Cannot delete PostHook job because it is still running, will requeue")
-				return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
-			}
-			return reconcile.Result{}, err
-		}
-	}
-
 	// SystemApp PostHook Job
 	if systemComponentsReady {
-		err = r.ReconcileJob(system.AppPostHookJob(ampImages.Options.SystemImage, currentNameSpace, currentAppDeploymentRevision), reconcilers.CreateOnlyMutator)
-		if err != nil {
-			return reconcile.Result{}, err
+		postHookJob := system.AppPostHookJob(ampImages.Options.SystemImage, currentNameSpace, currentAppDeploymentRevision)
+		result, err = r.ReconcileSystemAppHookJob(postHookJob)
+		if result.RequeueAfter > 0 || err != nil {
+			return result, err
 		}
 	}
 
@@ -430,6 +365,69 @@ func getSystemAppDeploymentRevision(namespace string, client k8sclient.Client) (
 	return strconv.ParseInt(v, 10, 64)
 }
 
+// ReconcileSystemAppHookJob (re-)creates the job based on targetRevision
+// When system app deployment revision changes, job will be re-created to
+// chase the deployment version - this will allow customers to re-trigger
+// hook jobs by rolling restart of the system-app deployment.
+func (r *SystemReconciler) ReconcileSystemAppHookJob(desired *batchv1.Job) (reconcile.Result, error) {
+	targetRevision, err := component.ParseSystemAppHookRevision(desired)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	found, err := helper.JobExists(r.Context(), desired, r.Client())
+	if err != nil {
+		return reconcile.Result{}, fmt.Errorf("error checking job %s exists: %w", desired.GetName(), err)
+	}
+
+	// Always create the hook job if it doesn't exist - we use its annotation to record reconciliation state
+	if !found {
+		err = r.ReconcileJob(desired, reconcilers.CreateOnlyMutator)
+		return reconcile.Result{}, err
+	}
+
+	trackedRevision, err := getSystemAppRevision(r.Context(), desired, r.Client())
+	if err != nil {
+		return reconcile.Result{}, fmt.Errorf("error getting app revision of %s: %w", desired.GetName(), err)
+	}
+
+	// Already at correct revision
+	if trackedRevision == targetRevision {
+		return reconcile.Result{}, nil
+	}
+
+	// Delete previous job - the job reconciler doesn't do this
+	err = helper.DeleteJob(r.Context(), desired, r.Client())
+	if err != nil {
+		// If job is still running, requeue and wait for it to complete
+		if helper.IsJobStillRunning(err) {
+			r.Logger().Info("Cannot delete PreHook job because it is still running, will requeue")
+			return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+		}
+		return reconcile.Result{}, err
+	}
+	if trackedRevision == -1 {
+		r.Logger().Info("Deleted PreHook job that was missing revision annotation")
+	}
+
+	err = r.ReconcileJob(desired, reconcilers.CreateOnlyMutator)
+	return reconcile.Result{}, err
+}
+
+// GetAppRevision returns the revision annotation value from a job
+// Returns error if the job doesn't exist
+// Returns -1 if the job exists but has no revision annotation (corrupted/unknown state)
+// Returns the revision number if annotation exists
+func getSystemAppRevision(ctx context.Context, job k8sclient.Object, client k8sclient.Client) (int64, error) {
+	lookup, err := helper.LookupJob(ctx, job, client)
+
+	if err != nil {
+		return 0, fmt.Errorf("error getting job %s: %w", job.GetName(), err)
+	}
+
+	return component.ParseSystemAppHookRevision(lookup)
+}
+
 // hasSystemImageChanged checks if the system image has changed compared to the currently deployed image
 // This indicates an upgrade scenario where hooks should be run
 func hasSystemImageChanged(namespace string, desiredImage string, client k8sclient.Client) (bool, error) {
@@ -459,28 +457,6 @@ func hasSystemImageChanged(namespace string, desiredImage string, client k8sclie
 	}
 
 	return false, nil
-}
-
-// needAppHookJobRerun returns true if the system-app Deployment's revision doesn't match the Job's annotation tracking it
-func needAppHookJobRerun(jName string, revision int64, namespace string, client k8sclient.Client) (bool, error) {
-	trackedRevision, err := helper.GetAppRevision(jName, namespace, client)
-	if err != nil {
-		return false, err
-	}
-
-	// Job doesn't exist - we don't need a rerun (that would try to delete the job)
-	if trackedRevision == 0 {
-		return false, nil
-	}
-
-	// Job exists but has no annotation - rerun
-	if trackedRevision == -1 {
-		return true, nil
-	}
-
-	// Return true if the Deployment's version doesn't match the version tracked in the Job's annotation
-	// This allows users to rerun hook jobs on demand
-	return trackedRevision != revision, nil
 }
 
 func (r *SystemReconciler) systemAppDeploymentResourceMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
