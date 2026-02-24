@@ -6,14 +6,8 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
-
-	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
-	configv1 "github.com/openshift/api/config/v1"
-	imagev1 "github.com/openshift/api/image/v1"
-	routev1 "github.com/openshift/api/route/v1"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+
 	k8sappsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -21,51 +15,21 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/tools/record"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func TestSystemReconcilerCreate(t *testing.T) {
-	log := logf.Log.WithName("operator_test")
-
-	ctx := context.TODO()
 	apimanager := basicApimanagerSpecTestSystemOptions()
-	appPreHookJob := &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{Name: component.SystemAppPreHookJobName, Namespace: apimanager.Namespace},
-		Spec: batchv1.JobSpec{
-			Template: v1.PodTemplateSpec{
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
-						{
-							Image: SystemImageURL(),
-						},
-					},
-				},
-			},
-		},
-		Status: batchv1.JobStatus{
-			Conditions: []batchv1.JobCondition{
-				{
-					Type:   batchv1.JobComplete,
-					Status: v1.ConditionTrue,
-				},
-			},
-		},
-	}
 	systemDatabaseSecret := createSystemDBSecret(apimanager.Namespace)
 	systemRedisSecret := createSystemRedisSecret(apimanager.Namespace)
+	appPreHookJob := createAppPreHookJob(apimanager.Namespace)
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{appPreHookJob, apimanager, systemDatabaseSecret, systemRedisSecret}
 
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, &appsv1alpha1.APIManager{})
-	s.AddKnownTypes(v1.SchemeGroupVersion, &v1.Secret{}, &v1.SecretList{})
-	err := v1.AddToScheme(s)
+	err := appsv1alpha1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,44 +37,8 @@ func TestSystemReconcilerCreate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = imagev1.Install(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = routev1.Install(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := monitoringv1.AddToScheme(s); err != nil {
-		t.Fatal(err)
-	}
-	if err := grafanav1alpha1.AddToScheme(s); err != nil {
-		t.Fatal(err)
-	}
-	if err := configv1.Install(s); err != nil {
-		t.Fatal(err)
-	}
 
-	// 3scale 2.14 -> 2.15
-	err = appsv1.Install(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Create a fake client to mock API calls.
-	cl := fake.NewClientBuilder().
-		WithScheme(s).
-		WithRuntimeObjects(objs...).
-		Build()
-	clientAPIReader := fake.NewClientBuilder().
-		WithScheme(s).
-		WithRuntimeObjects(objs...).
-		Build()
-	clientset := fakeclientset.NewSimpleClientset()
-	recorder := record.NewFakeRecorder(10000)
-
-	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
-	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
+	baseAPIManagerLogicReconciler, cl := setupTestBaseReconciler(s, apimanager, objs)
 
 	reconciler := NewSystemReconciler(baseAPIManagerLogicReconciler)
 	_, err = reconciler.Reconcile()
@@ -164,36 +92,13 @@ func TestSystemReconcilerCreate(t *testing.T) {
 func TestReplicaSystemReconciler(t *testing.T) {
 	var (
 		namespace        = "operator-unittest"
-		log              = logf.Log.WithName("operator_test")
 		oneValue   int32 = 1
 		oneValue64 int64 = 1
 		twoValue   int32 = 2
 	)
 
-	appPreHookJob := &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{Name: component.SystemAppPreHookJobName, Namespace: namespace},
-		Spec: batchv1.JobSpec{
-			Template: v1.PodTemplateSpec{
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
-						{
-							Image: SystemImageURL(),
-						},
-					},
-				},
-			},
-		},
-		Status: batchv1.JobStatus{
-			Conditions: []batchv1.JobCondition{
-				{
-					Type:   batchv1.JobComplete,
-					Status: v1.ConditionTrue,
-				},
-			},
-		},
-	}
+	appPreHookJob := createAppPreHookJob(namespace)
 
-	ctx := context.TODO()
 	s := scheme.Scheme
 
 	err := appsv1alpha1.AddToScheme(s)
@@ -202,9 +107,6 @@ func TestReplicaSystemReconciler(t *testing.T) {
 	}
 	err = k8sappsv1.AddToScheme(s)
 	if err != nil {
-		t.Fatal(err)
-	}
-	if err := configv1.Install(s); err != nil {
 		t.Fatal(err)
 	}
 
@@ -233,13 +135,7 @@ func TestReplicaSystemReconciler(t *testing.T) {
 			systemRedisSecret := createSystemRedisSecret(tc.apimanager.Namespace)
 			objs := []runtime.Object{tc.apimanager, appPreHookJob, systemDatabaseSecret, systemRedisSecret}
 
-			// Create a fake client to mock API calls.
-			cl := fake.NewFakeClient(objs...)
-			clientAPIReader := fake.NewFakeClient(objs...)
-			clientset := fakeclientset.NewSimpleClientset()
-			recorder := record.NewFakeRecorder(10000)
-			baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
-			baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, tc.apimanager)
+			baseAPIManagerLogicReconciler, cl := setupTestBaseReconciler(s, tc.apimanager, objs)
 
 			reconciler := NewSystemReconciler(baseAPIManagerLogicReconciler)
 			_, err = reconciler.Reconcile()
@@ -340,5 +236,30 @@ func createSystemDBSecret(namespace string) *v1.Secret {
 			Namespace: namespace,
 		},
 		Data: map[string][]byte{},
+	}
+}
+
+func createAppPreHookJob(namespace string) *batchv1.Job {
+	return &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{Name: component.SystemAppPreHookJobName, Namespace: namespace},
+		Spec: batchv1.JobSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Image: SystemImageURL(),
+						},
+					},
+				},
+			},
+		},
+		Status: batchv1.JobStatus{
+			Conditions: []batchv1.JobCondition{
+				{
+					Type:   batchv1.JobComplete,
+					Status: v1.ConditionTrue,
+				},
+			},
+		},
 	}
 }

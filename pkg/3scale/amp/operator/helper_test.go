@@ -1,14 +1,22 @@
 package operator
 
 import (
+	"context"
 	"fmt"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	fakeclientset "k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/tools/record"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 )
 
@@ -125,4 +133,24 @@ func getTestTolerations(prefix string) []v1.Toleration {
 			Value:    fmt.Sprintf("%s-%s", prefix, "val2"),
 		},
 	}
+}
+
+// setupTestReconciler creates a SystemReconciler with the provided objects for testing
+func setupTestBaseReconciler(s *runtime.Scheme, apimanager *appsv1alpha1.APIManager, objs []runtime.Object) (*BaseAPIManagerLogicReconciler, k8sclient.Client) {
+	cl := fake.NewClientBuilder().
+		WithScheme(s).
+		WithRuntimeObjects(objs...).
+		Build()
+	clientAPIReader := fake.NewClientBuilder().
+		WithScheme(s).
+		WithRuntimeObjects(objs...).
+		Build()
+	clientset := fakeclientset.NewSimpleClientset()
+	recorder := record.NewFakeRecorder(10000)
+	log := logf.Log.WithName("operator_test")
+
+	baseReconciler := reconcilers.NewBaseReconciler(context.Background(), cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
+	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
+
+	return baseAPIManagerLogicReconciler, cl
 }
