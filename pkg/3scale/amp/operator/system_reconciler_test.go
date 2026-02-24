@@ -2,11 +2,14 @@ package operator
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/google/go-cmp/cmp"
 	appsv1 "github.com/openshift/api/apps/v1"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8sappsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -16,7 +19,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestSystemReconcilerCreate(t *testing.T) {
@@ -177,6 +179,86 @@ func TestReplicaSystemReconciler(t *testing.T) {
 				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, *deployment.Spec.Replicas)
 			}
 		})
+	}
+}
+
+func TestSystemReconcilerUpdate(t *testing.T) {
+	apimanager := basicApimanagerSpecTestSystemOptions()
+	appPreHookJob := createAppPreHookJob(namespace)
+
+	s := scheme.Scheme
+
+	err := appsv1alpha1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = k8sappsv1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	systemDatabaseSecret := createSystemDBSecret(apimanager.Namespace)
+	systemRedisSecret := createSystemRedisSecret(apimanager.Namespace)
+	objs := []runtime.Object{apimanager, appPreHookJob, systemDatabaseSecret, systemRedisSecret}
+
+	baseAPIManagerLogicReconciler, cl := setupTestBaseReconciler(s, apimanager, objs)
+	reconciler := NewSystemReconciler(baseAPIManagerLogicReconciler)
+
+	system, err := System(reconciler.apiManager, reconciler.Client())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	oldImage := "old-system-image:v1"
+	oldArgs := []string{"foo", "bar"}
+
+	oldDeployment, err := system.AppDeployment(context.Background(), cl, oldImage)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	oldDeployment.Spec.Template.Spec.Containers[0].Args = oldArgs
+
+	// Create an system-app Deployment with old image and args
+	err = cl.Create(context.TODO(), oldDeployment)
+	if err != nil {
+		t.Errorf("error creating deployment of %s: %v", "system-app", err)
+	}
+
+	_, err = reconciler.Reconcile()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	reconciledDeployment := &k8sappsv1.Deployment{}
+	namespacedName := types.NamespacedName{
+		Name:      "system-app",
+		Namespace: namespace,
+	}
+
+	err = cl.Get(context.TODO(), namespacedName, reconciledDeployment)
+	if err != nil {
+		t.Errorf("error fetching object %s: %v", "system-app", err)
+	}
+
+	expectedDeployment, err := system.AppDeployment(context.Background(), cl, SystemImageURL())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify image was updated
+	actualImage := reconciledDeployment.Spec.Template.Spec.Containers[0].Image
+	expectedImage := expectedDeployment.Spec.Template.Spec.Containers[0].Image
+	if actualImage != expectedImage {
+		t.Errorf("image was not updated: expected %s, got %s", expectedImage, actualImage)
+	}
+
+	// Verify args were updated
+	actualArgs := reconciledDeployment.Spec.Template.Spec.Containers[0].Args
+	expectedArgs := expectedDeployment.Spec.Template.Spec.Containers[0].Args
+	if !reflect.DeepEqual(actualArgs, expectedArgs) {
+		t.Errorf("args were not updated:\nexpected: %v\ngot: %v\ndiff: %s",
+			expectedArgs, actualArgs, cmp.Diff(expectedArgs, actualArgs))
 	}
 }
 
