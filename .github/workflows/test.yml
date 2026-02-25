@@ -1,0 +1,261 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches: ['*']
+  merge_group:
+    types: [checks_requested]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Skip duplicate runs
+  pre-job:
+    runs-on: ubuntu-latest
+    name: Pre job checks
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@v3.4.1
+        with:
+          cancel_others: false
+          paths_ignore: '["**/*.md", "**/*.adoc", "LICENSE"]'
+
+  # Unit tests with coverage
+  unit-tests:
+    name: Unit Tests
+    if: ${{ github.event_name == 'schedule' || needs.pre-job.outputs.should_skip != 'true' }}
+    needs: pre-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Cache tool binaries
+        uses: actions/cache@v4
+        with:
+          path: bin/
+          key: ${{ runner.os }}-tools-${{ hashFiles('Makefile') }}
+          restore-keys: |
+            ${{ runner.os }}-tools-
+
+      - name: Run unit tests
+        run: make test-unit
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./_output/unit.cov
+          flags: unit
+          fail_ci_if_error: false
+          verbose: true
+
+  # CRD validation tests
+  test-crds:
+    name: CRD Validation
+    if: ${{ github.event_name == 'schedule' || needs.pre-job.outputs.should_skip != 'true' }}
+    needs: pre-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Cache tool binaries
+        uses: actions/cache@v4
+        with:
+          path: bin/
+          key: ${{ runner.os }}-tools-${{ hashFiles('Makefile') }}
+          restore-keys: |
+            ${{ runner.os }}-tools-
+
+      - name: Run CRD tests
+        run: make test-crds
+
+  # Manifest version tests
+  test-manifests-version:
+    name: Manifest Version Tests
+    if: ${{ github.event_name == 'schedule' || needs.pre-job.outputs.should_skip != 'true' }}
+    needs: pre-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Cache tool binaries
+        uses: actions/cache@v4
+        with:
+          path: bin/
+          key: ${{ runner.os }}-tools-${{ hashFiles('Makefile') }}
+          restore-keys: |
+            ${{ runner.os }}-tools-
+
+      - name: Run manifest version tests
+        run: make test-manifests-version
+
+  # Bundle validation
+  bundle-validate:
+    name: Bundle Validation
+    if: ${{ github.event_name == 'schedule' || needs.pre-job.outputs.should_skip != 'true' }}
+    needs: pre-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Cache tool binaries
+        uses: actions/cache@v4
+        with:
+          path: bin/
+          key: ${{ runner.os }}-tools-${{ hashFiles('Makefile') }}
+          restore-keys: |
+            ${{ runner.os }}-tools-
+
+      - name: Generate bundle
+        run: make bundle
+
+      - name: Validate bundle
+        run: make bundle-update-test
+
+  # Assets validation
+  assets-validate:
+    name: Assets Validation
+    if: ${{ github.event_name == 'schedule' || needs.pre-job.outputs.should_skip != 'true' }}
+    needs: pre-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Cache tool binaries
+        uses: actions/cache@v4
+        with:
+          path: bin/
+          key: ${{ runner.os }}-tools-${{ hashFiles('Makefile') }}
+          restore-keys: |
+            ${{ runner.os }}-tools-
+
+      - name: Validate assets
+        run: make assets-update-test
+
+  # Prometheus rules validation
+  prometheusrules-validate:
+    name: Prometheus Rules Validation
+    if: ${{ github.event_name == 'schedule' || needs.pre-job.outputs.should_skip != 'true' }}
+    needs: pre-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Cache tool binaries
+        uses: actions/cache@v4
+        with:
+          path: bin/
+          key: ${{ runner.os }}-tools-${{ hashFiles('Makefile') }}
+          restore-keys: |
+            ${{ runner.os }}-tools-
+
+      - name: Validate Prometheus rules
+        run: make prometheusrules-update-test
+
+  # License compliance check
+  license-check:
+    name: License Check
+    if: ${{ github.event_name == 'schedule' || needs.pre-job.outputs.should_skip != 'true' }}
+    needs: pre-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+
+      - name: Install license_finder
+        run: gem install license_finder --version 7.2.1
+
+      - name: Run license check
+        run: make licenses-check
+
+  lint:
+    name: Lint
+    if: ${{ github.event_name == 'schedule' || needs.pre-job.outputs.should_skip != 'true' }}
+    needs: pre-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Go Lint
+        run: make run-lint
+
+  # Required checks aggregation
+  required-checks:
+    name: All CI Checks
+    needs:
+      - license-check
+      - test-crds
+      - test-manifests-version
+      - unit-tests
+      - bundle-validate
+      - assets-validate
+      - prometheusrules-validate
+      - lint
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all job results
+        uses: actions/checkout@v5
+      - name: Verify all jobs succeeded
+        run: echo '${{ toJSON(needs) }}' | jq -e 'all(.[]; .result == "success" or .result == "skipped")'
