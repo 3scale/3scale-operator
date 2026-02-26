@@ -368,6 +368,29 @@ prometheusrules-update-test: prometheus-rules
 	git diff --exit-code ./doc/prometheusrules
 	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./doc/prometheusrules)" ]
 
+.PHONY: verify-fmt
+verify-fmt: fmt ## Verify fmt update.
+	git diff --exit-code ./apis ./controllers ./pkg
+
+.PHONY: verify-generate
+verify-generate: generate ## Verify generate update.
+	git diff --exit-code ./apis ./controllers ./pkg
+
+.PHONY: verify-go-mod
+verify-go-mod: ## Verify go.mod matches source code
+	go mod tidy
+	git diff --exit-code ./go.mod
+
+.PHONY: verify-manifests
+verify-manifests: manifests ## Verify manifests update.
+	git diff --exit-code ./config
+	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./config)" ]
+
+.PHONY: verify-bundle
+verify-bundle: bundle ## Verify bundle update.
+	git diff --exit-code ./bundle
+	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./bundle)" ]
+
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary
 # $2 - package url which can be installed

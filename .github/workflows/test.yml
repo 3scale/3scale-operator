@@ -240,6 +240,93 @@ jobs:
       - name: Go Lint
         run: make run-lint
 
+  verify-fmt:
+    name: Verify fmt
+    if: ${{ github.event_name == 'schedule' || needs.pre-job.outputs.should_skip != 'true' }}
+    needs: pre-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Run make verify-fmt
+        run: |
+          make verify-fmt
+
+  verify-go-mod:
+    name: Verify go.mod
+    if: ${{ github.event_name == 'schedule' || needs.pre-job.outputs.should_skip != 'true' }}
+    needs: pre-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Verify generate command
+        run: |
+          make verify-go-mod
+
+  verify-generate:
+    name: Verify generate
+    if: ${{ github.event_name == 'schedule' || needs.pre-job.outputs.should_skip != 'true' }}
+    needs: pre-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Verify generate command
+        run: |
+          make verify-generate
+
+  verify-manifests:
+    name: Verify manifests
+    if: ${{ github.event_name == 'schedule' || needs.pre-job.outputs.should_skip != 'true' }}
+    needs: pre-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Verify manifests
+        run: make verify-manifests
+
+  verify-bundle:
+    name: Verify bundle
+    if: ${{ github.event_name == 'schedule' || needs.pre-job.outputs.should_skip != 'true' }}
+    needs: pre-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Run make verify-bundle
+        run: |
+          make verify-bundle
+
   # Required checks aggregation
   required-checks:
     name: All CI Checks
