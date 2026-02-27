@@ -193,14 +193,6 @@ $(OPERATOR_SDK):
 .PHONY: operator-sdk
 operator-sdk: $(OPERATOR_SDK)
 
-GO_BINDATA=$(PROJECT_PATH)/bin/go-bindata
-GO_BINDATA_VERSION = v3.1.3
-$(GO_BINDATA):
-	$(call go-install-tool,$(GO_BINDATA),github.com/go-bindata/go-bindata/v3/...,$(GO_BINDATA_VERSION))
-
-.PHONY: go-bindata
-go-bindata: $(GO_BINDATA)
-
 # Install CRDs into a cluster
 install: manifests $(KUSTOMIZE)
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) create -f - || $(KUSTOMIZE) build config/crd | $(KUBECTL) replace -f -
@@ -239,10 +231,8 @@ lint: $(GOLANGCI-LINT) ## Run lint tests
 	$(GOLANGCI-LINT) run
 
 # Generate code
-generate: $(CONTROLLER_GEN) $(GO_BINDATA)
+generate: $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
-	@echo Generate Go embedded assets files by processing source
-	export PATH=$(PROJECT_PATH)/bin:$$PATH;	$(GO) generate github.com/3scale/3scale-operator/pkg/assets
 
 # Build the docker image
 .PHONY: docker-build

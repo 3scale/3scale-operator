@@ -190,13 +190,6 @@
     :versions: []
     :when: 2019-11-26 10:15:34.001520959 Z
 - - :license
-  - github.com/go-bindata/go-bindata
-  - CC0 1.0 Universal
-  - :who: 
-    :why: https://github.com/go-bindata/go-bindata/blob/master/LICENSE
-    :versions: []
-    :when: 2020-06-15 09:58:31.161619176 Z
-- - :license
   - github.com/RHsyseng/operator-utils
   - Apache 2.0
   - :who: 
