@@ -2,17 +2,17 @@ package assets
 
 import (
 	"bytes"
+	"embed"
 	"text/template"
 )
 
-// Important: Run "make" to regenerate code after modifying/adding/removing any asset
-// adding -nometadata to not preserve size, mode, and modtime info. It should not be necessary as the content will be embedded in custom resources.
-//go:generate go-bindata --prefix assets -pkg $GOPACKAGE -nometadata -o bindata.go assets/...
+//go:embed assets/*
+var embeddedFiles embed.FS
 
 // SafeStringAsset Returns asset data as string
 // panic if not found or any err is detected
 func SafeStringAsset(name string) string {
-	data, err := Asset(name)
+	data, err := embeddedFiles.ReadFile("assets/" + name)
 	if err != nil {
 		panic(err)
 	}
@@ -20,7 +20,7 @@ func SafeStringAsset(name string) string {
 	return string(data)
 }
 
-// TemplateAsset Executes one tamplate by applying it to a daata structure.
+// TemplateAsset Executes one template by applying it to a data structure.
 // panic if not found or any err is detected
 func TemplateAsset(name string, data interface{}) string {
 	tObj, err := template.New(name).Parse(SafeStringAsset(name))
