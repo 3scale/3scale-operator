@@ -563,7 +563,7 @@ spec:
                   value: quay.io/openshift/origin-cli:4.7
                 - name: RELATED_IMAGE_SYSTEM_SEARCHD
                   value: quay.io/3scale/searchd:latest
-                image: quay.io/3scale/3scale-operator:master
+                image: quay.io/3scale/3scale-operator:latest
                 name: manager
                 ports:
                 - containerPort: 8080
