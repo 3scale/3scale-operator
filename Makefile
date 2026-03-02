@@ -3,8 +3,7 @@ SHELL := /bin/bash
 VERSION ?= 0.0.1
 # Current Threescale version
 THREESCALE_VERSION ?= 2.16
-# Default bundle image tag
-BUNDLE_IMG ?= controller-bundle:$(VERSION)
+
 # Options for 'bundle-build'
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
@@ -17,8 +16,32 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 OS := $(shell uname | awk '{print tolower($$0)}' | sed -e s/linux/linux-gnu/ )
 ARCH := $(shell uname -m)
 
+# Address of the container registry
+REGISTRY = quay.io
+
+# Organization in container resgistry
+ORG ?= 3scale
+REPO_NAME ?= 3scale-operator
+
+# IMAGE_TAG_BASE defines the docker.io namespace and part of the image name for remote images.
+# This variable is used to construct full image tags for bundle and catalog images.
+#
+# For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
+# quay.io/kuadrant/limitador-operator-bundle:$VERSION and quay.io/kuadrant/limitador-operator-catalog:$VERSION.
+IMAGE_TAG_BASE ?= $(REGISTRY)/$(ORG)/$(REPO_NAME)
+
+# Default bundle image tag
+BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
+
 # Image URL to use all building/pushing image targets
-IMG ?= quay.io/3scale/3scale-operator:master
+IMG ?= $(IMAGE_TAG_BASE):master
+
+# A comma-separated list of bundle images (e.g. make catalog-build BUNDLE_IMGS=example.com/operator-bundle:v0.1.0,example.com/operator-bundle:v0.2.0).
+# These images MUST exist in a registry and be pull-able.
+BUNDLE_IMGS ?= $(BUNDLE_IMG)
+
+# The image tag given to the resulting catalog image (e.g. make catalog-build CATALOG_IMG=example.com/operator-catalog:v0.2.0).
+CATALOG_IMG ?= $(IMAGE_TAG_BASE)-catalog:v$(VERSION)
 
 CRD_OPTIONS ?= "crd:crdVersions=v1"
 
@@ -294,6 +317,41 @@ bundle-custom-build: | bundle-custom-updates bundle-build bundle-restore
 bundle-run: $(OPERATOR_SDK)
 	$(OPERATOR_SDK) run bundle --namespace openshift-marketplace $(BUNDLE_IMG)
 
+.PHONY: opm
+OPM = $(LOCALBIN)/opm
+opm: ## Download opm locally if necessary.
+ifeq (,$(wildcard $(OPM)))
+ifeq (,$(shell which opm 2>/dev/null))
+	@{ \
+	set -e ;\
+	mkdir -p $(dir $(OPM)) ;\
+	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
+	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.55.0/$${OS}-$${ARCH}-opm ;\
+	chmod +x $(OPM) ;\
+	}
+else
+OPM = $(shell which opm)
+endif
+endif
+
+
+# Set CATALOG_BASE_IMG to an existing catalog image tag to add $BUNDLE_IMGS to that image.
+ifneq ($(origin CATALOG_BASE_IMG), undefined)
+FROM_INDEX_OPT := --from-index $(CATALOG_BASE_IMG)
+endif
+
+# Build a catalog image by adding bundle images to an empty catalog using the operator package manager tool, 'opm'.
+# This recipe invokes 'opm' in 'semver' bundle add mode. For more information on add modes, see:
+# https://github.com/operator-framework/community-operators/blob/7f1438c/docs/packaging-operator.md#updating-your-existing-operator
+.PHONY: catalog-build
+catalog-build: opm ## Build a catalog image.
+	$(OPM) index add --container-tool $(DOCKER) --mode semver --tag $(CATALOG_IMG) --bundles $(BUNDLE_IMGS) $(FROM_INDEX_OPT)
+
+# Push the catalog image.
+.PHONY: catalog-push
+catalog-push: ## Push a catalog image.
+	$(DOCKER) push ${CATALOG_IMG}
+
 # 3scale-specific targets
 
 # find or download yq
@@ -367,6 +425,29 @@ prometheus-rules-clean:
 prometheusrules-update-test: prometheus-rules
 	git diff --exit-code ./doc/prometheusrules
 	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./doc/prometheusrules)" ]
+
+.PHONY: verify-fmt
+verify-fmt: fmt ## Verify fmt update.
+	git diff --exit-code ./apis ./controllers ./pkg
+
+.PHONY: verify-generate
+verify-generate: generate ## Verify generate update.
+	git diff --exit-code ./apis ./controllers ./pkg
+
+.PHONY: verify-go-mod
+verify-go-mod: ## Verify go.mod matches source code
+	go mod tidy
+	git diff --exit-code ./go.mod
+
+.PHONY: verify-manifests
+verify-manifests: manifests ## Verify manifests update.
+	git diff --exit-code ./config
+	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./config)" ]
+
+.PHONY: verify-bundle
+verify-bundle: bundle ## Verify bundle update.
+	git diff --exit-code ./bundle
+	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./bundle)" ]
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary

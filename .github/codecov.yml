@@ -1,0 +1,50 @@
+# Find more at https://docs.codecov.com/docs/codecovyml-reference
+codecov:
+  bot: "Codecov Bot"
+  max_report_age: 12
+  require_ci_to_pass: true
+  notify:
+    after_n_builds: 1
+    wait_for_ci: true
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 3%
+    patch:
+      default:
+        target: auto
+        threshold: 3%
+
+# Layout of the PR comment produced by Codecov bot
+comment:
+  layout: "header, diff, flags, components, files"
+
+# Find more at https://docs.codecov.com/docs/ignoring-paths
+ignore:
+  - "**/*.deepcopy.go"  # ignore controller-gen generated code
+
+component_management:
+  individual_components:
+    - component_id: apis-app-v1alpha1
+      name: apis/apps/v1alpha1 (u)
+      paths:
+        - apis/apps/v1alpha1
+    - component_id: apis-capabilities-v1alpha1
+      name: apis/capabilities/v1alpha1 (u)
+      paths:
+        - apis/capabilities/v1alpha1
+    - component_id: apis-capabilities-v1beta1
+      name: apis/capabilities/v1beta1 (u)
+      paths:
+        - apis/capabilities/v1beta1
+    - component_id: controllers
+      name: controllers (i)
+      paths:
+        - controllers
+    - component_id: pkg
+      name: pkg (u)
+      paths:
+        - pkg
