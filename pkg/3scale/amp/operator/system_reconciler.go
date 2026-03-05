@@ -171,7 +171,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 	preHookJob := system.AppPreHookJob(ampImages.Options.SystemImage, currentNameSpace)
 	result, err := r.ReconcileSystemAppHookJob(preHookJob, targetRevision)
-	if result.RequeueAfter > 0 || err != nil {
+	if result.Requeue || result.RequeueAfter > 0 || err != nil {
 		return result, err
 	}
 
@@ -233,7 +233,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	if systemComponentsReady {
 		postHookJob := system.AppPostHookJob(ampImages.Options.SystemImage, currentNameSpace)
 		result, err = r.ReconcileSystemAppHookJob(postHookJob, currentAppDeploymentRevision)
-		if result.RequeueAfter > 0 || err != nil {
+		if result.Requeue || result.RequeueAfter > 0 || err != nil {
 			return result, err
 		}
 	}
@@ -395,16 +395,16 @@ func (r *SystemReconciler) ReconcileSystemAppHookJob(desired *batchv1.Job, targe
 		return reconcile.Result{}, fmt.Errorf("error getting app revision of %s: %w", desired.GetName(), err)
 	}
 
-	// Already at correct revision
-	if trackedRevision == targetRevision {
-		return reconcile.Result{}, nil
+	// Need to update revision?
+	if trackedRevision != targetRevision {
+		if trackedRevision == -1 {
+			r.Logger().Info("Job will be deleted - missing revision annotation", "name", desired.GetName(), "namespace", desired.GetNamespace())
+		}
+
+		return r.recreateSystemAppHookJob(desired)
 	}
 
-	if trackedRevision == -1 {
-		r.Logger().Info("Job will be deleted - missing revision annotation", "name", desired.GetName(), "namespace", desired.GetNamespace())
-	}
-
-	return r.recreateSystemAppHookJob(desired)
+	return reconcile.Result{}, nil
 }
 
 // hard recreate given job without checking anything
@@ -421,7 +421,13 @@ func (r *SystemReconciler) recreateSystemAppHookJob(desired *batchv1.Job) (recon
 	}
 
 	err = r.ReconcileJob(desired, reconcilers.CreateOnlyMutator)
-	return reconcile.Result{}, err
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	// Reason to requeue here is because the state of the hook job is investigated during SystemReconciler logic
+	// State of the new job will only be known once watch events are propagated, which requires requeue
+	// RequeueAfter instead of regular Requeue - to bypass backoff
+	return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
 }
 
 // check all desired images are set and match in the lookup
