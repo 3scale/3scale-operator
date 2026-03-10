@@ -143,5 +143,5 @@ func DefaultSystemBackendUsername() string {
 }
 
 func DefaultSystemBackendPassword() string {
-	return oprand.String(8)
+	return oprand.GenerateRandomPasswordHash()
 }
