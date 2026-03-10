@@ -216,7 +216,17 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		}
 	}
 
-	// Block reconciling PostHook Job unless BOTH the PreHook Job has completed and the system-app Deployment is ready and not in the process of updating
+	// Block reconciling PostHook Job unless BOTH the PreHook Job has completed and the system-app Deployment is ready and not in the process of updating.
+	//
+	// The imageChanged check ensures PostHook is not created prematurely when
+	// the deployment was updated earlier in this reconcile but the cached read
+	// still reflects pre-mutation status (Available/Progressing conditions are
+	// stale). This aligns the gating logic with the cached client's eventual
+	// consistency model.
+	//
+	// CAUTION: This is legacy reconciliation code with subtle ordering
+	// dependencies between cached reads and mutations. Changes should only be
+	// made as part of a feature version release with thorough testing.
 	deployment := &k8sappsv1.Deployment{}
 	err = r.Client().Get(context.TODO(), k8sclient.ObjectKey{
 		Namespace: currentNameSpace,
@@ -225,7 +235,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	if err != nil && !k8serr.IsNotFound(err) {
 		return reconcile.Result{}, err
 	}
-	if k8serr.IsNotFound(err) || !helper.IsDeploymentAvailable(deployment) || helper.IsDeploymentProgressing(deployment) || !finished {
+	if k8serr.IsNotFound(err) || !helper.IsDeploymentAvailable(deployment) || helper.IsDeploymentProgressing(deployment) || !finished || imageChanged {
 		systemComponentsReady = false
 	}
 
@@ -395,8 +405,11 @@ func (r *SystemReconciler) ReconcileSystemAppHookJob(desired *batchv1.Job, targe
 		return reconcile.Result{}, fmt.Errorf("error getting app revision of %s: %w", desired.GetName(), err)
 	}
 
-	// Need to update revision?
-	if trackedRevision != targetRevision {
+	// Recreate job when its revision is behind the target (e.g. rollout restart
+	// bumped the deployment revision). A job revision ahead of the target means
+	// the operator triggered the rollout and the deployment controller hasn't
+	// bumped the revision annotation yet — preserve the job.
+	if trackedRevision < targetRevision {
 		if trackedRevision == -1 {
 			r.Logger().Info("Job will be deleted - missing revision annotation", "name", desired.GetName(), "namespace", desired.GetNamespace())
 		}
