@@ -508,6 +508,109 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
+			name: "UPGRADE: Deployment NOT updated while PreHook job is incomplete",
+			// Preconditions:
+			// - Deployment exists with NEW image at revision 1 (upgrade triggered)
+			// - PreHook job exists with correct image and revision 2 but is NOT completed
+			// - This is mid-upgrade: job was created but hasn't finished yet
+			// Expected behavior:
+			// - Deployment should NOT be reconciled/updated (gated by incomplete job)
+			// - Reconciler requeues to wait for job completion
+			additionalObjects: []runtime.Object{
+				createIncompleteJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 2),
+				createSystemAppDeployment(testNamespace, "old-image:v1", 1, 2, true, false),
+			},
+			expectedJobExists:  true,
+			expectedDeployment: true, // deployment exists but should NOT be updated
+			expectedRequeue:    true,
+			validateJob: func(t *testing.T, client k8sclient.Client) {
+				if !jobExists(t, client, component.SystemAppPreHookJobName, testNamespace) {
+					t.Error("PreHook job should still exist")
+				}
+				job := getJob(t, client, component.SystemAppPreHookJobName, testNamespace)
+				// Job should be preserved with revision 2
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "2" {
+					t.Errorf("expected job revision annotation to be '2', got %q",
+						job.Annotations[component.SystemAppRevisionAnnotation])
+				}
+				// Job should still be incomplete
+				for _, condition := range job.Status.Conditions {
+					if condition.Type == batchv1.JobComplete && condition.Status == v1.ConditionTrue {
+						t.Error("job should still be incomplete (running)")
+					}
+				}
+			},
+			validateDeployment: func(t *testing.T, client k8sclient.Client) {
+				// The deployment should still have the OLD image — it must not be
+				// updated until the pre-hook job completes.
+				deployment := getDeployment(t, client, component.SystemAppDeploymentName, testNamespace)
+				for _, container := range deployment.Spec.Template.Spec.Containers {
+					if container.Image != "old-image:v1" {
+						t.Errorf("deployment image should still be old-image:v1 while pre-hook is incomplete, got %q",
+							container.Image)
+					}
+				}
+			},
+		},
+		{
+			name: "BUG/REGRESSION: Completed correct-image job destroyed when deployment revision stale",
+			// Preconditions:
+			// - Deployment was ALREADY UPDATED to new image by a previous reconcile
+			// - BUT the deployment controller hasn't bumped the revision annotation yet
+			//   (revision annotation is set async by the deployment controller, not by the operator)
+			// - So deployment shows: image=NEW, revision=1
+			// - PreHook job exists: image=NEW, revision=2, COMPLETED
+			//   (correctly created during the upgrade before the deployment was updated)
+			//
+			// What happens (BUG):
+			// - hasSystemImageChanged(): deployment.image (NEW) == desired.image (NEW) → false
+			// - targetRevision = currentAppDeploymentRevision = 1 (no +1 since imageChanged=false)
+			// - ReconcileSystemAppHookJob: job.image matches, BUT job.revision (2) != targetRevision (1)
+			// - recreateSystemAppHookJob → DELETES the completed correct-image job
+			// - Creates new incomplete job with revision=1
+			// - Valid evidence of migration completion is destroyed
+			//
+			// Expected CORRECT behavior:
+			// - Job has correct image and is completed — migrations already ran
+			// - Job should be preserved regardless of revision mismatch
+			// - No requeue needed
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 2),
+				// Deployment already has NEW image but revision hasn't been bumped
+				createSystemAppDeployment(testNamespace, SystemImageURL(), 1, 2, true, false),
+			},
+			expectedJobExists:  true,
+			expectedDeployment: true,
+			expectedRequeue:    false, // Job completed with correct image — should proceed
+			validateJob: func(t *testing.T, client k8sclient.Client) {
+				if !jobExists(t, client, component.SystemAppPreHookJobName, testNamespace) {
+					t.Error("PreHook job should be preserved (not deleted)")
+					return
+				}
+				job := getJob(t, client, component.SystemAppPreHookJobName, testNamespace)
+
+				// BUG: job gets recreated with revision=1 instead of preserving revision=2
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "2" {
+					t.Errorf("BUG: completed correct-image job was destroyed due to stale revision. "+
+						"Expected revision '2' (preserved), got %q",
+						job.Annotations[component.SystemAppRevisionAnnotation])
+				}
+
+				// Job should still be completed (not recreated as incomplete)
+				completed := false
+				for _, condition := range job.Status.Conditions {
+					if condition.Type == batchv1.JobComplete && condition.Status == v1.ConditionTrue {
+						completed = true
+						break
+					}
+				}
+				if !completed {
+					t.Error("BUG: completed job was destroyed and recreated as incomplete — " +
+						"migration evidence lost")
+				}
+			},
+		},
+		{
 			name: "UPGRADE: Job already created with correct revision - preserved during upgrade",
 			// Preconditions:
 			// - Deployment exists at revision 1 with OLD image (not updated yet)
@@ -523,9 +626,10 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			// - hasSystemImageChanged() returns true (deployment still has old image)
 			// - targetRevision = 1 + 1 = 2
 			// - currentJobRevision = 2 (job already has correct revision)
-			// - Deletion condition: 2 != 0 && 2 != 2 -> TRUE && FALSE -> NO deletion ✓
+			// - Deletion condition: 2 < 2 -> FALSE -> NO deletion ✓
 			// - Job is preserved (not deleted and recreated)
-			// - Reconciler requeues if job running, or proceeds to deployment if completed
+			// - Reconciler requeues: deployment still has old image, PostHook must
+			//   wait until deployment rolls out with the new image
 			additionalObjects: []runtime.Object{
 				// Job already created with NEW image and target revision during previous reconcile
 				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 2),
@@ -534,7 +638,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			},
 			expectedJobExists:  true,
 			expectedDeployment: true,
-			expectedRequeue:    false, // Job completed, ready to update deployment
+			expectedRequeue:    true, // Deployment still has old image, PostHook blocked
 			validateJob: func(t *testing.T, client k8sclient.Client) {
 				if !jobExists(t, client, component.SystemAppPreHookJobName, testNamespace) {
 					t.Error("PreHook job should exist")
@@ -577,11 +681,11 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			// - This can happen from: manual job creation, migration from old operator, external tools
 			// - APIManager specifies NEW image (triggering upgrade)
 			//
-			// Expected behavior AFTER FIX:
+			// Expected behavior:
 			// - hasSystemImageChanged() returns true
 			// - targetRevision = 2 + 1 = 3
 			// - currentJobRevision = getPreHookJobRevision() returns -1 (no annotation)
-			// - Condition: -1 != 0 && -1 != 3 evaluates to TRUE
+			// - Condition: -1 < 3 evaluates to TRUE
 			// - Old job is DELETED
 			// - New job created for revision 3 with NEW image
 			// - Reconciler requeues waiting for new job to complete
@@ -630,15 +734,13 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			// This tests that GetAppRevision() default (0) works correctly:
 			// - GetAppRevision() returns 0 (job doesn't exist)
 			// - targetRevision = 1 + 1 = 2
-			// - Deletion condition: 0 != 0 && 0 != 2 evaluates to FALSE
-			// - No deletion attempted (correct - nothing to delete)
+			// - Deletion condition: 0 < 2 evaluates to TRUE but job doesn't exist — no deletion needed
 			// - Job created for the first time with revision 2
 			//
 			// Expected behavior:
 			// - hasSystemImageChanged() returns true
 			// - targetRevision = 2
 			// - currentJobRevision = 0 (from GetAppRevision - job doesn't exist)
-			// - No deletion (0 != 0 is false)
 			// - New job created with revision 2
 			// - Reconciler requeues waiting for job to complete
 			additionalObjects: []runtime.Object{
@@ -693,7 +795,7 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 			// - hasSystemImageChanged() returns true (old-image:v1 != SystemImageURL())
 			// - targetRevision = currentAppDeploymentRevision + 1 = 3
 			// - currentJobRevision = 1 (from job annotation)
-			// - Since currentJobRevision (1) != targetRevision (3), old job is deleted
+			// - Since currentJobRevision (1) < targetRevision (3), old job is deleted
 			// - New job created for revision 3 with new image
 			// - Reconciler requeues waiting for new job to complete
 			additionalObjects: []runtime.Object{
@@ -818,8 +920,8 @@ func TestSystemReconciler_PreHookJobOrchestration(t *testing.T) {
 
 			// Validate requeue behavior
 			if tt.expectedRequeue {
-				if result.RequeueAfter == 0 {
-					t.Error("expected requeue but RequeueAfter is 0")
+				if !result.Requeue && result.RequeueAfter == 0 {
+					t.Error("expected requeue but got neither Requeue nor RequeueAfter")
 				}
 			} else {
 				if result.Requeue || result.RequeueAfter != 0 {
@@ -942,6 +1044,32 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 			},
 		},
 		{
+			name: "PostHook blocked - Deployment has old image (mid-upgrade)",
+			// Preconditions:
+			// - PreHook completed with new image and revision 2
+			// - Deployment available, not progressing, but still has OLD image
+			// - imageChanged = true (deployment image != desired image)
+			//
+			// This is the critical mid-upgrade window: PreHook finished but
+			// the deployment hasn't been updated yet. PostHook must NOT run
+			// against the old deployment.
+			//
+			// Expected behavior:
+			// - imageChanged blocks PostHook creation
+			// - Reconciler requeues waiting for deployment to be updated
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 2),
+				createSystemAppDeployment(testNamespace, "old-image:v1", 1, 2, true, false),
+			},
+			expectedJobExists: false,
+			expectedRequeue:   true,
+			validateJob: func(t *testing.T, client k8sclient.Client) {
+				if jobExists(t, client, component.SystemAppPostHookJobName, testNamespace) {
+					t.Error("PostHook job should NOT be created while deployment still has old image")
+				}
+			},
+		},
+		{
 			name: "PostHook created - All conditions met",
 			// Preconditions:
 			// - PreHook completed for revision 1
@@ -992,13 +1120,14 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 			// - HasAppRevisionChanged() returns true
 			// - Old PostHook deleted
 			// - New PostHook created for revision 2
+			// - Reconciler requeues after job recreation
 			additionalObjects: []runtime.Object{
 				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 2),
 				createCompletedJob("system-app-post", testNamespace, SystemImageURL(), 1), // Old PostHook
 				createSystemAppDeployment(testNamespace, SystemImageURL(), 2, 2, true, false),
 			},
 			expectedJobExists: true,
-			expectedRequeue:   false,
+			expectedRequeue:   true,
 			validateJob: func(t *testing.T, client k8sclient.Client) {
 				if !jobExists(t, client, component.SystemAppPostHookJobName, testNamespace) {
 					t.Error("PostHook job should be recreated for new revision")
@@ -1038,7 +1167,7 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 				createSystemAppDeployment(testNamespace, SystemImageURL(), 1, 1, true, false),
 			},
 			expectedJobExists: true,
-			expectedRequeue:   false,
+			expectedRequeue:   true, // recreateSystemAppHookJob returns Requeue: true
 			validateJob: func(t *testing.T, client k8sclient.Client) {
 				if !jobExists(t, client, component.SystemAppPostHookJobName, testNamespace) {
 					t.Error("PostHook job should exist")
@@ -1049,6 +1178,56 @@ func TestSystemReconciler_PostHookJobOrchestration(t *testing.T) {
 				// Verify job was recreated with correct annotation
 				if job.Annotations[component.SystemAppRevisionAnnotation] != "1" {
 					t.Errorf("expected PostHook job with revision '1', got %v", job.Annotations)
+				}
+			},
+		},
+		{
+			name: "STEADY STATE: PostHook completed with correct revision - no action needed",
+			// Preconditions:
+			// - PostHook exists for revision 1 (completed)
+			// - Deployment at revision 1, ready and available
+			// - PreHook completed with revision 1
+			// - Images match (no upgrade)
+			//
+			// Expected behavior:
+			// - No mutation, no requeue — steady state
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 1),
+				createCompletedJob("system-app-post", testNamespace, SystemImageURL(), 1),
+				createSystemAppDeployment(testNamespace, SystemImageURL(), 1, 1, true, false),
+			},
+			expectedJobExists: true,
+			expectedRequeue:   false,
+			validateJob: func(t *testing.T, client k8sclient.Client) {
+				job := getJob(t, client, component.SystemAppPostHookJobName, testNamespace)
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "1" {
+					t.Errorf("expected PostHook job with revision '1', got %q",
+						job.Annotations[component.SystemAppRevisionAnnotation])
+				}
+			},
+		},
+		{
+			name: "STEADY STATE: PostHook incomplete with correct revision - no action needed",
+			// Preconditions:
+			// - PostHook exists for revision 1 (still running)
+			// - Deployment at revision 1, ready and available
+			// - PreHook completed with revision 1
+			// - Images match (no upgrade)
+			//
+			// Expected behavior:
+			// - No mutation, no requeue — PostHook completion is not gated
+			additionalObjects: []runtime.Object{
+				createCompletedJob("system-app-pre", testNamespace, SystemImageURL(), 1),
+				createIncompleteJob("system-app-post", testNamespace, SystemImageURL(), 1),
+				createSystemAppDeployment(testNamespace, SystemImageURL(), 1, 1, true, false),
+			},
+			expectedJobExists: true,
+			expectedRequeue:   false,
+			validateJob: func(t *testing.T, client k8sclient.Client) {
+				job := getJob(t, client, component.SystemAppPostHookJobName, testNamespace)
+				if job.Annotations[component.SystemAppRevisionAnnotation] != "1" {
+					t.Errorf("expected PostHook job with revision '1', got %q",
+						job.Annotations[component.SystemAppRevisionAnnotation])
 				}
 			},
 		},
@@ -1548,7 +1727,7 @@ func TestReconcileSystemAppHookJob_JobCreation(t *testing.T) {
 			name:            "completed job with different revision - recreates job",
 			existingJob:     createCompletedJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 1),
 			desiredJobRev:   2,
-			expectedRequeue: false,
+			expectedRequeue: true, // recreateSystemAppHookJob returns Requeue: true
 			validateResult: func(t *testing.T, cl k8sclient.Client) {
 				job := getJob(t, cl, component.SystemAppPreHookJobName, testNamespace)
 				// New job should have new revision
@@ -1591,7 +1770,7 @@ func TestReconcileSystemAppHookJob_JobCreation(t *testing.T) {
 			name:            "matching revision & change in images - recreates job",
 			existingJob:     createCompletedJob(component.SystemAppPreHookJobName, testNamespace, "old-image:v1", 3),
 			desiredJobRev:   3,
-			expectedRequeue: false,
+			expectedRequeue: true, // recreateSystemAppHookJob returns Requeue: true
 			validateResult: func(t *testing.T, cl k8sclient.Client) {
 				job := getJob(t, cl, component.SystemAppPreHookJobName, testNamespace)
 				// New job should have new revision

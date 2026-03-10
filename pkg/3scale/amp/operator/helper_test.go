@@ -243,6 +243,16 @@ func deploymentExists(t *testing.T, client k8sclient.Client, name, namespace str
 	return true
 }
 
+// getDeployment retrieves a deployment from the cluster
+func getDeployment(t *testing.T, client k8sclient.Client, name, namespace string) *k8sappsv1.Deployment {
+	deployment := &k8sappsv1.Deployment{}
+	err := client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: namespace}, deployment)
+	if err != nil {
+		t.Fatalf("failed to get deployment %s: %v", name, err)
+	}
+	return deployment
+}
+
 func createJob(name, namespace, image string) *batchv1.Job {
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
