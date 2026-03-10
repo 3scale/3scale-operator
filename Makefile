@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 # Current Operator version
-VERSION ?= 0.0.1
+VERSION ?= 0.0.0
 # Current Threescale version
 THREESCALE_VERSION ?= 2.16
 
@@ -30,18 +30,32 @@ REPO_NAME ?= 3scale-operator
 # quay.io/kuadrant/limitador-operator-bundle:$VERSION and quay.io/kuadrant/limitador-operator-catalog:$VERSION.
 IMAGE_TAG_BASE ?= $(REGISTRY)/$(ORG)/$(REPO_NAME)
 
+# Semantic versioning (i.e. Major.Minor.Patch)
+is_semantic_version = $(shell [[ $(1) =~ ^[0-9]+\.[0-9]+\.[0-9]+(-.+)?$$ ]] && echo "true")
+
+# BUNDLE_VERSION defines the version for the limitador-operator bundle.
+# If the version is not semantic, will use the default one
+bundle_is_semantic := $(call is_semantic_version,$(VERSION))
+ifeq (0.0.0,$(VERSION))
+BUNDLE_VERSION = 0.0.1
+IMAGE_TAG = latest
+else ifeq ($(bundle_is_semantic),true)
+BUNDLE_VERSION = $(VERSION)
+IMAGE_TAG = v$(VERSION)
+endif
+
 # Default bundle image tag
-BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
+BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:$(IMAGE_TAG)
 
 # Image URL to use all building/pushing image targets
-IMG ?= $(IMAGE_TAG_BASE):latest
+IMG ?= $(IMAGE_TAG_BASE):$(IMAGE_TAG)
 
 # A comma-separated list of bundle images (e.g. make catalog-build BUNDLE_IMGS=example.com/operator-bundle:v0.1.0,example.com/operator-bundle:v0.2.0).
 # These images MUST exist in a registry and be pull-able.
 BUNDLE_IMGS ?= $(BUNDLE_IMG)
 
 # The image tag given to the resulting catalog image (e.g. make catalog-build CATALOG_IMG=example.com/operator-catalog:v0.2.0).
-CATALOG_IMG ?= $(IMAGE_TAG_BASE)-catalog:v$(VERSION)
+CATALOG_IMG ?= $(IMAGE_TAG_BASE)-catalog:$(IMAGE_TAG)
 
 CRD_OPTIONS ?= "crd:crdVersions=v1"
 
@@ -280,7 +294,7 @@ bundle-image-push:
 bundle: manifests $(KUSTOMIZE) $(OPERATOR_SDK)
 	$(OPERATOR_SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS)
 	$(OPERATOR_SDK) bundle validate ./bundle
 
 # Build the bundle image.
