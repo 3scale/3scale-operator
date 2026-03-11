@@ -6,7 +6,6 @@ import (
 	"log"
 	"regexp"
 	"strconv"
-	"time"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -358,7 +357,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Requeue if any of the system-app Deployment's components aren't ready
 	if !systemComponentsReady {
-		return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+		return reconcile.Result{Requeue: true}, nil
 	}
 
 	return reconcile.Result{}, nil
