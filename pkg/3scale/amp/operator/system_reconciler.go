@@ -6,6 +6,7 @@ import (
 	"log"
 	"regexp"
 	"strconv"
+	"time"
 
 	"gopkg.in/yaml.v2"
 
@@ -379,7 +380,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Requeue if any of the system-app Deployment's components aren't ready
 	if !systemComponentsReady {
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 	}
 
 	return reconcile.Result{}, nil
