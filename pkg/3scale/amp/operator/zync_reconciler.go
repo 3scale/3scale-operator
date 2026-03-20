@@ -23,6 +23,27 @@ func NewZyncReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconci
 	}
 }
 
+func (r *ZyncReconciler) ReconcileBeforeSystemApp() (reconcile.Result, error) {
+	if !r.ZyncEnabled {
+		return reconcile.Result{}, nil
+	}
+
+	zync, err := Zync(r.apiManager, r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Zync Secret
+	// This needs to be reconciled before system app as that's where system app
+	// reads the token to reach out to zync-que from
+	err = r.ReconcileSecret(zync.Secret(), reconcilers.DefaultsOnlySecretMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
 func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	ampImages, err := AmpImages(r.apiManager)
 	if err != nil {
@@ -151,12 +172,6 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-	}
-
-	// Zync Secret
-	err = r.ReconcileSecret(zync.Secret(), reconcilers.DefaultsOnlySecretMutator)
-	if err != nil {
-		return reconcile.Result{}, err
 	}
 
 	// Zync PDB
