@@ -150,11 +150,7 @@ func getTestTolerations(prefix string) []v1.Toleration {
 }
 
 // setupTestReconciler creates a SystemReconciler with the provided objects for testing
-func setupTestBaseReconciler(ctx context.Context, s *runtime.Scheme, apimanager *appsv1alpha1.APIManager, objs []runtime.Object) (*BaseAPIManagerLogicReconciler, k8sclient.Client) {
-	cl := fake.NewClientBuilder().
-		WithScheme(s).
-		WithRuntimeObjects(objs...).
-		Build()
+func setupTestBaseReconcilerWithClient(ctx context.Context, s *runtime.Scheme, apimanager *appsv1alpha1.APIManager, cl k8sclient.Client, objs []runtime.Object) *BaseAPIManagerLogicReconciler {
 	clientAPIReader := fake.NewClientBuilder().
 		WithScheme(s).
 		WithRuntimeObjects(objs...).
@@ -164,9 +160,15 @@ func setupTestBaseReconciler(ctx context.Context, s *runtime.Scheme, apimanager 
 	log := logf.Log.WithName("operator_test")
 
 	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
-	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
+	return NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
+}
 
-	return baseAPIManagerLogicReconciler, cl
+func setupTestBaseReconciler(ctx context.Context, s *runtime.Scheme, apimanager *appsv1alpha1.APIManager, objs []runtime.Object) (*BaseAPIManagerLogicReconciler, k8sclient.Client) {
+	cl := fake.NewClientBuilder().
+		WithScheme(s).
+		WithRuntimeObjects(objs...).
+		Build()
+	return setupTestBaseReconcilerWithClient(ctx, s, apimanager, cl, objs), cl
 }
 
 // Generic test helpers - reusable across all reconciler tests

@@ -9,13 +9,14 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/google/go-cmp/cmp"
-	appsv1 "github.com/openshift/api/apps/v1"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 
 	k8sappsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -88,12 +89,6 @@ func TestSystemReconciler_ReconcileCreatesResources(t *testing.T) {
 func TestSystemReconciler_Replicas(t *testing.T) {
 	const namespace = "operator-unittest"
 	ctx := context.TODO()
-
-	// 3scale 2.14 -> 2.15
-	err = appsv1.Install(s)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	cases := []struct {
 		testName                 string
@@ -1678,6 +1673,98 @@ func createSystemAppDeployment(namespace, image string, revision int64, replicas
 	return deployment
 }
 
+// TestReconcileSystemAppHookJob_StaleCacheNoDuplication verifies behavior when
+// the informer cache hasn't caught up after recreateSystemAppHookJob: Get returns
+// NotFound (stale cache) but the job already exists on the API server, so Create
+// returns AlreadyExists. This documents that the code surfaces an error (triggering
+// controller-runtime's backoff requeue) rather than silently creating a duplicate.
+func TestReconcileSystemAppHookJob_StaleCacheNoDuplication(t *testing.T) {
+	const testNamespace = "operator-unittest"
+	ctx := context.TODO()
+
+	tests := []struct {
+		name           string
+		existingJob    *batchv1.Job
+		desiredJobRev  int64
+		expectedError  func(error) bool
+		validateResult func(t *testing.T, cl k8sclient.Client)
+	}{
+		{
+			name:          "stale cache - job exists on API server but cache returns NotFound",
+			existingJob:   createCompletedJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL(), 1),
+			desiredJobRev: 1,
+			expectedError: k8serr.IsAlreadyExists,
+			validateResult: func(t *testing.T, cl k8sclient.Client) {
+				// Verify no duplication — exactly one job with this name
+				jobList := &batchv1.JobList{}
+				if err := cl.List(ctx, jobList, k8sclient.InNamespace(testNamespace)); err != nil {
+					t.Fatalf("failed to list jobs: %v", err)
+				}
+				jobCount := 0
+				for _, j := range jobList.Items {
+					if j.Name == component.SystemAppPreHookJobName {
+						jobCount++
+					}
+				}
+				if jobCount != 1 {
+					t.Errorf("expected exactly 1 job named %s, found %d", component.SystemAppPreHookJobName, jobCount)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			apimanager := createSystemAPIManager(nil, nil)
+			objs := []runtime.Object{
+				apimanager,
+				createSystemDBSecret(testNamespace),
+				createSystemRedisSecret(testNamespace),
+			}
+
+			if tt.existingJob != nil {
+				objs = append(objs, tt.existingJob)
+			}
+
+			s := setupScheme(t)
+			realClient := fake.NewClientBuilder().WithScheme(s).WithRuntimeObjects(objs...).Build()
+
+			// Wrap with interceptor: Get returns NotFound for the hook job
+			// (simulates stale informer cache), but Create passes through to
+			// the real store (simulates writes going directly to the API server)
+			staleCacheClient := interceptor.NewClient(realClient, interceptor.Funcs{
+				Get: func(ctx context.Context, client k8sclient.WithWatch, key k8sclient.ObjectKey, obj k8sclient.Object, opts ...k8sclient.GetOption) error {
+					if _, isJob := obj.(*batchv1.Job); isJob && key.Name == component.SystemAppPreHookJobName {
+						return k8serr.NewNotFound(batchv1.Resource("jobs"), key.Name)
+					}
+					return client.Get(ctx, key, obj, opts...)
+				},
+			})
+
+			baseLogicReconciler := setupTestBaseReconcilerWithClient(ctx, s, apimanager, staleCacheClient, objs)
+			reconciler := NewSystemReconciler(baseLogicReconciler)
+
+			desiredJob := createJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL())
+			_, err := reconciler.ReconcileSystemAppHookJob(desiredJob, tt.desiredJobRev)
+
+			if tt.expectedError != nil {
+				if err == nil {
+					t.Fatal("expected error but got nil")
+				}
+				if !tt.expectedError(err) {
+					t.Fatalf("unexpected error type: %v", err)
+				}
+			} else if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if tt.validateResult != nil {
+				tt.validateResult(t, realClient)
+			}
+		})
+	}
+}
+
 // TestReconcileSystemAppHookJob_JobCreation tests job creation scenarios
 func TestReconcileSystemAppHookJob_JobCreation(t *testing.T) {
 	const testNamespace = "operator-unittest"
@@ -1806,7 +1893,6 @@ func TestReconcileSystemAppHookJob_JobCreation(t *testing.T) {
 			// Create desired job with specified revision
 			desiredJob := createJob(component.SystemAppPreHookJobName, testNamespace, SystemImageURL())
 			result, err := reconciler.ReconcileSystemAppHookJob(desiredJob, tt.desiredJobRev)
-
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}

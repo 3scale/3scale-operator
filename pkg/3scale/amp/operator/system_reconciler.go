@@ -460,7 +460,7 @@ func (r *SystemReconciler) recreateSystemAppHookJob(desired *batchv1.Job) (recon
 		return reconcile.Result{}, err
 	}
 	// Reason to requeue here is because the state of the hook job is investigated during SystemReconciler logic
-	// State of the new job will only be known once watch events are propagated, which requires requeue
+	// Client cache will be updated once watch events are propagated - 5s requeue is a good estimate for that
 	// RequeueAfter instead of regular Requeue - to bypass backoff
 	return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
 }
