@@ -184,7 +184,6 @@ jobs:
           images: ${{ env.IMG_REGISTRY_HOST }}/${{ env.IMG_REGISTRY_ORG }}/${{ env.OPERATOR_NAME }}-catalog
           tags: |
             type=raw,value=${{ env.IMG_TAGS }}
-            type=raw,value=${{ github.sha }},enable={{is_default_branch}}
       - name: Build and Push Catalog Image
         id: build-catalog-image
         run:
