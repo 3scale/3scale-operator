@@ -3,7 +3,7 @@
   <dependencies>
           <dependency>
         <packageName>filippo.io/edwards25519</packageName>
-        <version>v1.1.0</version>
+        <version>v1.1.1</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -13,7 +13,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/3scale/3scale-porta-go-client</packageName>
-        <version>v0.11.1-0.20250124150520-23225e662421</version>
+        <version>v0.12.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -28,16 +28,6 @@
                       <license>
               <name>Apache 2.0</name>
               <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>github.com/antlr/antlr4/runtime/Go/antlr/v4</packageName>
-        <version>v4.0.0-20230305170008-8188dc5388df</version>
-        <licenses>
-                      <license>
-              <name>New BSD</name>
-              <url>http://opensource.org/licenses/BSD-3-Clause</url>
             </license>
                   </licenses>
       </dependency>
@@ -272,16 +262,6 @@
                   </licenses>
       </dependency>
           <dependency>
-        <packageName>github.com/google/cel-go</packageName>
-        <version>v0.17.7</version>
-        <licenses>
-                      <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
         <packageName>github.com/google/gnostic-models</packageName>
         <version>v0.6.8</version>
         <licenses>
@@ -348,26 +328,6 @@
                       <license>
               <name>Apache 2.0</name>
               <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>github.com/h2non/filetype</packageName>
-        <version>v1.1.1</version>
-        <licenses>
-                      <license>
-              <name>MIT</name>
-              <url>http://opensource.org/licenses/mit-license</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>github.com/h2non/go-is-svg</packageName>
-        <version>v0.0.0-20160927212452-35e8c4b0612c</version>
-        <licenses>
-                      <license>
-              <name>MIT</name>
-              <url>http://opensource.org/licenses/mit-license</url>
             </license>
                   </licenses>
       </dependency>
@@ -542,16 +502,6 @@
                   </licenses>
       </dependency>
           <dependency>
-        <packageName>github.com/onsi/gomega</packageName>
-        <version>v1.34.1</version>
-        <licenses>
-                      <license>
-              <name>MIT</name>
-              <url>http://opensource.org/licenses/mit-license</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
         <packageName>github.com/openshift/api</packageName>
         <version>v0.0.0-20210831091943-07e756545ac1</version>
         <licenses>
@@ -564,16 +514,6 @@
           <dependency>
         <packageName>github.com/operator-framework/api</packageName>
         <version>v0.17.5</version>
-        <licenses>
-                      <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>github.com/operator-framework/operator-registry</packageName>
-        <version>v1.28.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -667,7 +607,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/sirupsen/logrus</packageName>
-        <version>v1.9.2</version>
+        <version>v1.9.3</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -728,16 +668,6 @@
           <dependency>
         <packageName>github.com/spf13/viper</packageName>
         <version>v1.7.0</version>
-        <licenses>
-                      <license>
-              <name>MIT</name>
-              <url>http://opensource.org/licenses/mit-license</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>github.com/stoewer/go-strcase</packageName>
-        <version>v1.2.0</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -878,36 +808,6 @@
           <dependency>
         <packageName>gomodules.xyz/jsonpatch/v2</packageName>
         <version>v2.4.0</version>
-        <licenses>
-                      <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>google.golang.org/genproto/googleapis/api</packageName>
-        <version>v0.0.0-20230726155614-23370e0ffb3e</version>
-        <licenses>
-                      <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>google.golang.org/genproto/googleapis/rpc</packageName>
-        <version>v0.0.0-20230822172742-b8732ec3820d</version>
-        <licenses>
-                      <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>google.golang.org/grpc</packageName>
-        <version>v1.58.3</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
