@@ -11,9 +11,10 @@ import (
 	"strings"
 
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
-	"github.com/operator-framework/operator-registry/pkg/registry"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -124,7 +125,7 @@ func getCSVfromCM(resourceStr string) (*operatorsv1alpha1.ClusterServiceVersion,
 
 	// Decode the manifest
 	reader := strings.NewReader(resourceStr)
-	resource, decodeErr := registry.DecodeUnstructured(reader)
+	resource, decodeErr := DecodeUnstructured(reader)
 	if decodeErr != nil {
 		return csv, decodeErr
 	}
@@ -249,4 +250,18 @@ func ForEmbedded(installPlan *operatorsv1alpha1.InstallPlan) CSVLocator {
 	}
 
 	return nil
+}
+
+// DecodeUnstructured decodes a raw stream into a an
+// unstructured.Unstructured instance.
+func DecodeUnstructured(reader io.Reader) (obj *unstructured.Unstructured, err error) {
+	decoder := yaml.NewYAMLOrJSONDecoder(reader, 30)
+
+	t := &unstructured.Unstructured{}
+	if err = decoder.Decode(t); err != nil {
+		return
+	}
+
+	obj = t
+	return
 }
