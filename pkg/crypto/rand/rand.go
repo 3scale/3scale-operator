@@ -37,3 +37,16 @@ func StringWithCharset(length int, charset string) string {
 
 	return string(result)
 }
+
+// GenerateRandomPasswordHash generates a hash of a random ASCII password
+// 5char-5char-5char-5char
+// Inspired from openshift/installer https://github.com/openshift/installer/blob/master/pkg/asset/password/password.go
+func GenerateRandomPasswordHash() string {
+	password := StringWithCharset(23, alphanumericCharset)
+	pw := []rune(password)
+	for _, replace := range []int{5, 11, 17} {
+		pw[replace] = '-'
+	}
+
+	return string(pw)
+}

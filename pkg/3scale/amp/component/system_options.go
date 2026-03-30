@@ -137,7 +137,7 @@ func DefaultRecaptchaPrivatekey() string {
 }
 
 func DefaultBackendSharedSecret() string {
-	return oprand.String(8)
+	return oprand.String(16)
 }
 
 func DefaultEventHooksURL() string {
@@ -163,7 +163,7 @@ func DefaultSystemMasterUsername() string {
 }
 
 func DefaultSystemMasterPassword() string {
-	return oprand.String(8)
+	return oprand.GenerateRandomPasswordHash()
 }
 
 func DefaultSystemAdminUsername() string {
@@ -171,7 +171,7 @@ func DefaultSystemAdminUsername() string {
 }
 
 func DefaultSystemAdminPassword() string {
-	return oprand.String(8)
+	return oprand.GenerateRandomPasswordHash()
 }
 
 func DefaultSystemAdminAccessToken() string {
