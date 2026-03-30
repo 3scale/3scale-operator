@@ -2,6 +2,7 @@ package component
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strconv"
 
@@ -147,6 +148,10 @@ const (
 	backendRedisPrivateKeyPath = "/tls/backend-redis/backend-redis-private.key"
 
 	SystemRedisSecretResverAnnotation = "apimanager.apps.3scale.net/system-redis-secret-resource-version"
+)
+
+const (
+	SystemAppRevisionAnnotation = "apimanager.apps.3scale.net/system-app-deployment-revision"
 )
 
 type System struct {
@@ -884,7 +889,7 @@ func (system *System) AppDeployment(ctx context.Context, k8sclient client.Client
 	}, nil
 }
 
-func (system *System) AppPreHookJob(containerImage string, namespace string, currentSystemAppRevision int64) *batchv1.Job {
+func (system *System) AppPreHookJob(containerImage string, namespace string) *batchv1.Job {
 	var completions int32 = 1
 
 	return &batchv1.Job{
@@ -896,9 +901,6 @@ func (system *System) AppPreHookJob(containerImage string, namespace string, cur
 			Name:      SystemAppPreHookJobName,
 			Namespace: namespace,
 			Labels:    system.Options.CommonAppLabels,
-			Annotations: map[string]string{
-				helper.SystemAppRevisionAnnotation: strconv.FormatInt(currentSystemAppRevision, 10),
-			},
 		},
 		Spec: batchv1.JobSpec{
 			Completions: &completions,
@@ -926,7 +928,7 @@ func (system *System) AppPreHookJob(containerImage string, namespace string, cur
 	}
 }
 
-func (system *System) AppPostHookJob(containerImage string, namespace string, currentSystemAppRevision int64) *batchv1.Job {
+func (system *System) AppPostHookJob(containerImage string, namespace string) *batchv1.Job {
 	var completions int32 = 1
 
 	return &batchv1.Job{
@@ -938,9 +940,6 @@ func (system *System) AppPostHookJob(containerImage string, namespace string, cu
 			Name:      SystemAppPostHookJobName,
 			Namespace: namespace,
 			Labels:    system.Options.CommonAppLabels,
-			Annotations: map[string]string{
-				helper.SystemAppRevisionAnnotation: strconv.FormatInt(currentSystemAppRevision, 10),
-			},
 		},
 		Spec: batchv1.JobSpec{
 			Completions: &completions,
@@ -1745,4 +1744,33 @@ func (system *System) backendRedisTlsVolumeMount() v1.VolumeMount {
 		ReadOnly:  false,
 		MountPath: "/tls/backend-redis",
 	}
+}
+
+func SetSystemAppHookRevision(job *batchv1.Job, currentSystemAppRevision int64) {
+	annotations := job.GetAnnotations()
+	if annotations == nil {
+		annotations = map[string]string{}
+		job.SetAnnotations(annotations)
+	}
+	annotations[SystemAppRevisionAnnotation] = strconv.FormatInt(currentSystemAppRevision, 10)
+}
+
+// ParseSystemAppHookRevision returns deployment version annotation from given job or -1 if annotation does not exist
+func ParseSystemAppHookRevision(job *batchv1.Job) (int64, error) {
+	annotations := job.GetAnnotations()
+	if annotations == nil {
+		return -1, nil
+	}
+
+	revisionStr, ok := annotations[SystemAppRevisionAnnotation]
+	if !ok {
+		return -1, nil
+	}
+
+	// Parse the revision from job annotations
+	revision, err := strconv.ParseInt(revisionStr, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse revision from job %s annotations: %w", job.GetName(), err)
+	}
+	return revision, nil
 }
