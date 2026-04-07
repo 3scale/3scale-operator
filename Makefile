@@ -101,10 +101,10 @@ PROMETHEUS_RULES_NAMESPACE ?= "__NAMESPACE__"
 all: manager
 
 # Run all tests
-test: test-unit test-e2e test-crds test-manifests-version
+test: test-unit test-integration test-e2e test-crds test-manifests-version
 
 # Run unit tests
-TEST_UNIT_PKGS = $(shell $(GO) list ./... | grep -E 'github.com/3scale/3scale-operator/pkg|github.com/3scale/3scale-operator/apis|github.com/3scale/3scale-operator/test/unitcontrollers|github.com/3scale/3scale-operator/controllers/capabilities')
+TEST_UNIT_PKGS = $(shell $(GO) list ./... | grep -Ev 'github.com/3scale/3scale-operator/test/(e2e|integration|crds|manifests-version)')
 TEST_UNIT_COVERPKGS = $(shell $(GO) list ./... | grep -v github.com/3scale/3scale-operator/test | tr "\n" ",") # Exclude test directories as coverpkg does not accept only-tests packages
 test-unit: clean-cov generate fmt vet manifests
 	mkdir -p "$(PROJECT_PATH)/_output"
@@ -123,12 +123,16 @@ test-manifests-version:
 	$(GO) test -v $(TEST_MANIFESTS_VERSION_PKGS)
 
 # Run e2e tests
-TEST_E2E_PKGS_APPS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/controllers/apps')
-TEST_E2E_PKGS_CAPABILITIES = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/controllers/capabilities')
-test-e2e: generate fmt vet manifests setup-envtest
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" USE_EXISTING_CLUSTER=true $(GO) test $(TEST_E2E_PKGS_APPS) -coverprofile cover.out -ginkgo.v -v -timeout 0
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" USE_EXISTING_CLUSTER=true $(GO) test $(TEST_E2E_PKGS_CAPABILITIES) -coverprofile cover.out -v -timeout 0
+TEST_E2E_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/e2e')
+.PHONY: test-e2e
+test-e2e:
+	$(GO) test $(TEST_E2E_PKGS) -ginkgo.v -v -timeout 0
 
+# Run integration tests
+TEST_INTEGRATION_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/integration')
+.PHONY: test-integration
+test-integration: generate fmt vet manifests setup-envtest
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" USE_EXISTING_CLUSTER=true $(GO) test $(TEST_INTEGRATION_PKGS) -coverprofile cover.out -ginkgo.v -v -timeout 0
 
 # Build manager binary
 manager: generate fmt vet

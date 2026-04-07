@@ -1,4 +1,4 @@
-package controllers
+package integration
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 
 	"github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	controllers "github.com/3scale/3scale-operator/controllers/apps"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/google/uuid"
@@ -975,7 +976,7 @@ func waitForAPIManagerLabels(namespace string, retryInterval time.Duration, time
 		}
 
 		expectedLabels := map[string]string{
-			fmt.Sprintf("%s%s", APImanagerSecretLabelPrefix, string(customEnvSecret.GetUID())): "true",
+			fmt.Sprintf("%s%s", controllers.APImanagerSecretLabelPrefix, string(customEnvSecret.GetUID())): "true",
 		}
 
 		// Then verify that the hash matches the hashed config secret

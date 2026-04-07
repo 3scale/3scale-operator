@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package integration
 
 import (
 	"context"
@@ -37,6 +37,7 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	controllers "github.com/3scale/3scale-operator/controllers/apps"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	configv1 "github.com/openshift/api/config/v1"
@@ -125,7 +126,7 @@ var _ = BeforeSuite(func() {
 	discoveryClientAPIManager, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&APIManagerReconciler{
+	err = (&controllers.APIManagerReconciler{
 		BaseReconciler: reconcilers.NewBaseReconciler(
 			context.Background(),
 			mgr.GetClient(),
