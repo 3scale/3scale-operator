@@ -157,7 +157,7 @@ make test-unit
 Access to a Openshift v4.8.0+ cluster required
 
 ```sh
-WATCH_NAMESPACE=3scale-test make test-e2e
+WATCH_NAMESPACE=3scale-test make test-integration
 ```
 Note that the value of the WATCH_NAMESPACE is irrelevant but required. E2E test will create an new namespace regardless of the value of WATCH_NAMESPACE 
 
