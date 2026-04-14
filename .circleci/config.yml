@@ -1,0 +1,15 @@
+---
+version: 2.1
+
+jobs:
+  noop:
+    docker:
+      - image: alpine:latest
+    steps:
+      - run: echo "noop"
+
+workflows:
+  version: 2
+  noop:
+    jobs:
+      - noop
