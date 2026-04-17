@@ -1025,7 +1025,7 @@ spec:
 ```
 The operator will remove zync deployment, routes it previously created and all other associated with the deployment resources.
 If you wish to have zync re-enabled, change the value of the flag to "true".
-Note, that APIManager requires at minimum 5 basic routes to be available to report it's status as "available=true".
+Note, that when Zync is enabled the APIManager requires the Backend Listener route plus 5 Zync-managed routes to be admitted for the `RoutesReady` condition to become `True` (which is required for `Available=True`).
 After re-enabling zync, it's up to you to re-sync routes to have them re-created. This can be achieved by running following command against sidekiq deployment:
 ```
 oc rsh $(oc get pods -l 'deployment=system-sidekiq' -o json | jq '.items[0].metadata.name' -r) bash -c 'bundle exec rake zync:resync:domains'
