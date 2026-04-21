@@ -190,6 +190,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 			reconcilers.DeploymentPriorityClassMutator,
 			reconcilers.DeploymentTopologySpreadConstraintsMutator,
 			reconcilers.DeploymentPodTemplateAnnotationsMutator,
+			reconcilers.DeploymentProbesMutator,
 			r.systemAppDeploymentResourceMutator,
 			reconcilers.DeploymentPodInitContainerMutator,
 			reconcilers.DeploymentRemoveDuplicateEnvVarMutator,

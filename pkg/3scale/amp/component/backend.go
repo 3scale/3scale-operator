@@ -324,10 +324,6 @@ func (backend *Backend) ListenerDeployment(ctx context.Context, k8sclient client
 									},
 								},
 								InitialDelaySeconds: 30,
-								TimeoutSeconds:      0,
-								PeriodSeconds:       10,
-								SuccessThreshold:    0,
-								FailureThreshold:    0,
 							},
 							ReadinessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
@@ -341,9 +337,6 @@ func (backend *Backend) ListenerDeployment(ctx context.Context, k8sclient client
 								},
 								InitialDelaySeconds: 30,
 								TimeoutSeconds:      5,
-								PeriodSeconds:       0,
-								SuccessThreshold:    0,
-								FailureThreshold:    0,
 							},
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
