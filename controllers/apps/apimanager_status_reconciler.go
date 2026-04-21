@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	subController "github.com/3scale/3scale-operator/controllers/subscription"
@@ -49,16 +50,15 @@ func (s *APIManagerStatusReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, fmt.Errorf("failed to calculate status: %w", err)
 	}
 
-	// Read availability from the newly computed status, not the stale pre-reconcile snapshot.
-	// Using old status caused a True-to-False requeue gap: old=Available=True would suppress
-	// the requeue even after writing Available=False to the API server (THREESCALE-10754).
 	newAvailable := newStatus.Conditions.IsTrueFor(appsv1alpha1.APIManagerAvailableConditionType)
 
 	equalStatus := s.apimanagerResource.Status.Equals(newStatus, s.logger)
 	s.logger.V(1).Info("Status", "status is different", !equalStatus)
-	if equalStatus && newAvailable {
-		// Steady state
+	if equalStatus {
 		s.logger.V(1).Info("Status was not updated")
+		if !newAvailable {
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+		}
 		return reconcile.Result{}, nil
 	}
 
@@ -75,9 +75,8 @@ func (s *APIManagerStatusReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	if !newAvailable {
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 	}
-
 	return reconcile.Result{}, nil
 }
 

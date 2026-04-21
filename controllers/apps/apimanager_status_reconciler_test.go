@@ -174,11 +174,15 @@ func getRequiredSecrets(namespace string) []runtime.Object {
 	}
 }
 
-// makeAdmittedRoute returns a Route with the Admitted condition set to True.
+// makeAdmittedRoute returns a Route with the Admitted condition set to True and the Zync created-by label.
 func makeAdmittedRoute(name, namespace, host string) *routev1.Route {
 	return &routev1.Route{
-		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
-		Spec:       routev1.RouteSpec{Host: host},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    map[string]string{zyncCreatedByLabel: zyncCreatedByValue},
+		},
+		Spec: routev1.RouteSpec{Host: host},
 		Status: routev1.RouteStatus{
 			Ingress: []routev1.RouteIngress{
 				{Conditions: []routev1.RouteIngressCondition{
@@ -609,10 +613,11 @@ func TestAPIManagerStatusReconciler_Reconcile_statusConditions(t *testing.T) {
 	}
 }
 
-// TestAPIManagerStatusReconciler_Reconcile_requeueOnTrueToFalseTransition is a regression
-// test for the stale-read requeue bug: when Available transitions from True to False the
-// reconciler must requeue, not settle silently at Available=False.
-func TestAPIManagerStatusReconciler_Reconcile_requeueOnTrueToFalseTransition(t *testing.T) {
+// TestAPIManagerStatusReconciler_Reconcile_requeueAfterWhenUnavailable verifies that when
+// Available is False the reconciler schedules a RequeueAfter (not Requeue, which would feed
+// the rate limiter) so the system periodically re-checks availability as a safety net for
+// missed watch events.
+func TestAPIManagerStatusReconciler_Reconcile_requeueAfterWhenUnavailable(t *testing.T) {
 	namespace := "test-namespace"
 	t.Setenv("PREFLIGHT_CHECKS_BYPASS", "true")
 
@@ -640,7 +645,10 @@ func TestAPIManagerStatusReconciler_Reconcile_requeueOnTrueToFalseTransition(t *
 	if err != nil {
 		t.Fatalf("Reconcile() unexpected error: %v", err)
 	}
-	if !result.Requeue {
-		t.Errorf("Reconcile() Requeue = false, want true on Available True-to-False transition")
+	if result.Requeue {
+		t.Errorf("Reconcile() Requeue = true, want false (must not feed rate limiter)")
+	}
+	if result.RequeueAfter == 0 {
+		t.Errorf("Reconcile() RequeueAfter = 0, want non-zero when Available is False")
 	}
 }

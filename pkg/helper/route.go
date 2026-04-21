@@ -12,9 +12,10 @@ import (
 )
 
 // ListRoutes returns the routes in the given namespace, sorted by name.
-func ListRoutes(k8sclient client.Client, namespace string) ([]routev1.Route, error) {
+func ListRoutes(k8sclient client.Client, namespace string, opts ...client.ListOption) ([]routev1.Route, error) {
 	routeList := &routev1.RouteList{}
-	err := k8sclient.List(context.TODO(), routeList, client.InNamespace(namespace))
+	listOpts := append([]client.ListOption{client.InNamespace(namespace)}, opts...)
+	err := k8sclient.List(context.TODO(), routeList, listOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list routes: %w", err)
 	}
