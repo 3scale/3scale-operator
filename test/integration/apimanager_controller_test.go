@@ -211,6 +211,8 @@ var _ = Describe("APIManager controller", func() {
 			waitForAPIManagerAvailableCondition(5*time.Second, 15*time.Minute, apimanager, GinkgoWriter)
 			fmt.Fprintf(GinkgoWriter, "APIManager 'Available' condition is true\n")
 
+			triggerSyntheticDeploymentUpdate(testNamespace, GinkgoWriter)
+			verifyNoDeploymentUpdates(apimanager.Namespace, apimanager.Name, GinkgoWriter)
 			elapsed := time.Since(start)
 			fmt.Fprintf(GinkgoWriter, "APIManager creation and availability took '%s'\n", elapsed)
 		})
@@ -1051,6 +1053,36 @@ func testCustomEnvironmentContent() string {
       port = { metrics = 9421 },
     }
 `
+}
+
+// triggerSyntheticDeploymentUpdate patches a monitored deployment with a dummy
+// image tag, then waits for the operator to reconcile it back. This guarantees
+// at least one Deployment UPDATE in the ReconcileCounter, proving the counter
+// is wired correctly and not silently counting nothing.
+func triggerSyntheticDeploymentUpdate(namespace string, w io.Writer) {
+	const deploymentName = "system-memcache"
+
+	dep := &appsv1.Deployment{}
+	Expect(testK8sClient.Get(context.Background(),
+		types.NamespacedName{Name: deploymentName, Namespace: namespace}, dep)).To(Succeed())
+
+	originalImage := dep.Spec.Template.Spec.Containers[0].Image
+	dep.Spec.Template.Spec.Containers[0].Image = originalImage + "-synthetic-test-trigger"
+	Expect(testK8sClient.Update(context.Background(), dep)).To(Succeed())
+	fmt.Fprintf(w, "Synthetic image change applied to %s; waiting for operator to reconcile back\n", deploymentName)
+
+	// Use testK8sAPIClient (direct API server read) to avoid the cached client
+	// returning the pre-update image before the operator has processed the change.
+	Eventually(func() bool {
+		d := &appsv1.Deployment{}
+		if err := testK8sAPIClient.Get(context.Background(),
+			types.NamespacedName{Name: deploymentName, Namespace: namespace}, d); err != nil {
+			return false
+		}
+		return d.Spec.Template.Spec.Containers[0].Image == originalImage
+	}, 2*time.Minute, 2*time.Second).Should(BeTrue(),
+		fmt.Sprintf("operator did not revert synthetic image change on %s within 2 minutes", deploymentName))
+	fmt.Fprintf(w, "Operator reconciled %s back to desired image\n", deploymentName)
 }
 
 func testGetCustomEnvironmentSecret(namespace string) *corev1.Secret {

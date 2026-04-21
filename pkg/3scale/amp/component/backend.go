@@ -15,6 +15,7 @@ import (
 	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -130,33 +131,43 @@ func (backend *Backend) WorkerDeployment(ctx context.Context, k8sclient client.C
 					Annotations: deploymentAnnotations,
 				},
 				Spec: v1.PodSpec{
-					Affinity:    backend.Options.WorkerAffinity,
-					Tolerations: backend.Options.WorkerTolerations,
-					Volumes:     backend.backendVolumes(),
+					Affinity:                      backend.Options.WorkerAffinity,
+					Tolerations:                   backend.Options.WorkerTolerations,
+					RestartPolicy:                 v1.RestartPolicyAlways,
+					DNSPolicy:                     v1.DNSClusterFirst,
+					SecurityContext:               &v1.PodSecurityContext{},
+					TerminationGracePeriodSeconds: ptr.To(int64(v1.DefaultTerminationGracePeriodSeconds)),
+					SchedulerName:                 v1.DefaultSchedulerName,
+					Volumes:                       backend.backendVolumes(),
 					InitContainers: []v1.Container{
 						{
-							Name:  "backend-redis-svc",
-							Image: containerImage,
+							Name:            "backend-redis-svc",
+							Image:           containerImage,
+							ImagePullPolicy: v1.PullIfNotPresent,
 							Command: []string{
 								"/opt/app/entrypoint.sh",
 								"sh",
 								"-c",
 								"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
 							},
-							VolumeMounts: backend.backendContainerVolumeMounts(),
-							Env:          append(backend.buildBackendCommonEnv(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
+							VolumeMounts:             backend.backendContainerVolumeMounts(),
+							Env:                      append(backend.buildBackendCommonEnv(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
+							TerminationMessagePath:   v1.TerminationMessagePathDefault,
+							TerminationMessagePolicy: v1.TerminationMessageReadFile,
 						},
 					},
 					Containers: []v1.Container{
 						{
-							Name:            BackendWorkerName,
-							Image:           containerImage,
-							Args:            []string{"bin/3scale_backend_worker", "run"},
-							Env:             backend.buildBackendWorkerEnv(),
-							Resources:       backend.Options.WorkerResourceRequirements,
-							VolumeMounts:    backend.backendContainerVolumeMounts(),
-							ImagePullPolicy: v1.PullIfNotPresent,
-							Ports:           backend.workerPorts(),
+							Name:                     BackendWorkerName,
+							Image:                    containerImage,
+							Args:                     []string{"bin/3scale_backend_worker", "run"},
+							Env:                      backend.buildBackendWorkerEnv(),
+							Resources:                backend.Options.WorkerResourceRequirements,
+							VolumeMounts:             backend.backendContainerVolumeMounts(),
+							ImagePullPolicy:          v1.PullIfNotPresent,
+							Ports:                    backend.workerPorts(),
+							TerminationMessagePath:   v1.TerminationMessagePathDefault,
+							TerminationMessagePolicy: v1.TerminationMessageReadFile,
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									HTTPGet: &v1.HTTPGetAction{
@@ -222,32 +233,42 @@ func (backend *Backend) CronDeployment(ctx context.Context, k8sclient client.Cli
 					Annotations: deploymentAnnotations,
 				},
 				Spec: v1.PodSpec{
-					Affinity:    backend.Options.CronAffinity,
-					Tolerations: backend.Options.CronTolerations,
-					Volumes:     backend.backendVolumes(),
+					Affinity:                      backend.Options.CronAffinity,
+					Tolerations:                   backend.Options.CronTolerations,
+					RestartPolicy:                 v1.RestartPolicyAlways,
+					DNSPolicy:                     v1.DNSClusterFirst,
+					SecurityContext:               &v1.PodSecurityContext{},
+					TerminationGracePeriodSeconds: ptr.To(int64(v1.DefaultTerminationGracePeriodSeconds)),
+					SchedulerName:                 v1.DefaultSchedulerName,
+					Volumes:                       backend.backendVolumes(),
 					InitContainers: []v1.Container{
 						{
-							Name:  "backend-redis-svc",
-							Image: containerImage,
+							Name:            "backend-redis-svc",
+							Image:           containerImage,
+							ImagePullPolicy: v1.PullIfNotPresent,
 							Command: []string{
 								"/opt/app/entrypoint.sh",
 								"sh",
 								"-c",
 								"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
 							},
-							VolumeMounts: backend.backendContainerVolumeMounts(),
-							Env:          append(backend.buildBackendCommonEnv(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
+							VolumeMounts:             backend.backendContainerVolumeMounts(),
+							Env:                      append(backend.buildBackendCommonEnv(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
+							TerminationMessagePath:   v1.TerminationMessagePathDefault,
+							TerminationMessagePolicy: v1.TerminationMessageReadFile,
 						},
 					},
 					Containers: []v1.Container{
 						{
-							Name:            "backend-cron",
-							Image:           containerImage,
-							Args:            []string{"touch /tmp/healthy && backend-cron"},
-							Env:             backend.buildBackendCronEnv(),
-							VolumeMounts:    backend.backendContainerVolumeMounts(),
-							Resources:       backend.Options.CronResourceRequirements,
-							ImagePullPolicy: v1.PullIfNotPresent,
+							Name:                     "backend-cron",
+							Image:                    containerImage,
+							Args:                     []string{"touch /tmp/healthy && backend-cron"},
+							Env:                      backend.buildBackendCronEnv(),
+							VolumeMounts:             backend.backendContainerVolumeMounts(),
+							Resources:                backend.Options.CronResourceRequirements,
+							ImagePullPolicy:          v1.PullIfNotPresent,
+							TerminationMessagePath:   v1.TerminationMessagePathDefault,
+							TerminationMessagePolicy: v1.TerminationMessageReadFile,
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									Exec: &v1.ExecAction{
@@ -256,6 +277,9 @@ func (backend *Backend) CronDeployment(ctx context.Context, k8sclient client.Cli
 								},
 								InitialDelaySeconds: 30,
 								PeriodSeconds:       5,
+								TimeoutSeconds:      1,
+								SuccessThreshold:    1,
+								FailureThreshold:    3,
 							},
 						},
 					},
@@ -308,18 +332,26 @@ func (backend *Backend) ListenerDeployment(ctx context.Context, k8sclient client
 					Annotations: deploymentAnnotations,
 				},
 				Spec: v1.PodSpec{
-					Affinity:    backend.Options.ListenerAffinity,
-					Tolerations: backend.Options.ListenerTolerations,
-					Volumes:     backend.backendVolumes(),
+					Affinity:                      backend.Options.ListenerAffinity,
+					Tolerations:                   backend.Options.ListenerTolerations,
+					RestartPolicy:                 v1.RestartPolicyAlways,
+					DNSPolicy:                     v1.DNSClusterFirst,
+					SecurityContext:               &v1.PodSecurityContext{},
+					TerminationGracePeriodSeconds: ptr.To(int64(v1.DefaultTerminationGracePeriodSeconds)),
+					SchedulerName:                 v1.DefaultSchedulerName,
+					Volumes:                       backend.backendVolumes(),
 					Containers: []v1.Container{
 						{
-							Name:         BackendListenerName,
-							Image:        containerImage,
-							Args:         backend.backendListenerRunArgs(),
-							Ports:        backend.listenerPorts(),
-							Env:          backend.buildBackendListenerEnv(),
-							Resources:    backend.Options.ListenerResourceRequirements,
-							VolumeMounts: backend.backendContainerVolumeMounts(),
+							Name:                     BackendListenerName,
+							Image:                    containerImage,
+							ImagePullPolicy:          v1.PullIfNotPresent,
+							Args:                     backend.backendListenerRunArgs(),
+							Ports:                    backend.listenerPorts(),
+							Env:                      backend.buildBackendListenerEnv(),
+							Resources:                backend.Options.ListenerResourceRequirements,
+							VolumeMounts:             backend.backendContainerVolumeMounts(),
+							TerminationMessagePath:   v1.TerminationMessagePathDefault,
+							TerminationMessagePolicy: v1.TerminationMessageReadFile,
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
@@ -330,28 +362,25 @@ func (backend *Backend) ListenerDeployment(ctx context.Context, k8sclient client
 									},
 								},
 								InitialDelaySeconds: 30,
-								TimeoutSeconds:      0,
+								TimeoutSeconds:      1,
 								PeriodSeconds:       10,
-								SuccessThreshold:    0,
-								FailureThreshold:    0,
+								SuccessThreshold:    1,
+								FailureThreshold:    3,
 							},
 							ReadinessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									HTTPGet: &v1.HTTPGetAction{
-										Path: "/status",
-										Port: intstr.IntOrString{
-											Type:   intstr.Int,
-											IntVal: 3000,
-										},
+										Path:   "/status",
+										Port:   intstr.IntOrString{Type: intstr.Int, IntVal: 3000},
+										Scheme: v1.URISchemeHTTP,
 									},
 								},
 								InitialDelaySeconds: 30,
 								TimeoutSeconds:      5,
-								PeriodSeconds:       0,
-								SuccessThreshold:    0,
-								FailureThreshold:    0,
+								PeriodSeconds:       10,
+								SuccessThreshold:    1,
+								FailureThreshold:    3,
 							},
-							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
 					ServiceAccountName:        "amp",
@@ -668,7 +697,7 @@ func (backend *Backend) QueuesRedisTLSEnvVars() []v1.EnvVar {
 }
 
 func (backend *Backend) backendVolumes() []v1.Volume {
-	res := []v1.Volume{}
+	var res []v1.Volume
 	if backend.Options.BackendRedisTLS.Enabled {
 		items := []v1.KeyToPath{}
 		if backend.Options.BackendRedisTLS.HasCA() {
@@ -682,8 +711,9 @@ func (backend *Backend) backendVolumes() []v1.Volume {
 			Name: "backend-redis-tls",
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: BackendSecretBackendRedisSecretName,
-					Items:      items,
+					SecretName:  BackendSecretBackendRedisSecretName,
+					Items:       items,
+					DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 				},
 			},
 		}
@@ -703,8 +733,9 @@ func (backend *Backend) backendVolumes() []v1.Volume {
 			Name: "queues-redis-tls",
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: BackendSecretBackendRedisSecretName,
-					Items:      items,
+					SecretName:  BackendSecretBackendRedisSecretName,
+					Items:       items,
+					DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 				},
 			},
 		}
@@ -725,7 +756,7 @@ func (backend *Backend) backendListenerRunArgs() []string {
 }
 
 func (backend *Backend) backendContainerVolumeMounts() []v1.VolumeMount {
-	res := []v1.VolumeMount{}
+	var res []v1.VolumeMount
 	if backend.Options.BackendRedisTLS.Enabled {
 		res = append(res, backend.backendRedisContainerVolumeMounts())
 	}

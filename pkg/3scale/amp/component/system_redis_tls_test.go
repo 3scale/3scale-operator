@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/utils/ptr"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 )
@@ -187,6 +188,7 @@ func TestRedisTLSVolumes(t *testing.T) {
 							Items: []v1.KeyToPath{
 								{Key: "REDIS_SSL_CA", Path: "system-redis-ca.crt"},
 							},
+							DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 						},
 					},
 				},
@@ -210,6 +212,7 @@ func TestRedisTLSVolumes(t *testing.T) {
 							Items: []v1.KeyToPath{
 								{Key: "REDIS_SSL_CA", Path: "backend-redis-ca.crt"},
 							},
+							DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 						},
 					},
 				},
@@ -242,6 +245,7 @@ func TestRedisTLSVolumes(t *testing.T) {
 								{Key: "REDIS_SSL_CERT", Path: "system-redis-client.crt"},
 								{Key: "REDIS_SSL_KEY", Path: "system-redis-private.key"},
 							},
+							DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 						},
 					},
 				},
@@ -255,6 +259,7 @@ func TestRedisTLSVolumes(t *testing.T) {
 								{Key: "REDIS_SSL_CERT", Path: "backend-redis-client.crt"},
 								{Key: "REDIS_SSL_KEY", Path: "backend-redis-private.key"},
 							},
+							DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 						},
 					},
 				},
@@ -285,6 +290,7 @@ func TestRedisTLSVolumes(t *testing.T) {
 								{Key: "REDIS_SSL_CERT", Path: "system-redis-client.crt"},
 								{Key: "REDIS_SSL_KEY", Path: "system-redis-private.key"},
 							},
+							DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 						},
 					},
 				},
@@ -296,6 +302,7 @@ func TestRedisTLSVolumes(t *testing.T) {
 							Items: []v1.KeyToPath{
 								{Key: "REDIS_SSL_CA", Path: "backend-redis-ca.crt"},
 							},
+							DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 						},
 					},
 				},
