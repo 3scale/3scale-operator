@@ -222,6 +222,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 			r.systemAppDeploymentResourceMutator,
 			reconcilers.DeploymentPodInitContainerMutator,
 			reconcilers.DeploymentRemoveDuplicateEnvVarMutator,
+			reconcilers.DeploymentArgsMutator,
 			reconcilers.DeploymentPodContainerImageMutator,
 			r.systemZyncEnvVarMutator,
 			r.systemDatabaseTLSEnvVarMutator,
