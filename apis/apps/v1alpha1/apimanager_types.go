@@ -1459,15 +1459,6 @@ func (a *APIManager) GetSystemDatabaseSecretRefs() []*v1.LocalObjectReference {
 	return secretRefs
 }
 
-func (a *APIManager) GetZyncSecretRefs() []*v1.LocalObjectReference {
-	secretRefs := []*v1.LocalObjectReference{}
-	zyncSecretRef := v1.LocalObjectReference{
-		Name: "zync",
-	}
-	secretRefs = append(secretRefs, &zyncSecretRef)
-	return secretRefs
-}
-
 func (apimanager *APIManager) Get3scaleSecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 
@@ -1504,11 +1495,6 @@ func (apimanager *APIManager) Get3scaleSecretRefs() []*v1.LocalObjectReference {
 	systemDatabaseSecretRefs := apimanager.GetSystemDatabaseSecretRefs()
 	if len(systemDatabaseSecretRefs) > 0 {
 		secretRefs = append(secretRefs, systemDatabaseSecretRefs...)
-	}
-
-	zyncSecretRefs := apimanager.GetZyncSecretRefs()
-	if len(zyncSecretRefs) > 0 {
-		secretRefs = append(secretRefs, zyncSecretRefs...)
 	}
 
 	secretRefs = removeDuplicateSecretRefs(secretRefs)
@@ -1738,6 +1724,7 @@ func (apimanager *APIManager) IsSystemRedisTLSEnabled() bool {
 	}
 	return tlsEnabled
 }
+
 func (apimanager *APIManager) IsBackendRedisTLSEnabled() bool {
 	tlsEnabled := false
 	if apimanager.Spec.Backend != nil &&
@@ -1747,6 +1734,7 @@ func (apimanager *APIManager) IsBackendRedisTLSEnabled() bool {
 	}
 	return tlsEnabled
 }
+
 func (apimanager *APIManager) IsQueuesRedisTLSEnabled() bool {
 	tlsEnabled := false
 	if apimanager.Spec.Backend != nil &&
