@@ -165,11 +165,6 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	specResult, specErr := r.reconcileAPIManagerLogic(instance)
-	if specErr != nil && specResult.Requeue {
-		logger.Info("Reconciling not finished. Requeueing.")
-		return specResult, nil
-	}
-
 	statusResult, statusErr := r.reconcileAPIManagerStatus(instance, preflightChecksError)
 	if statusErr != nil {
 		return ctrl.Result{}, statusErr
@@ -177,6 +172,11 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	if specErr != nil {
 		return ctrl.Result{}, specErr
+	}
+
+	if specResult.Requeue || specResult.RequeueAfter > 0 {
+		logger.Info("Reconciling not finished. Requeueing.")
+		return specResult, nil
 	}
 
 	if statusResult.Requeue {
@@ -453,20 +453,25 @@ func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIMana
 		return result, err
 	}
 
-	systemReconciler := operator.NewSystemReconciler(baseAPIManagerLogicReconciler)
-	result, err = systemReconciler.Reconcile()
+	zyncReconciler := operator.NewZyncReconciler(baseAPIManagerLogicReconciler, cr.IsZyncEnabled())
+	result, err = zyncReconciler.ReconcileBeforeSystemApp()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
-	zyncReconciler := operator.NewZyncReconciler(baseAPIManagerLogicReconciler, cr.IsZyncEnabled())
-	result, err = zyncReconciler.Reconcile()
-	if err != nil || result.Requeue {
+	systemReconciler := operator.NewSystemReconciler(baseAPIManagerLogicReconciler)
+	result, err = systemReconciler.Reconcile()
+	if err != nil || result.Requeue || result.RequeueAfter > 0 {
 		return result, err
 	}
 
 	apicastReconciler := operator.NewApicastReconciler(baseAPIManagerLogicReconciler)
 	result, err = apicastReconciler.Reconcile()
+	if err != nil || result.Requeue {
+		return result, err
+	}
+
+	result, err = zyncReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}

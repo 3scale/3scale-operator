@@ -6,6 +6,7 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
@@ -399,6 +400,93 @@ func testZyncAPIManagerCreator(zyncReplicas, zyncQueReplicas *int64) *appsv1alph
 			},
 			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
 		},
+	}
+}
+
+func TestReconcileBeforeSystemApp(t *testing.T) {
+	var (
+		namespace = "operator-unittest"
+		log       = logf.Log.WithName("operator_test")
+	)
+
+	cases := []struct {
+		testName          string
+		zyncEnabled       bool
+		existingResources []runtime.Object
+		verify            func(t *testing.T, cl client.Client)
+	}{
+		{
+			testName:          "creates zync secret when enabled",
+			zyncEnabled:       true,
+			existingResources: []runtime.Object{},
+			verify: func(t *testing.T, cl client.Client) {
+				secret, err := helper.GetSecret(component.ZyncSecretName, namespace, cl)
+				if err != nil {
+					t.Fatalf("expected zync secret to exist: %v", err)
+				}
+				if _, ok := secret.StringData[component.ZyncSecretAuthenticationTokenFieldName]; !ok {
+					t.Error("zync secret should contain ZYNC_AUTHENTICATION_TOKEN field")
+				}
+			},
+		},
+		{
+			testName:          "idempotent when secret already exists",
+			zyncEnabled:       true,
+			existingResources: []runtime.Object{testZyncSecret()},
+			verify: func(t *testing.T, cl client.Client) {
+				secret, err := helper.GetSecret(component.ZyncSecretName, namespace, cl)
+				if err != nil {
+					t.Fatalf("expected zync secret to still exist: %v", err)
+				}
+				if _, ok := secret.StringData[component.ZyncSecretAuthenticationTokenFieldName]; !ok {
+					t.Error("zync secret should contain ZYNC_AUTHENTICATION_TOKEN field")
+				}
+			},
+		},
+		{
+			testName:          "no-op when zync disabled",
+			zyncEnabled:       false,
+			existingResources: []runtime.Object{},
+			verify: func(t *testing.T, cl client.Client) {
+				_, err := helper.GetSecret(component.ZyncSecretName, namespace, cl)
+				if err == nil {
+					t.Error("expected zync secret to not exist when zync is disabled")
+				} else if !errors.IsNotFound(err) {
+					t.Errorf("expected NotFound error, got: %v", err)
+				}
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			ctx := context.TODO()
+			apimanager := testZyncAPIManagerCreator(nil, nil)
+
+			objs := append([]runtime.Object{apimanager}, tc.existingResources...)
+
+			s := scheme.Scheme
+			s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+
+			cl := fake.NewFakeClient(objs...)
+			clientAPIReader := fake.NewFakeClient(objs...)
+			clientset := fakeclientset.NewSimpleClientset()
+			recorder := record.NewFakeRecorder(10000)
+
+			baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
+			baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
+
+			zyncReconciler := NewZyncReconciler(baseAPIManagerLogicReconciler, tc.zyncEnabled)
+			result, err := zyncReconciler.ReconcileBeforeSystemApp()
+			if err != nil {
+				subT.Fatalf("unexpected error: %v", err)
+			}
+			if result.Requeue {
+				subT.Error("unexpected requeue from ReconcileBeforeSystemApp")
+			}
+
+			tc.verify(subT, cl)
+		})
 	}
 }
 
