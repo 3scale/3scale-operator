@@ -3,7 +3,6 @@ package helper
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -15,9 +14,20 @@ import (
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const (
-	SystemAppRevisionAnnotation = "system-app-deployment-generation"
-)
+// JobStillRunningError is returned when attempting to delete a job that hasn't completed yet
+type JobStillRunningError struct {
+	JobName string
+}
+
+func (e *JobStillRunningError) Error() string {
+	return fmt.Sprintf("job %s is still running and cannot be deleted", e.JobName)
+}
+
+// IsJobStillRunning checks if an error is a JobStillRunningError
+func IsJobStillRunning(err error) bool {
+	_, ok := err.(*JobStillRunningError)
+	return ok
+}
 
 // UIDBasedJobName returns a Job name that is compromised of the provided prefix,
 // a hyphen and the provided uid: "<prefix>-<uid>". The returned name is a
@@ -38,7 +48,7 @@ func UIDBasedJobName(prefix string, uid types.UID) (string, error) {
 	return jobName, err
 }
 
-func lookupJob(ctx context.Context, job k8sclient.Object, client k8sclient.Client) (*batchv1.Job, error) {
+func LookupJob(ctx context.Context, job k8sclient.Object, client k8sclient.Client) (*batchv1.Job, error) {
 	lookupKey := types.NamespacedName{
 		Name:      job.GetName(),
 		Namespace: job.GetNamespace(),
@@ -55,7 +65,7 @@ func lookupJob(ctx context.Context, job k8sclient.Object, client k8sclient.Clien
 
 // HasJobCompleted checks if the provided Job has completed
 func HasJobCompleted(ctx context.Context, job k8sclient.Object, client k8sclient.Client) bool {
-	lookup, err := lookupJob(ctx, job, client)
+	lookup, err := LookupJob(ctx, job, client)
 	// Return false on error
 	if err != nil {
 		return false
@@ -72,61 +82,20 @@ func HasJobCompleted(ctx context.Context, job k8sclient.Object, client k8sclient
 	return false
 }
 
-// HasAppRevisionChanged returns true if the system-app Deployment's revision doesn't match the Job's annotation tracking it
-func HasAppRevisionChanged(jName string, revision int64, namespace string, client k8sclient.Client) (bool, error) {
-	job := &batchv1.Job{}
-	err := client.Get(context.TODO(), k8sclient.ObjectKey{
-		Namespace: namespace,
-		Name:      jName,
-	}, job)
-	// Return error if can't get Job
-	if err != nil && !k8serr.IsNotFound(err) {
-		return false, fmt.Errorf("error getting job %s: %w", job.Name, err)
-	}
-	// Return false if the Job doesn't exist yet
-	if k8serr.IsNotFound(err) {
-		return false, nil
-	}
-
-	// Parse the Job's observed Deployment revision from its annotations
-	var trackedRevision int64 = 1
-	if job.Annotations != nil {
-		for key, val := range job.Annotations {
-			if key == SystemAppRevisionAnnotation {
-				trackedRevision, err = strconv.ParseInt(val, 10, 64)
-				if err != nil {
-					return false, fmt.Errorf("failed to parse system-app Deployment's revision from job %s annotations: %w", job.Name, err)
-				}
-			}
-		}
-	}
-
-	// Return true if the Deployment's version doesn't match the version tracked in the Job's annotation
-	if trackedRevision != revision {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func DeleteJob(ctx context.Context, jName string, jNamespace string, client k8sclient.Client) error {
-	job := &batchv1.Job{}
-	err := client.Get(context.TODO(), k8sclient.ObjectKey{
-		Namespace: jNamespace,
-		Name:      jName,
-	}, job)
+func DeleteJob(ctx context.Context, job k8sclient.Object, client k8sclient.Client) error {
+	lookup, err := LookupJob(ctx, job, client)
 
 	// Breakout if the Job has already been deleted
 	if k8serr.IsNotFound(err) {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error getting job %s: %v", job.Name, err)
+		return fmt.Errorf("error getting job %s: %v", job.GetName(), err)
 	}
 
-	// Return error if Job is currently running
-	if !HasJobCompleted(ctx, job, client) {
-		return fmt.Errorf("won't delete job %s because it's still running", job.Name)
+	// Return specific error if Job is currently running
+	if !HasJobCompleted(ctx, lookup, client) {
+		return &JobStillRunningError{JobName: lookup.GetName()}
 	}
 
 	deleteOptions := []k8sclient.DeleteOption{
@@ -135,26 +104,12 @@ func DeleteJob(ctx context.Context, jName string, jNamespace string, client k8sc
 	}
 
 	// Delete the Job
-	err = client.Delete(context.TODO(), job, deleteOptions...)
+	err = client.Delete(context.TODO(), lookup, deleteOptions...)
 	if err != nil {
 		if !k8serr.IsNotFound(err) {
-			return fmt.Errorf("error deleting job %s: %v", job.Name, err)
+			return fmt.Errorf("error deleting job %s: %v", lookup.GetName(), err)
 		}
 	}
 
 	return nil
-}
-
-func JobExists(ctx context.Context, job k8sclient.Object, client k8sclient.Client) (bool, error) {
-	_, err := lookupJob(ctx, job, client)
-
-	if err == nil {
-		return true, nil
-	}
-
-	if k8serr.IsNotFound(err) {
-		return false, nil
-	}
-
-	return false, err
 }
