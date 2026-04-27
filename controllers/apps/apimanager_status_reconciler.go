@@ -16,6 +16,7 @@ import (
 
 	"github.com/RHsyseng/operator-utils/pkg/olm"
 	"github.com/go-logr/logr"
+	routev1 "github.com/openshift/api/route/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -48,16 +49,14 @@ func (s *APIManagerStatusReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, fmt.Errorf("failed to calculate status: %w", err)
 	}
 
-	apiManagerAvailable := false
-	for _, s := range s.apimanagerResource.Status.Conditions {
-		if s.Type == appsv1alpha1.APIManagerAvailableConditionType && s.IsTrue() {
-			apiManagerAvailable = true
-		}
-	}
+	// Read availability from the newly computed status, not the stale pre-reconcile snapshot.
+	// Using old status caused a True-to-False requeue gap: old=Available=True would suppress
+	// the requeue even after writing Available=False to the API server (THREESCALE-10754).
+	newAvailable := newStatus.Conditions.IsTrueFor(appsv1alpha1.APIManagerAvailableConditionType)
 
 	equalStatus := s.apimanagerResource.Status.Equals(newStatus, s.logger)
 	s.logger.V(1).Info("Status", "status is different", !equalStatus)
-	if equalStatus && apiManagerAvailable {
+	if equalStatus && newAvailable {
 		// Steady state
 		s.logger.V(1).Info("Status was not updated")
 		return reconcile.Result{}, nil
@@ -75,7 +74,7 @@ func (s *APIManagerStatusReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, fmt.Errorf("failed to update status: %w", updateErr)
 	}
 
-	if !apiManagerAvailable {
+	if !newAvailable {
 		return reconcile.Result{Requeue: true}, nil
 	}
 
@@ -85,21 +84,45 @@ func (s *APIManagerStatusReconciler) Reconcile() (reconcile.Result, error) {
 func (s *APIManagerStatusReconciler) calculateStatus() (*appsv1alpha1.APIManagerStatus, error) {
 	newStatus := &appsv1alpha1.APIManagerStatus{}
 
-	deployments, err := s.existingDeployments()
+	expectedDeploymentNames := apimanagerExpectedDeploymentNames(s.apimanagerResource)
+	expectedRouteHosts := apimanagerExpectedRouteHosts(s.apimanagerResource)
+
+	deployments, err := s.existingDeployments(expectedDeploymentNames)
 	if err != nil {
 		return nil, err
+	}
+
+	routes, err := helper.ListRoutes(s.Client(), s.apimanagerResource.Namespace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list routes: %w", err)
 	}
 
 	newStatus.Conditions = s.apimanagerResource.Status.Conditions.Copy()
 
-	// Check if any of the watched secrets are missing
-	watchedSecretsExist, watchedSecretsMessage := s.watchedSecretsExist(s.apimanagerResource)
+	deploymentsAvailCond := deploymentsAvailableCondition(expectedDeploymentNames, deployments)
+	routesReadyCond := routesReadyCondition(expectedRouteHosts, routes, s.logger)
+	secretsAvailCond := secretsAvailableCondition(s.watchedSecretsExist(s.apimanagerResource))
 
-	availableCondition, err := s.apimanagerAvailableCondition(deployments, watchedSecretsExist, watchedSecretsMessage)
-	if err != nil {
-		return nil, err
+	s.logger.V(1).Info("Status calculateStatus", "deploymentsAvailable", deploymentsAvailCond.IsTrue(), "routesReady", routesReadyCond.IsTrue(), "secretsAvailable", secretsAvailCond.IsTrue())
+
+	newStatus.Conditions.SetCondition(deploymentsAvailCond)
+	newStatus.Conditions.SetCondition(routesReadyCond)
+	newStatus.Conditions.SetCondition(secretsAvailCond)
+
+	// Available is a roll-up: True iff all three sub-conditions are True
+	availCond := common.Condition{
+		Type:   appsv1alpha1.APIManagerAvailableConditionType,
+		Status: v1.ConditionFalse,
 	}
-	newStatus.Conditions.SetCondition(availableCondition)
+	if deploymentsAvailCond.IsTrue() && routesReadyCond.IsTrue() && secretsAvailCond.IsTrue() {
+		availCond.Status = v1.ConditionTrue
+	}
+	// Preserve backwards compatibility: surface secrets reason/message on Available when secrets are missing
+	if !secretsAvailCond.IsTrue() {
+		availCond.Reason = secretsAvailCond.Reason
+		availCond.Message = secretsAvailCond.Message
+	}
+	newStatus.Conditions.SetCondition(availCond)
 
 	if s.preflightsErr == nil {
 		s.reconcileHpaWarningMessages(&newStatus.Conditions, s.apimanagerResource)
@@ -119,23 +142,17 @@ func (s *APIManagerStatusReconciler) calculateStatus() (*appsv1alpha1.APIManager
 	return newStatus, nil
 }
 
-func (s *APIManagerStatusReconciler) expectedDeploymentNames(instance *appsv1alpha1.APIManager) []string {
-	var externalZyncDatabase bool
-
-	if instance.IsExternal(appsv1alpha1.ZyncDatabase) && s.apimanagerResource.IsZyncEnabled() {
-		externalZyncDatabase = true
-	}
-
-	deploymentLister := component.DeploymentsLister{
+func apimanagerExpectedDeploymentNames(instance *appsv1alpha1.APIManager) []string {
+	externalZyncDatabase := instance.IsExternal(appsv1alpha1.ZyncDatabase) && instance.IsZyncEnabled()
+	lister := component.DeploymentsLister{
 		ExternalZyncDatabase: externalZyncDatabase,
-		IsZyncEnabled:        s.apimanagerResource.IsZyncEnabled(),
+		IsZyncEnabled:        instance.IsZyncEnabled(),
 	}
-
-	return deploymentLister.DeploymentNames()
+	return lister.DeploymentNames()
 }
 
-func (s *APIManagerStatusReconciler) deploymentsAvailable(existingDeployments []k8sappsv1.Deployment) bool {
-	expectedDeploymentNames := s.expectedDeploymentNames(s.apimanagerResource)
+func deploymentsAvailableCondition(expectedDeploymentNames []string, existingDeployments []k8sappsv1.Deployment) common.Condition {
+	var notReadyNames []string
 	for _, deploymentName := range expectedDeploymentNames {
 		foundExistingDeploymentIdx := -1
 		for idx, existingDeployment := range existingDeployments {
@@ -145,16 +162,67 @@ func (s *APIManagerStatusReconciler) deploymentsAvailable(existingDeployments []
 			}
 		}
 		if foundExistingDeploymentIdx == -1 || !helper.IsDeploymentAvailable(&existingDeployments[foundExistingDeploymentIdx]) {
-			return false
+			notReadyNames = append(notReadyNames, deploymentName)
 		}
 	}
-
-	return true
+	if len(notReadyNames) == 0 {
+		return common.Condition{
+			Type:   appsv1alpha1.APIManagerDeploymentsAvailableConditionType,
+			Status: v1.ConditionTrue,
+		}
+	}
+	return common.Condition{
+		Type:    appsv1alpha1.APIManagerDeploymentsAvailableConditionType,
+		Status:  v1.ConditionFalse,
+		Reason:  "DeploymentsNotAvailable",
+		Message: fmt.Sprintf("The following deployment(s) are not available: %s", strings.Join(notReadyNames, ", ")),
+	}
 }
 
-func (s *APIManagerStatusReconciler) existingDeployments() ([]k8sappsv1.Deployment, error) {
-	expectedDeploymentNames := s.expectedDeploymentNames(s.apimanagerResource)
+func apimanagerExpectedRouteHosts(apimanager *appsv1alpha1.APIManager) []string {
+	if apimanager.Spec.TenantName == nil {
+		return nil
+	}
+	wildcardDomain := apimanager.Spec.WildcardDomain
+	tenantName := *apimanager.Spec.TenantName
+	hosts := []string{
+		fmt.Sprintf("backend-%s.%s", tenantName, wildcardDomain), // Backend Listener route
+	}
+	if apimanager.IsZyncEnabled() {
+		hosts = append(hosts,
+			fmt.Sprintf("api-%s-apicast-production.%s", tenantName, wildcardDomain), // Apicast Production default tenant Route
+			fmt.Sprintf("api-%s-apicast-staging.%s", tenantName, wildcardDomain),    // Apicast Staging default tenant Route
+			fmt.Sprintf("master.%s", wildcardDomain),                                // System's Master Portal Route
+			fmt.Sprintf("%s.%s", tenantName, wildcardDomain),                        // System's default tenant Developer Portal Route
+			fmt.Sprintf("%s-admin.%s", tenantName, wildcardDomain),                  // System's default tenant Admin Portal Route
+		)
+	}
+	return hosts
+}
 
+func routesReadyCondition(expectedHosts []string, routes []routev1.Route, logger logr.Logger) common.Condition {
+	if expectedHosts == nil {
+		return common.Condition{
+			Type:   appsv1alpha1.APIManagerRoutesReadyConditionType,
+			Status: v1.ConditionFalse,
+		}
+	}
+	ready, notReadyHosts := helper.CheckRoutesReady(expectedHosts, routes, logger)
+	if ready {
+		return common.Condition{
+			Type:   appsv1alpha1.APIManagerRoutesReadyConditionType,
+			Status: v1.ConditionTrue,
+		}
+	}
+	return common.Condition{
+		Type:    appsv1alpha1.APIManagerRoutesReadyConditionType,
+		Status:  v1.ConditionFalse,
+		Reason:  "RoutesNotReady",
+		Message: fmt.Sprintf("The following route(s) are not yet admitted: %s", strings.Join(notReadyHosts, ", ")),
+	}
+}
+
+func (s *APIManagerStatusReconciler) existingDeployments(expectedDeploymentNames []string) ([]k8sappsv1.Deployment, error) {
 	var deployments []k8sappsv1.Deployment
 	for _, dName := range expectedDeploymentNames {
 		existingDeployment := &k8sappsv1.Deployment{}
@@ -176,32 +244,6 @@ func (s *APIManagerStatusReconciler) existingDeployments() ([]k8sappsv1.Deployme
 	sort.Slice(deployments, func(i, j int) bool { return deployments[i].Name < deployments[j].Name })
 
 	return deployments, nil
-}
-
-func (s *APIManagerStatusReconciler) apimanagerAvailableCondition(existingDeployments []k8sappsv1.Deployment, watchedSecretsExist bool, missingSecretsMessage string) (common.Condition, error) {
-	deploymentsAvailable := s.deploymentsAvailable(existingDeployments)
-
-	defaultRoutesReady, err := helper.DefaultRoutesReady(s.apimanagerResource, s.Client(), s.logger)
-	if err != nil {
-		return common.Condition{}, err
-	}
-
-	newAvailableCondition := common.Condition{
-		Type:   appsv1alpha1.APIManagerAvailableConditionType,
-		Status: v1.ConditionFalse,
-	}
-
-	s.logger.V(1).Info("Status apimanagerAvailableCondition", "deploymentsAvailable", deploymentsAvailable, "defaultRoutesReady", defaultRoutesReady, "watchedSecretsExist", watchedSecretsExist)
-	if deploymentsAvailable && defaultRoutesReady && watchedSecretsExist {
-		newAvailableCondition.Status = v1.ConditionTrue
-	}
-
-	if !watchedSecretsExist {
-		newAvailableCondition.Message = missingSecretsMessage
-		newAvailableCondition.Reason = "MissingWatchedSecrets"
-	}
-
-	return newAvailableCondition, nil
 }
 
 func (s *APIManagerStatusReconciler) reconcileHpaWarningMessages(conditions *common.Conditions, cr *appsv1alpha1.APIManager) {
@@ -362,6 +404,21 @@ func (s *APIManagerStatusReconciler) reconcilePreflightsStatus(conditions *commo
 	}
 
 	return nil
+}
+
+func secretsAvailableCondition(exists bool, message string) common.Condition {
+	if exists {
+		return common.Condition{
+			Type:   appsv1alpha1.APIManagerSecretsAvailableConditionType,
+			Status: v1.ConditionTrue,
+		}
+	}
+	return common.Condition{
+		Type:    appsv1alpha1.APIManagerSecretsAvailableConditionType,
+		Status:  v1.ConditionFalse,
+		Reason:  "MissingWatchedSecrets",
+		Message: message,
+	}
 }
 
 func (s *APIManagerStatusReconciler) watchedSecretsExist(cr *appsv1alpha1.APIManager) (bool, string) {
