@@ -108,7 +108,8 @@ type SystemOptions struct {
 	// to the prometheus or grafana services.
 	Namespace string `validate:"required"`
 
-	RedisTLSEnabled bool
+	SystemRedisTLS  TLSConfig
+	BackendRedisTLS TLSConfig
 }
 
 func NewSystemOptions() *SystemOptions {

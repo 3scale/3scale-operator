@@ -36,6 +36,8 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.backendOptions.WildcardDomain = o.apimanager.Spec.WildcardDomain
 	o.backendOptions.ImageTag = version.ThreescaleVersionMajorMinor()
 
+	o.setBackendRedisTLSEnabled()
+	o.setQueuesRedisTLSEnabled()
 	err := o.setSecretBasedOptions()
 	if err != nil {
 		return nil, fmt.Errorf("GetBackendOptions reading secret options: %w", err)
@@ -47,8 +49,6 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.setPriorityClassNames()
 	o.setTopologySpreadConstraints()
 	o.setPodTemplateAnnotations()
-	o.setBackendRedisTLSEnabled()
-	o.setQueuesRedisTLSEnabled()
 	o.setRedisAsyncEnabled()
 
 	o.backendOptions.CommonLabels = o.commonLabels()
@@ -105,6 +105,52 @@ func (o *OperatorBackendOptionsProvider) setSecretBasedOptions() error {
 
 	for _, option := range cases {
 		val, err := o.secretSource.FieldValue(option.secretName, option.secretField, option.defValue)
+		if err != nil {
+			return err
+		}
+		*option.field = val
+	}
+
+	if o.backendOptions.BackendRedisTLS.Enabled {
+		err := o.setRedisTLSOptions(
+			&o.backendOptions.BackendRedisTLS,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisStorageCACertificate,
+			component.BackendSecretBackendRedisStorageCertificate,
+			component.BackendSecretBackendRedisStorageKey,
+		)
+		if err != nil {
+			return fmt.Errorf("unable to create Backend Redis secret options - %s", err)
+		}
+	}
+
+	if o.backendOptions.BackendRedisQueuesTLS.Enabled {
+		err := o.setRedisTLSOptions(
+			&o.backendOptions.BackendRedisQueuesTLS,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisQueuesCACertificate,
+			component.BackendSecretBackendRedisQueuesCertificate,
+			component.BackendSecretBackendRedisQueuesKey,
+		)
+		if err != nil {
+			return fmt.Errorf("unable to create Backend Redis Queues secret options - %s", err)
+		}
+	}
+
+	return nil
+}
+
+func (o *OperatorBackendOptionsProvider) setRedisTLSOptions(tlsCfg *component.TLSConfig, secretName, caField, certField, keyField string) error {
+	cases := []struct {
+		field       *string
+		secretField string
+	}{
+		{&tlsCfg.CACertificate, caField},
+		{&tlsCfg.Certificate, certField},
+		{&tlsCfg.Key, keyField},
+	}
+	for _, option := range cases {
+		val, err := o.secretSource.FieldValue(secretName, option.secretField, "")
 		if err != nil {
 			return err
 		}
@@ -281,11 +327,11 @@ func (o *OperatorBackendOptionsProvider) setTopologySpreadConstraints() {
 }
 
 func (o *OperatorBackendOptionsProvider) setBackendRedisTLSEnabled() {
-	o.backendOptions.BackendRedisTLSEnabled = o.apimanager.IsBackendRedisTLSEnabled()
+	o.backendOptions.BackendRedisTLS.Enabled = o.apimanager.IsBackendRedisTLSEnabled()
 }
 
 func (o *OperatorBackendOptionsProvider) setQueuesRedisTLSEnabled() {
-	o.backendOptions.QueuesRedisTLSEnabled = o.apimanager.IsQueuesRedisTLSEnabled()
+	o.backendOptions.BackendRedisQueuesTLS.Enabled = o.apimanager.IsQueuesRedisTLSEnabled()
 }
 
 func (o *OperatorBackendOptionsProvider) setRedisAsyncEnabled() {
