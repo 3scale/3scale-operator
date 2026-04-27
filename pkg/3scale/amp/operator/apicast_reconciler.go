@@ -91,6 +91,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPriorityClassMutator,
 		reconcilers.DeploymentTopologySpreadConstraintsMutator,
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
+		reconcilers.DeploymentProbesMutator,
 		reconcilers.DeploymentPodContainerImageMutator,
 	}
 
@@ -134,6 +135,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPriorityClassMutator,
 		reconcilers.DeploymentTopologySpreadConstraintsMutator,
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
+		reconcilers.DeploymentProbesMutator,
 		reconcilers.DeploymentPodContainerImageMutator,
 		reconcilers.DeploymentPodInitContainerImageMutator,
 	}

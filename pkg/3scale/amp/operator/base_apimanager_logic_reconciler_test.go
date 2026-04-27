@@ -5,13 +5,17 @@ import (
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	hpav2 "k8s.io/api/autoscaling/v2"
 	v1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
@@ -397,6 +401,162 @@ func TestBaseAPIManagerLogicReconcilerHasPodMonitors(t *testing.T) {
 	}
 	if exists {
 		t.Fatalf("Unexpected exists value received. Expected: %t, got: %t", false, exists)
+	}
+}
+
+func newTestReconciler(t *testing.T, apimanager *appsv1alpha1.APIManager, existingObjs ...runtime.Object) (*BaseAPIManagerLogicReconciler, client.Client) {
+	t.Helper()
+	s := scheme.Scheme
+	if err := appsv1alpha1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+
+	objs := append([]runtime.Object{apimanager}, existingObjs...)
+	cl := fake.NewClientBuilder().WithScheme(s).WithRuntimeObjects(objs...).Build()
+	clientAPIReader := fake.NewClientBuilder().WithScheme(s).WithRuntimeObjects(objs...).Build()
+	clientset := fakeclientset.NewSimpleClientset()
+	recorder := record.NewFakeRecorder(10000)
+	log := logf.Log.WithName("operator_test")
+
+	baseReconciler := reconcilers.NewBaseReconciler(context.Background(), cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
+	return NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager), cl
+}
+
+func TestReconcileHpa(t *testing.T) {
+	baseAM := func(annotations map[string]string) *appsv1alpha1.APIManager {
+		am := &appsv1alpha1.APIManager{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:        apimanagerName,
+				Namespace:   namespace,
+				Annotations: annotations,
+			},
+			Spec: appsv1alpha1.APIManagerSpec{
+				APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+					WildcardDomain: wildcardDomain,
+				},
+			},
+		}
+		if _, err := am.SetDefaults(); err != nil {
+			panic(err)
+		}
+		return am
+	}
+
+	hpaExists := func(t *testing.T, cl client.Client, name string) bool {
+		t.Helper()
+		obj := &hpav2.HorizontalPodAutoscaler{}
+		err := cl.Get(context.Background(), types.NamespacedName{Name: name, Namespace: namespace}, obj)
+		if k8serrors.IsNotFound(err) {
+			return false
+		}
+		if err != nil {
+			t.Fatalf("unexpected error checking HPA %s: %v", name, err)
+		}
+		return true
+	}
+
+	tests := []struct {
+		name        string
+		apimanager  *appsv1alpha1.APIManager
+		existingHPA *hpav2.HorizontalPodAutoscaler
+		desired     *hpav2.HorizontalPodAutoscaler
+		assert      func(t *testing.T, cl client.Client)
+	}{
+		{
+			name:       "disabled with no existing HPA is a no-op",
+			apimanager: baseAM(nil),
+			desired:    component.DefaultHpa(component.BackendListenerName, namespace),
+			assert: func(t *testing.T, cl client.Client) {
+				if hpaExists(t, cl, component.BackendListenerName) {
+					t.Error("HPA should not exist when disabled and was not pre-existing")
+				}
+			},
+		},
+		{
+			name:        "disabled with existing HPA deletes it",
+			apimanager:  baseAM(nil),
+			existingHPA: component.DefaultHpa(component.BackendListenerName, namespace),
+			desired:     component.DefaultHpa(component.BackendListenerName, namespace),
+			assert: func(t *testing.T, cl client.Client) {
+				if hpaExists(t, cl, component.BackendListenerName) {
+					t.Error("HPA should have been deleted when disabled")
+				}
+			},
+		},
+		{
+			name: "backend listener HPA enabled creates HPA",
+			apimanager: func() *appsv1alpha1.APIManager {
+				am := baseAM(nil)
+				am.Spec.Backend.ListenerSpec.Hpa = true
+				return am
+			}(),
+			desired: component.DefaultHpa(component.BackendListenerName, namespace),
+			assert: func(t *testing.T, cl client.Client) {
+				if !hpaExists(t, cl, component.BackendListenerName) {
+					t.Error("HPA should have been created when enabled")
+				}
+			},
+		},
+		{
+			name: "backend listener HPA enabled with async-disable annotation deletes HPA",
+			apimanager: func() *appsv1alpha1.APIManager {
+				am := baseAM(map[string]string{appsv1alpha1.DisableAsyncAnnotation: "true"})
+				am.Spec.Backend.ListenerSpec.Hpa = true
+				return am
+			}(),
+			existingHPA: component.DefaultHpa(component.BackendListenerName, namespace),
+			desired:     component.DefaultHpa(component.BackendListenerName, namespace),
+			assert: func(t *testing.T, cl client.Client) {
+				if hpaExists(t, cl, component.BackendListenerName) {
+					t.Error("HPA should have been deleted when async is disabled regardless of HPA flag")
+				}
+			},
+		},
+		{
+			name: "backend worker HPA enabled creates HPA",
+			apimanager: func() *appsv1alpha1.APIManager {
+				am := baseAM(nil)
+				am.Spec.Backend.WorkerSpec.Hpa = true
+				return am
+			}(),
+			desired: component.DefaultHpa(component.BackendWorkerName, namespace),
+			assert: func(t *testing.T, cl client.Client) {
+				if !hpaExists(t, cl, component.BackendWorkerName) {
+					t.Error("HPA should have been created when enabled")
+				}
+			},
+		},
+		{
+			name: "apicast HPA enabled with async-disable annotation creates HPA",
+			apimanager: func() *appsv1alpha1.APIManager {
+				am := baseAM(map[string]string{appsv1alpha1.DisableAsyncAnnotation: "true"})
+				am.Spec.Apicast.ProductionSpec.Hpa = true
+				return am
+			}(),
+			desired: component.DefaultHpa(component.ApicastProductionName, namespace),
+			assert: func(t *testing.T, cl client.Client) {
+				if !hpaExists(t, cl, component.ApicastProductionName) {
+					t.Error("Apicast HPA should be created regardless of async-disable annotation")
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var existingObjs []runtime.Object
+			if tt.existingHPA != nil {
+				existingObjs = append(existingObjs, tt.existingHPA)
+			}
+
+			r, cl := newTestReconciler(t, tt.apimanager, existingObjs...)
+
+			if err := r.ReconcileHpa(tt.desired, reconcilers.CreateOnlyMutator); err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			tt.assert(t, cl)
+		})
 	}
 }
 

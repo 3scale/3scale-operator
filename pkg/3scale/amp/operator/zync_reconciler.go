@@ -87,6 +87,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPriorityClassMutator,
 		reconcilers.DeploymentTopologySpreadConstraintsMutator,
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
+		reconcilers.DeploymentProbesMutator,
 		reconcilers.DeploymentPodContainerImageMutator,
 		reconcilers.DeploymentPodInitContainerImageMutator,
 		reconcilers.DeploymentPodInitContainerMutator,
@@ -118,6 +119,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPriorityClassMutator,
 		reconcilers.DeploymentTopologySpreadConstraintsMutator,
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
+		reconcilers.DeploymentProbesMutator,
 		reconcilers.DeploymentPodContainerImageMutator,
 		reconcilers.DeploymentPodInitContainerMutator,
 		zyncDatabaseTLSEnvVarMutator,
@@ -159,6 +161,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 			reconcilers.DeploymentPriorityClassMutator,
 			reconcilers.DeploymentTopologySpreadConstraintsMutator,
 			reconcilers.DeploymentPodTemplateAnnotationsMutator,
+			reconcilers.DeploymentProbesMutator,
 			reconcilers.DeploymentPodContainerImageMutator,
 			zyncDatabaseTLSEnvVarMutator,
 		)

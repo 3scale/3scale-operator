@@ -55,6 +55,8 @@ func DeploymentMutator(opts ...DMutateFn) MutateFn {
 			return false, fmt.Errorf("%T is not a *k8sappsv1.Deployment", desiredObj)
 		}
 
+		normalizeDeploymentDefaults(desired)
+
 		update := false
 
 		// Loop through each option

@@ -159,7 +159,6 @@ func (apicast *Apicast) StagingDeployment(ctx context.Context, k8sclient client.
 								}},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      5,
-								PeriodSeconds:       10,
 							},
 							ReadinessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
@@ -252,7 +251,6 @@ func (apicast *Apicast) ProductionDeployment(ctx context.Context, k8sclient clie
 								}},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      5,
-								PeriodSeconds:       10,
 							},
 							ReadinessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{

@@ -57,6 +57,9 @@ jobs:
       - name: Run unit tests
         run: make test-unit
 
+      - name: Run envtest tests
+        run: make test-envtest
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
