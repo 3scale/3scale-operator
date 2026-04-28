@@ -139,3 +139,5 @@ require (
 )
 
 replace github.com/openshift/api => github.com/openshift/api v0.0.0-20210831091943-07e756545ac1
+
+replace github.com/jackc/pgx/v5 v5.7.2 => github.com/3scale/pgx/v5 v5.7.2-cve.1
