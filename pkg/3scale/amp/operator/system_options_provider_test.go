@@ -699,3 +699,257 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 		})
 	}
 }
+
+func getSystemRedisSecretWithTLS(ca, cert, key string) *v1.Secret {
+	data := map[string]string{}
+	if ca != "" {
+		data[component.SystemSecretSystemRedisCACertificate] = ca
+	}
+	if cert != "" {
+		data[component.SystemSecretSystemRedisCertificate] = cert
+	}
+	if key != "" {
+		data[component.SystemSecretSystemRedisKey] = key
+	}
+	return GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, data)
+}
+
+func getBackendRedisSecretWithTLS(ca, cert, key string) *v1.Secret {
+	data := map[string]string{}
+	if ca != "" {
+		data[component.BackendSecretBackendRedisStorageCACertificate] = ca
+	}
+	if cert != "" {
+		data[component.BackendSecretBackendRedisStorageCertificate] = cert
+	}
+	if key != "" {
+		data[component.BackendSecretBackendRedisStorageKey] = key
+	}
+	return GetTestSecret(namespace, component.BackendSecretBackendRedisSecretName, data)
+}
+
+func TestGetSystemOptionsProvider_RedisTLS(t *testing.T) {
+	cases := []struct {
+		testName           string
+		apimanagerFactory  func() *appsv1alpha1.APIManager
+		systemRedisSecret  *v1.Secret
+		backendRedisSecret *v1.Secret
+		validateOptions    func(*testing.T, *component.SystemOptions)
+	}{
+		{
+			"WithRedisTLS_Disabled",
+			basicApimanagerSpecTestSystemOptions,
+			nil, nil,
+			func(t *testing.T, opts *component.SystemOptions) {
+				if opts.SystemRedisTLS.Enabled {
+					t.Error("expected SystemRedisTLS.Enabled to be false")
+				}
+				if opts.BackendRedisTLS.Enabled {
+					t.Error("expected BackendRedisTLS.Enabled to be false")
+				}
+			},
+		},
+		{
+			"WithSystemRedisTLS_OneWayTLS",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestSystemOptions()
+				apimanager.Spec.System.SystemRedisTLSEnabled = &[]bool{true}[0]
+				return apimanager
+			},
+			getSystemRedisSecretWithTLS("system-ca-cert", "", ""),
+			nil,
+			func(t *testing.T, opts *component.SystemOptions) {
+				if !opts.SystemRedisTLS.Enabled {
+					t.Error("expected SystemRedisTLS.Enabled to be true")
+				}
+				if opts.SystemRedisTLS.CACertificate != "system-ca-cert" {
+					t.Errorf("expected CACertificate 'system-ca-cert', got '%s'", opts.SystemRedisTLS.CACertificate)
+				}
+				if opts.SystemRedisTLS.Certificate != "" {
+					t.Errorf("expected empty Certificate, got '%s'", opts.SystemRedisTLS.Certificate)
+				}
+				if opts.SystemRedisTLS.Key != "" {
+					t.Errorf("expected empty Key, got '%s'", opts.SystemRedisTLS.Key)
+				}
+				if opts.BackendRedisTLS.Enabled {
+					t.Error("expected BackendRedisTLS.Enabled to be false")
+				}
+			},
+		},
+		{
+			"WithSystemRedisTLS_MutualTLS",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestSystemOptions()
+				apimanager.Spec.System.SystemRedisTLSEnabled = &[]bool{true}[0]
+				return apimanager
+			},
+			getSystemRedisSecretWithTLS("ca-cert", "client-cert", "client-key"),
+			nil,
+			func(t *testing.T, opts *component.SystemOptions) {
+				if !opts.SystemRedisTLS.Enabled {
+					t.Error("expected SystemRedisTLS.Enabled to be true")
+				}
+				if opts.SystemRedisTLS.CACertificate != "ca-cert" {
+					t.Errorf("expected CACertificate 'ca-cert', got '%s'", opts.SystemRedisTLS.CACertificate)
+				}
+				if opts.SystemRedisTLS.Certificate != "client-cert" {
+					t.Errorf("expected Certificate 'client-cert', got '%s'", opts.SystemRedisTLS.Certificate)
+				}
+				if opts.SystemRedisTLS.Key != "client-key" {
+					t.Errorf("expected Key 'client-key', got '%s'", opts.SystemRedisTLS.Key)
+				}
+			},
+		},
+		{
+			"WithBackendRedisTLS_OneWayTLS",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestSystemOptions()
+				apimanager.Spec.Backend = &appsv1alpha1.BackendSpec{
+					BackendRedisTLSEnabled: &[]bool{true}[0],
+				}
+				return apimanager
+			},
+			nil,
+			getBackendRedisSecretWithTLS("backend-ca-cert", "", ""),
+			func(t *testing.T, opts *component.SystemOptions) {
+				if opts.SystemRedisTLS.Enabled {
+					t.Error("expected SystemRedisTLS.Enabled to be false")
+				}
+				if !opts.BackendRedisTLS.Enabled {
+					t.Error("expected BackendRedisTLS.Enabled to be true")
+				}
+				if opts.BackendRedisTLS.CACertificate != "backend-ca-cert" {
+					t.Errorf("expected CACertificate 'backend-ca-cert', got '%s'", opts.BackendRedisTLS.CACertificate)
+				}
+				if opts.BackendRedisTLS.Certificate != "" {
+					t.Errorf("expected empty Certificate, got '%s'", opts.BackendRedisTLS.Certificate)
+				}
+			},
+		},
+		{
+			"WithBackendRedisTLS_MutualTLS",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestSystemOptions()
+				apimanager.Spec.Backend.BackendRedisTLSEnabled = &[]bool{true}[0]
+				return apimanager
+			},
+			nil,
+			getBackendRedisSecretWithTLS("backend-ca", "backend-cert", "backend-key"),
+			func(t *testing.T, opts *component.SystemOptions) {
+				if opts.SystemRedisTLS.Enabled {
+					t.Error("expected SystemRedisTLS.Enabled to be false")
+				}
+				if !opts.BackendRedisTLS.Enabled {
+					t.Error("expected BackendRedisTLS.Enabled to be true")
+				}
+				if opts.BackendRedisTLS.CACertificate != "backend-ca" {
+					t.Errorf("expected CACertificate 'backend-ca', got '%s'", opts.BackendRedisTLS.CACertificate)
+				}
+				if opts.BackendRedisTLS.Certificate != "backend-cert" {
+					t.Errorf("expected Certificate 'backend-cert', got '%s'", opts.BackendRedisTLS.Certificate)
+				}
+				if opts.BackendRedisTLS.Key != "backend-key" {
+					t.Errorf("expected Key 'backend-key', got '%s'", opts.BackendRedisTLS.Key)
+				}
+			},
+		},
+		{
+			"WithBothRedisTLS_Independent",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestSystemOptions()
+				apimanager.Spec.System.SystemRedisTLSEnabled = &[]bool{true}[0]
+				apimanager.Spec.Backend = &appsv1alpha1.BackendSpec{
+					BackendRedisTLSEnabled: &[]bool{true}[0],
+				}
+				return apimanager
+			},
+			getSystemRedisSecretWithTLS("system-ca", "system-cert", "system-key"),
+			getBackendRedisSecretWithTLS("backend-ca", "", ""),
+			func(t *testing.T, opts *component.SystemOptions) {
+				if !opts.SystemRedisTLS.Enabled {
+					t.Error("expected SystemRedisTLS.Enabled to be true")
+				}
+				if !opts.BackendRedisTLS.Enabled {
+					t.Error("expected BackendRedisTLS.Enabled to be true")
+				}
+				// System should have mutual TLS
+				if opts.SystemRedisTLS.CACertificate != "system-ca" {
+					t.Errorf("expected SystemRedisTLS.CACertificate 'system-ca', got '%s'", opts.SystemRedisTLS.CACertificate)
+				}
+				if opts.SystemRedisTLS.Certificate != "system-cert" {
+					t.Errorf("expected SystemRedisTLS.Certificate 'system-cert', got '%s'", opts.SystemRedisTLS.Certificate)
+				}
+				if opts.SystemRedisTLS.Key != "system-key" {
+					t.Errorf("expected SystemRedisTLS.Key 'sys-key', got '%s'", opts.SystemRedisTLS.Key)
+				}
+				// Backend should have one-way TLS
+				if opts.BackendRedisTLS.CACertificate != "backend-ca" {
+					t.Errorf("expected BackendRedisTLS.CACertificate 'backend-ca', got '%s'", opts.BackendRedisTLS.CACertificate)
+				}
+				if opts.BackendRedisTLS.Certificate != "" {
+					t.Errorf("expected empty BackendRedisTLS.Certificate, got '%s'", opts.BackendRedisTLS.Certificate)
+				}
+			},
+		},
+		{
+			"WithBothRedisTLS_MTLS",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestSystemOptions()
+				apimanager.Spec.System.SystemRedisTLSEnabled = &[]bool{true}[0]
+				apimanager.Spec.Backend = &appsv1alpha1.BackendSpec{
+					BackendRedisTLSEnabled: &[]bool{true}[0],
+				}
+				return apimanager
+			},
+			getSystemRedisSecretWithTLS("system-ca", "system-cert", "system-key"),
+			getBackendRedisSecretWithTLS("backend-ca", "backend-cert", "backend-key"),
+			func(t *testing.T, opts *component.SystemOptions) {
+				if !opts.SystemRedisTLS.Enabled {
+					t.Error("expected SystemRedisTLS.Enabled to be true")
+				}
+				if !opts.BackendRedisTLS.Enabled {
+					t.Error("expected BackendRedisTLS.Enabled to be true")
+				}
+				// System should have mutual TLS
+				if opts.SystemRedisTLS.CACertificate != "system-ca" {
+					t.Errorf("expected SystemRedisTLS.CACertificate 'system-ca', got '%s'", opts.SystemRedisTLS.CACertificate)
+				}
+				if opts.SystemRedisTLS.Certificate != "system-cert" {
+					t.Errorf("expected SystemRedisTLS.Certificate 'system-cert', got '%s'", opts.SystemRedisTLS.Certificate)
+				}
+				if opts.SystemRedisTLS.Key != "system-key" {
+					t.Errorf("expected SystemRedisTLS.Key 'sys-key', got '%s'", opts.SystemRedisTLS.Key)
+				}
+				// Backend should have mutual TLS
+				if opts.BackendRedisTLS.CACertificate != "backend-ca" {
+					t.Errorf("expected BackendRedisTLS.CACertificate 'backend-ca', got '%s'", opts.BackendRedisTLS.CACertificate)
+				}
+				if opts.BackendRedisTLS.Certificate != "backend-cert" {
+					t.Errorf("expected Certificate 'backend-cert', got '%s'", opts.BackendRedisTLS.Certificate)
+				}
+				if opts.BackendRedisTLS.Key != "backend-key" {
+					t.Errorf("expected Key 'backend-key', got '%s'", opts.BackendRedisTLS.Key)
+				}
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			objs := []runtime.Object{}
+			if tc.systemRedisSecret != nil {
+				objs = append(objs, tc.systemRedisSecret)
+			}
+			if tc.backendRedisSecret != nil {
+				objs = append(objs, tc.backendRedisSecret)
+			}
+			cl := fake.NewFakeClient(objs...)
+			optsProvider := NewSystemOptionsProvider(tc.apimanagerFactory(), namespace, cl)
+			opts, err := optsProvider.GetSystemOptions()
+			if err != nil {
+				subT.Fatal(err)
+			}
+			tc.validateOptions(subT, opts)
+		})
+	}
+}

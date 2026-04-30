@@ -50,6 +50,8 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	s.options.MemcachedLabels = s.memcachedLabels()
 	s.options.SMTPLabels = s.smtpLabels()
 	s.setSystemDBTLSEabled()
+	s.setSystemRedisTLSEnabled()
+	s.setBackendRedisTLSEnabled()
 
 	err := s.setSecretBasedOptions()
 	if err != nil {
@@ -66,7 +68,6 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	s.setPriorityClassNames()
 	s.setTopologySpreadConstraints()
 	s.setPodTemplateAnnotations()
-	s.setSystemRedisTLSEnabled()
 
 	s.options.SideKiqMetrics = true
 	s.options.AppMetrics = true
@@ -118,6 +119,32 @@ func (s *SystemOptionsProvider) setSecretBasedOptions() error {
 	err = s.setSystemSMTPOptions()
 	if err != nil {
 		return fmt.Errorf("unable to create System SMTP secret options - %s", err)
+	}
+
+	if s.options.SystemRedisTLS.Enabled {
+		err = s.setRedisTLSOptions(
+			&s.options.SystemRedisTLS,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisCACertificate,
+			component.SystemSecretSystemRedisCertificate,
+			component.SystemSecretSystemRedisKey,
+		)
+		if err != nil {
+			return fmt.Errorf("unable to create System Redis secret options - %s", err)
+		}
+	}
+
+	if s.options.BackendRedisTLS.Enabled {
+		err = s.setRedisTLSOptions(
+			&s.options.BackendRedisTLS,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisStorageCACertificate,
+			component.BackendSecretBackendRedisStorageCertificate,
+			component.BackendSecretBackendRedisStorageKey,
+		)
+		if err != nil {
+			return fmt.Errorf("unable to create Backend Redis secret options - %s", err)
+		}
 	}
 
 	return nil
@@ -362,6 +389,26 @@ func (s *SystemOptionsProvider) setSystemSMTPOptions() error {
 	}
 
 	s.options.SmtpSecretOptions = smtpSecretOptions
+	return nil
+}
+
+func (s *SystemOptionsProvider) setRedisTLSOptions(tlsCfg *component.TLSConfig, secretName, caField, certField, keyField string) error {
+	cases := []struct {
+		field       *string
+		secretField string
+	}{
+		{&tlsCfg.CACertificate, caField},
+		{&tlsCfg.Certificate, certField},
+		{&tlsCfg.Key, keyField},
+	}
+	for _, option := range cases {
+		val, err := s.secretSource.FieldValue(secretName, option.secretField, "")
+		if err != nil {
+			return err
+		}
+		*option.field = val
+	}
+
 	return nil
 }
 
@@ -636,5 +683,9 @@ func (s *SystemOptionsProvider) setSystemDBTLSEabled() {
 }
 
 func (s *SystemOptionsProvider) setSystemRedisTLSEnabled() {
-	s.options.RedisTLSEnabled = s.apimanager.IsSystemRedisTLSEnabled()
+	s.options.SystemRedisTLS.Enabled = s.apimanager.IsSystemRedisTLSEnabled()
+}
+
+func (s *SystemOptionsProvider) setBackendRedisTLSEnabled() {
+	s.options.BackendRedisTLS.Enabled = s.apimanager.IsBackendRedisTLSEnabled()
 }
