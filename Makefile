@@ -104,7 +104,7 @@ all: manager
 test: test-unit test-integration test-e2e test-crds test-manifests-version
 
 # Run unit tests
-TEST_UNIT_PKGS = $(shell $(GO) list ./... | grep -Ev 'github.com/3scale/3scale-operator/test/(e2e|integration|crds|manifests-version)')
+TEST_UNIT_PKGS = $(shell $(GO) list ./... | grep -Ev 'github.com/3scale/3scale-operator/test/(e2e|integration|envtest|crds|manifests-version)')
 TEST_UNIT_COVERPKGS = $(shell $(GO) list ./... | grep -v github.com/3scale/3scale-operator/test | tr "\n" ",") # Exclude test directories as coverpkg does not accept only-tests packages
 test-unit: clean-cov generate fmt vet manifests
 	mkdir -p "$(PROJECT_PATH)/_output"
@@ -128,11 +128,17 @@ TEST_E2E_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operat
 test-e2e:
 	$(GO) test $(TEST_E2E_PKGS) -ginkgo.v -v -timeout 0
 
-# Run integration tests
-TEST_INTEGRATION_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/integration')
+# Run integration tests (requires live cluster)
+TEST_INTEGRATION_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/integration$$')
 .PHONY: test-integration
 test-integration: generate fmt vet manifests setup-envtest
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" USE_EXISTING_CLUSTER=true $(GO) test $(TEST_INTEGRATION_PKGS) -coverprofile cover.out -ginkgo.v -v -timeout 0
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" USE_EXISTING_CLUSTER=true $(GO) test $(TEST_INTEGRATION_PKGS) -ginkgo.v -v -timeout 0
+
+# Run envtest tests (envtest only, no cluster required)
+TEST_ENVTEST_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/envtest')
+.PHONY: test-envtest
+test-envtest: generate fmt vet manifests setup-envtest
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" $(GO) test $(TEST_ENVTEST_PKGS) -ginkgo.v -v -timeout 0
 
 # Build manager binary
 manager: generate fmt vet

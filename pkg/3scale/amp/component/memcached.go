@@ -73,10 +73,6 @@ func (m *Memcached) Deployment(containerImage string) *k8sappsv1.Deployment {
 									},
 								},
 								InitialDelaySeconds: 10,
-								TimeoutSeconds:      0,
-								PeriodSeconds:       10,
-								SuccessThreshold:    0,
-								FailureThreshold:    0,
 							},
 							ReadinessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
@@ -90,8 +86,6 @@ func (m *Memcached) Deployment(containerImage string) *k8sappsv1.Deployment {
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      5,
 								PeriodSeconds:       30,
-								SuccessThreshold:    0,
-								FailureThreshold:    0,
 							},
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},

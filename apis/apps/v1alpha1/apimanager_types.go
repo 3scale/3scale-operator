@@ -149,9 +149,12 @@ type APIManager struct {
 }
 
 const (
-	APIManagerAvailableConditionType  common.ConditionType = "Available"
-	APIManagerWarningConditionType    common.ConditionType = "Warning"
-	APIManagerPreflightsConditionType common.ConditionType = "Preflights"
+	APIManagerAvailableConditionType            common.ConditionType = "Available"
+	APIManagerWarningConditionType              common.ConditionType = "Warning"
+	APIManagerPreflightsConditionType           common.ConditionType = "Preflights"
+	APIManagerDeploymentsAvailableConditionType common.ConditionType = "DeploymentsAvailable"
+	APIManagerRoutesReadyConditionType          common.ConditionType = "RoutesReady"
+	APIManagerSecretsAvailableConditionType     common.ConditionType = "SecretsAvailable"
 )
 
 type APIManagerCommonSpec struct {

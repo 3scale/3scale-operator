@@ -242,8 +242,6 @@ func (zync *Zync) Deployment(ctx context.Context, k8sclient client.Client, conta
 								},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      60,
-								PeriodSeconds:       10,
-								SuccessThreshold:    1,
 								FailureThreshold:    10,
 							},
 							ReadinessProbe: &v1.Probe{
@@ -256,9 +254,6 @@ func (zync *Zync) Deployment(ctx context.Context, k8sclient client.Client, conta
 								},
 								InitialDelaySeconds: 100,
 								TimeoutSeconds:      10,
-								PeriodSeconds:       10,
-								SuccessThreshold:    1,
-								FailureThreshold:    3,
 							},
 							Resources:    zync.Options.ContainerResourceRequirements,
 							VolumeMounts: zync.zyncVolumeMount(),
@@ -389,10 +384,7 @@ func (zync *Zync) QueDeployment(ctx context.Context, k8sclient client.Client, co
 							Image:           containerImage,
 							ImagePullPolicy: v1.PullAlways,
 							LivenessProbe: &v1.Probe{
-								FailureThreshold:    3,
 								InitialDelaySeconds: 10,
-								PeriodSeconds:       10,
-								SuccessThreshold:    1,
 								TimeoutSeconds:      60,
 								ProbeHandler: v1.ProbeHandler{
 									HTTPGet: &v1.HTTPGetAction{
@@ -500,17 +492,15 @@ func (zync *Zync) DatabaseDeployment(containerImage string) *k8sappsv1.Deploymen
 										Port: intstr.FromInt32(5432),
 									},
 								},
-								TimeoutSeconds:      1,
 								InitialDelaySeconds: 30,
 							},
 							ReadinessProbe: &v1.Probe{
-								TimeoutSeconds:      1,
-								InitialDelaySeconds: 5,
 								ProbeHandler: v1.ProbeHandler{
 									Exec: &v1.ExecAction{
 										Command: []string{"/bin/sh", "-i", "-c", "psql -h 127.0.0.1 -U zync -q -d zync_production -c 'SELECT 1'"},
 									},
 								},
+								InitialDelaySeconds: 5,
 							},
 							Resources: zync.Options.DatabaseContainerResourceRequirements,
 						},
