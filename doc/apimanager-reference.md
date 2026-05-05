@@ -668,39 +668,64 @@ When zync `database` is enabled the following secret has to be pre-created by th
 Used by the Operator/Kubernetes to control the state of the APIManager.
 an `APIManager` status field should never be modified by the user.
 
-| **Field** | **json/yaml field**| **Type** | **Info** |
-| --- | --- | --- | --- |
-| Available | `available` | v1.Condition | Indicates whether the APIManager is in `Available` state. See [ConditionSpec](#ConditionSpec) for a description on the meaning of `Available`|
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| Conditions | `conditions` | []Condition | No | N/A | An array of Conditions through which the Product has or has not passed. See [Condition](#condition) |
+| Deployments | `deployments` | DeploymentStatus | Yes | N/A | Records state of deployments owned by the operator. See [DeploymentStatus](#deploymentstatus) |
 
-#### ConditionSpec
+#### Condition
 
-The status object has an array of Conditions through which the Product has or has not passed.
-Each element of the Condition array has the following fields:
+Each element of the Conditions array has the following fields:
 
-* The *lastTransitionTime* field provides a timestamp for when the entity last transitioned from one status to another.
-* The *message* field is a human-readable message indicating details about the transition.
-* The *reason* field is a unique, one-word, CamelCase reason for the condition’s last transition.
-* The *status* field is a string, with possible values **True**, **False**, and **Unknown**.
-* The *type* field is a string indicating the type of the condition. The types are:
-  * `Available`: An APIManager is in `Available` state when *all* of the following scenarios are true:
-    * All expected Deployments to be deployed exist and have the `Available` condition set to true
-    * All 3scale default OpenShift routes exist and have the Admitted condition set to true. The default routes are:
-      * Master route
-      * Backend Listener route
-      * Default tenant admin route, developer route, APIcast staging and production routes beloinging to the default tenant
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| Type | `type` | string | yes | N/A | Condition Type idenfitying a specific condition. See [ConditionTypes](#condition-types) |
+| Status | `status` | string | yes | N/A | Status: True, False, Unknown |
+| Reason | `reason` | string | no | N/A | Unique, one-word, CamelCase reason for the condition’s last transition |
+| Message | `message` | string | no | N/A | A human-readable message indicating details about the transition |
+| LastTransitionTime | `lastTransitionTime` | timestamp | no | N/A | Provides a timestamp for when the entity last transitioned from one status to another |
 
-Note: If you had zync disabled and then re-enabled it, the routes must be manually re-created for the APIManager to report status completed.
+##### Condition Types
 
+**`Available`** is a roll-up condition. It is `True` if and only if `DeploymentsAvailable`, `RoutesReady`, and `SecretsAvailable` are all `True`. When secrets are missing, the `reason` and `message` fields on `Available` mirror those from `SecretsAvailable` for backwards compatibility with automation that reads failure details from `Available` directly. When deployments or routes are the cause of unavailability, `Available` carries no `reason` or `message`; read the sub-conditions for details.
 
-| **Field** | **json field**| **Type** | **Info** |
-| --- | --- | --- | --- |
-| Type | `type` | string | Condition Type |
-| Status | `status` | string | Status: True, False, Unknown |
-| Reason | `reason` | string | Condition state reason |
-| Message | `message` | string | Condition state description |
-| LastTransitionTime | `lastTransitionTime` | timestamp | Last transition timestap |
+**`DeploymentsAvailable`** becomes `True` when expected Deployments are present on the cluster and in Ready state. The `message` field lists the names of the failing Deployments, for example:
 
+```
+The following deployment(s) are not available: backend-listener, backend-worker
+```
 
+**`RoutesReady`** becomes `True` when all routes are created and admitted by the router. The routes the operator checks are:
+
+- Backend Listener route (always checked)
+- When Zync is enabled:
+  - Default tenant routes for: Master Portal, Developer Portal, Admin Portal, Apicast Production, Apicast Staging
+
+> **Note:** If `spec.tenantName` is not set, `RoutesReady` will be `False` with no `reason` or `message`. This is expected — the operator cannot determine route hostnames without a tenant name. In practice `tenantName` always defaults to `"3scale"`.
+
+> **Note:** If you had Zync disabled and then re-enabled it, the Zync-managed routes must be manually re-created for `RoutesReady` to become `True`. See the [operator user guide](operator-user-guide.md) for the resync command.
+
+The `message` field lists the hostnames that prevent the condition from passing, for example:
+
+```
+The following route(s) are not yet admitted: backend-3scale.apps.example.com
+```
+
+**`SecretsAvailable`** becomes `True` when secrets referenced in the APIManager spec (Redis URLs, database credentials, custom environment secrets, custom policy secrets, etc.) are missing from the cluster. The `message` field names the missing secrets, for example:
+
+```
+The following secret(s) could not be found: system-redis
+```
+
+#### DeploymentStatus
+
+Operator manages a set of deployments and exposes the overall status of the deployment via this field.
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| Ready | ready | []string | no | N/A | Listed deployments are ready to server requests |
+| Starting | starting | []string | no | N/A | Listed deployments are starting, may or may not succeed |
+| Stopped | stopped | []string | no | N/A | Listed deployments are not starting |
 
 ## PersistentVolumeClaimResourcesSpec
 
