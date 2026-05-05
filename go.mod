@@ -1,8 +1,8 @@
 module github.com/3scale/3scale-operator
 
-go 1.22
+go 1.25
 
-toolchain go1.22.10
+toolchain go1.25.9
 
 require (
 	github.com/3scale/3scale-porta-go-client v0.12.0
