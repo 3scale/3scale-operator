@@ -96,7 +96,7 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 	systemName := p.desiredSystemName()
 
 	// product description
-	description := fmt.Sprintf(p.openapiObj.Info.Description)
+	description := p.openapiObj.Info.Description
 
 	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(p.openapiCR.GetAnnotations())
 
