@@ -149,7 +149,7 @@ run: generate fmt vet manifests
 # find or download controller-gen
 # download controller-gen if necessary
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
-CONTROLLER_TOOLS_VERSION = v0.14.0
+CONTROLLER_TOOLS_VERSION = v0.20.0
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN)
 $(CONTROLLER_GEN): $(LOCALBIN)
