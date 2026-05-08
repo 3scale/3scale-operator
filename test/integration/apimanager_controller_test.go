@@ -211,6 +211,26 @@ var _ = Describe("APIManager controller", func() {
 			waitForAPIManagerAvailableCondition(5*time.Second, 15*time.Minute, apimanager, GinkgoWriter)
 			fmt.Fprintf(GinkgoWriter, "APIManager 'Available' condition is true\n")
 
+			// Verify that route watch events trigger status reconciliation for routes
+			// not created by Zync (regression test for THREESCALE-14653: the old ownerRef-chain
+			// mapper could not map route events to an APIManager when Zync was absent).
+			// Use a Zync-managed route so that deleting and recreating it without the
+			// Zync label exercises the domain-name mapper path (THREESCALE-14653).
+			zyncRouteHost := "api-3scale-apicast-production." + wildcardDomain
+			fmt.Fprintf(GinkgoWriter, "Deleting Zync-managed route '%s' to trigger unavailability\n", zyncRouteHost)
+			routeTo := deleteRouteByHost(testNamespace, zyncRouteHost)
+
+			fmt.Fprintf(GinkgoWriter, "Waiting until APIManager's 'Available' condition is false after route deletion\n")
+			waitForAPIManagerUnavailableCondition(5*time.Second, 2*time.Minute, apimanager, GinkgoWriter)
+			fmt.Fprintf(GinkgoWriter, "APIManager 'Available' condition is false\n")
+
+			fmt.Fprintf(GinkgoWriter, "Recreating route '%s' manually (no Zync label)\n", zyncRouteHost)
+			createRouteManually(testNamespace, zyncRouteHost, routeTo)
+
+			fmt.Fprintf(GinkgoWriter, "Waiting until APIManager's 'Available' condition is true after manual route creation\n")
+			waitForAPIManagerAvailableCondition(5*time.Second, 5*time.Minute, apimanager, GinkgoWriter)
+			fmt.Fprintf(GinkgoWriter, "APIManager 'Available' condition is true after manual route creation\n")
+
 			elapsed := time.Since(start)
 			fmt.Fprintf(GinkgoWriter, "APIManager creation and availability took '%s'\n", elapsed)
 		})
@@ -963,6 +983,42 @@ func waitForAPIManagerAvailableCondition(retryInterval, timeout time.Duration, a
 
 		return apimanager.Status.Conditions.IsTrueFor(appsv1alpha1.APIManagerAvailableConditionType)
 	}, timeout, retryInterval).Should(BeTrue())
+}
+
+func waitForAPIManagerUnavailableCondition(retryInterval, timeout time.Duration, apimanager *appsv1alpha1.APIManager, w io.Writer) {
+	Eventually(func() bool {
+		err := testK8sClient.Get(context.Background(), types.NamespacedName{Name: apimanager.Name, Namespace: apimanager.Namespace}, apimanager)
+		if err != nil {
+			fmt.Fprintf(w, "Error getting APIManager '%s': %v\n", apimanager.Name, err)
+			return false
+		}
+		return !apimanager.Status.Conditions.IsTrueFor(appsv1alpha1.APIManagerAvailableConditionType)
+	}, timeout, retryInterval).Should(BeTrue())
+}
+
+// deleteRouteByHost deletes the route with the given host and returns its spec.to
+// so the caller can recreate the route pointing at the same backend service.
+func deleteRouteByHost(namespace, host string) routev1.RouteTargetReference {
+	routeList := &routev1.RouteList{}
+	Expect(testK8sAPIClient.List(context.Background(), routeList, &client.ListOptions{
+		Namespace:     namespace,
+		FieldSelector: fields.OneTermEqualSelector("spec.host", host),
+	})).To(Succeed())
+	Expect(routeList.Items).To(HaveLen(1))
+	to := routeList.Items[0].Spec.To
+	Expect(testK8sClient.Delete(context.Background(), &routeList.Items[0])).To(Succeed())
+	return to
+}
+
+func createRouteManually(namespace, host string, to routev1.RouteTargetReference) {
+	route := &routev1.Route{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "manual-" + host,
+			Namespace: namespace,
+		},
+		Spec: routev1.RouteSpec{Host: host, To: to},
+	}
+	Expect(testK8sClient.Create(context.Background(), route)).To(Succeed())
 }
 
 func waitForAPIManagerLabels(namespace string, retryInterval time.Duration, timeout time.Duration, apimanager *appsv1alpha1.APIManager, customEnvSecret *corev1.Secret, w io.Writer) {
