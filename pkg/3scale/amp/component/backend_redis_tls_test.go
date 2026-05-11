@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/utils/ptr"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 )
@@ -163,7 +164,7 @@ func TestBackendComponentRedisTLSVolumes(t *testing.T) {
 				BackendRedisTLS:       TLSConfig{Enabled: false},
 				BackendRedisQueuesTLS: TLSConfig{Enabled: false},
 			},
-			[]v1.Volume{},
+			nil,
 		},
 		{
 			"StorageOnly_OneWayTLS",
@@ -183,6 +184,7 @@ func TestBackendComponentRedisTLSVolumes(t *testing.T) {
 							Items: []v1.KeyToPath{
 								{Key: "REDIS_SSL_CA", Path: "backend-redis-ca.crt"},
 							},
+							DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 						},
 					},
 				},
@@ -206,6 +208,7 @@ func TestBackendComponentRedisTLSVolumes(t *testing.T) {
 							Items: []v1.KeyToPath{
 								{Key: "REDIS_SSL_QUEUES_CA", Path: "backend-redis-queues-ca.crt"},
 							},
+							DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 						},
 					},
 				},
@@ -238,6 +241,7 @@ func TestBackendComponentRedisTLSVolumes(t *testing.T) {
 								{Key: "REDIS_SSL_CERT", Path: "backend-redis-client.crt"},
 								{Key: "REDIS_SSL_KEY", Path: "backend-redis-private.key"},
 							},
+							DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 						},
 					},
 				},
@@ -251,6 +255,7 @@ func TestBackendComponentRedisTLSVolumes(t *testing.T) {
 								{Key: "REDIS_SSL_QUEUES_CERT", Path: "backend-redis-queues-client.crt"},
 								{Key: "REDIS_SSL_QUEUES_KEY", Path: "backend-redis-queues-private.key"},
 							},
+							DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 						},
 					},
 				},
@@ -281,6 +286,7 @@ func TestBackendComponentRedisTLSVolumes(t *testing.T) {
 								{Key: "REDIS_SSL_CERT", Path: "backend-redis-client.crt"},
 								{Key: "REDIS_SSL_KEY", Path: "backend-redis-private.key"},
 							},
+							DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 						},
 					},
 				},
@@ -292,6 +298,7 @@ func TestBackendComponentRedisTLSVolumes(t *testing.T) {
 							Items: []v1.KeyToPath{
 								{Key: "REDIS_SSL_QUEUES_CA", Path: "backend-redis-queues-ca.crt"},
 							},
+							DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 						},
 					},
 				},
@@ -322,7 +329,7 @@ func TestBackendComponentRedisTLSVolumeMounts(t *testing.T) {
 				BackendRedisTLS:       TLSConfig{Enabled: false},
 				BackendRedisQueuesTLS: TLSConfig{Enabled: false},
 			},
-			[]v1.VolumeMount{},
+			nil,
 		},
 		{
 			"StorageOnly",

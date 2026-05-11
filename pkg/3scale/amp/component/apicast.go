@@ -17,6 +17,7 @@ import (
 	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -139,36 +140,49 @@ func (apicast *Apicast) StagingDeployment(ctx context.Context, k8sclient client.
 					Annotations: apicast.stagingPodAnnotations(watchedSecretAnnotations),
 				},
 				Spec: v1.PodSpec{
-					Affinity:           apicast.Options.StagingAffinity,
-					Tolerations:        apicast.Options.StagingTolerations,
-					ServiceAccountName: "amp",
-					Volumes:            apicast.stagingVolumes(),
+					Affinity:                      apicast.Options.StagingAffinity,
+					Tolerations:                   apicast.Options.StagingTolerations,
+					ServiceAccountName:            "amp",
+					RestartPolicy:                 v1.RestartPolicyAlways,
+					DNSPolicy:                     v1.DNSClusterFirst,
+					SecurityContext:               &v1.PodSecurityContext{},
+					TerminationGracePeriodSeconds: ptr.To(int64(v1.DefaultTerminationGracePeriodSeconds)),
+					SchedulerName:                 v1.DefaultSchedulerName,
+					Volumes:                       apicast.stagingVolumes(),
 					Containers: []v1.Container{
 						{
-							Ports:           apicast.stagingContainerPorts(),
-							Env:             apicast.buildApicastStagingEnv(),
-							Image:           containerImage,
-							ImagePullPolicy: v1.PullIfNotPresent,
-							Name:            ApicastStagingName,
-							Resources:       apicast.Options.StagingResourceRequirements,
-							VolumeMounts:    apicast.stagingVolumeMounts(),
+							Ports:                    apicast.stagingContainerPorts(),
+							Env:                      apicast.buildApicastStagingEnv(),
+							Image:                    containerImage,
+							ImagePullPolicy:          v1.PullIfNotPresent,
+							Name:                     ApicastStagingName,
+							Resources:                apicast.Options.StagingResourceRequirements,
+							VolumeMounts:             apicast.stagingVolumeMounts(),
+							TerminationMessagePath:   v1.TerminationMessagePathDefault,
+							TerminationMessagePolicy: v1.TerminationMessageReadFile,
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
-									Path: "/status/live",
-									Port: intstr.FromInt32(8090),
+									Path:   "/status/live",
+									Port:   intstr.FromInt32(8090),
+									Scheme: v1.URISchemeHTTP,
 								}},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      5,
 								PeriodSeconds:       10,
+								SuccessThreshold:    1,
+								FailureThreshold:    3,
 							},
 							ReadinessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
-									Path: "/status/ready",
-									Port: intstr.FromInt32(8090),
+									Path:   "/status/ready",
+									Port:   intstr.FromInt32(8090),
+									Scheme: v1.URISchemeHTTP,
 								}},
 								InitialDelaySeconds: 15,
 								TimeoutSeconds:      5,
 								PeriodSeconds:       30,
+								SuccessThreshold:    1,
+								FailureThreshold:    3,
 							},
 						},
 					},
@@ -219,15 +233,23 @@ func (apicast *Apicast) ProductionDeployment(ctx context.Context, k8sclient clie
 					Annotations: apicast.productionPodAnnotations(watchedSecretAnnotations),
 				},
 				Spec: v1.PodSpec{
-					Affinity:           apicast.Options.ProductionAffinity,
-					Tolerations:        apicast.Options.ProductionTolerations,
-					ServiceAccountName: "amp",
-					Volumes:            apicast.productionVolumes(),
+					Affinity:                      apicast.Options.ProductionAffinity,
+					Tolerations:                   apicast.Options.ProductionTolerations,
+					ServiceAccountName:            "amp",
+					RestartPolicy:                 v1.RestartPolicyAlways,
+					DNSPolicy:                     v1.DNSClusterFirst,
+					SecurityContext:               &v1.PodSecurityContext{},
+					TerminationGracePeriodSeconds: ptr.To(int64(v1.DefaultTerminationGracePeriodSeconds)),
+					SchedulerName:                 v1.DefaultSchedulerName,
+					Volumes:                       apicast.productionVolumes(),
 					InitContainers: []v1.Container{
 						{
-							Name:    ApicastProductionInitContainerName,
-							Image:   containerImage,
-							Command: []string{"sh", "-c", "until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done"},
+							Name:                     ApicastProductionInitContainerName,
+							Image:                    containerImage,
+							ImagePullPolicy:          v1.PullIfNotPresent,
+							Command:                  []string{"sh", "-c", "until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done"},
+							TerminationMessagePath:   v1.TerminationMessagePathDefault,
+							TerminationMessagePolicy: v1.TerminationMessageReadFile,
 							Env: []v1.EnvVar{
 								{
 									Name:  "SLEEP_SECONDS",
@@ -238,30 +260,38 @@ func (apicast *Apicast) ProductionDeployment(ctx context.Context, k8sclient clie
 					},
 					Containers: []v1.Container{
 						{
-							Ports:           apicast.productionContainerPorts(),
-							Env:             apicast.buildApicastProductionEnv(),
-							Image:           containerImage,
-							ImagePullPolicy: v1.PullIfNotPresent,
-							Name:            ApicastProductionName,
-							Resources:       apicast.Options.ProductionResourceRequirements,
-							VolumeMounts:    apicast.productionVolumeMounts(),
+							Ports:                    apicast.productionContainerPorts(),
+							Env:                      apicast.buildApicastProductionEnv(),
+							Image:                    containerImage,
+							ImagePullPolicy:          v1.PullIfNotPresent,
+							Name:                     ApicastProductionName,
+							Resources:                apicast.Options.ProductionResourceRequirements,
+							VolumeMounts:             apicast.productionVolumeMounts(),
+							TerminationMessagePath:   v1.TerminationMessagePathDefault,
+							TerminationMessagePolicy: v1.TerminationMessageReadFile,
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
-									Path: "/status/live",
-									Port: intstr.FromInt32(8090),
+									Path:   "/status/live",
+									Port:   intstr.FromInt32(8090),
+									Scheme: v1.URISchemeHTTP,
 								}},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      5,
 								PeriodSeconds:       10,
+								SuccessThreshold:    1,
+								FailureThreshold:    3,
 							},
 							ReadinessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
-									Path: "/status/ready",
-									Port: intstr.FromInt32(8090),
+									Path:   "/status/ready",
+									Port:   intstr.FromInt32(8090),
+									Scheme: v1.URISchemeHTTP,
 								}},
 								InitialDelaySeconds: 15,
 								TimeoutSeconds:      5,
 								PeriodSeconds:       30,
+								SuccessThreshold:    1,
+								FailureThreshold:    3,
 							},
 						},
 					},
@@ -618,7 +648,8 @@ func (apicast *Apicast) productionVolumes() []v1.Volume {
 			Name: customPolicy.VolumeName(),
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: customPolicy.Secret.Name,
+					SecretName:  customPolicy.Secret.Name,
+					DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 				},
 			},
 		})
@@ -636,6 +667,7 @@ func (apicast *Apicast) productionVolumes() []v1.Volume {
 							Path: apicast.Options.ProductionTracingConfig.VolumeName(),
 						},
 					},
+					DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 				},
 			},
 		})
@@ -646,8 +678,9 @@ func (apicast *Apicast) productionVolumes() []v1.Volume {
 			Name: OpentelemetryConfigurationVolumeName,
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: apicast.Options.ProductionOpentelemetry.Secret.Name,
-					Optional:   &[]bool{false}[0],
+					SecretName:  apicast.Options.ProductionOpentelemetry.Secret.Name,
+					Optional:    &[]bool{false}[0],
+					DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 				},
 			},
 		})
@@ -658,7 +691,8 @@ func (apicast *Apicast) productionVolumes() []v1.Volume {
 			Name: customEnvVolumeName(customEnvSecret),
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: customEnvSecret.GetName(),
+					SecretName:  customEnvSecret.GetName(),
+					DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 				},
 			},
 		})
@@ -669,7 +703,8 @@ func (apicast *Apicast) productionVolumes() []v1.Volume {
 			Name: HTTPSCertificatesVolumeName,
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: *apicast.Options.ProductionHTTPSCertificateSecretName,
+					SecretName:  *apicast.Options.ProductionHTTPSCertificateSecretName,
+					DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 				},
 			},
 		})
@@ -686,7 +721,8 @@ func (apicast *Apicast) stagingVolumes() []v1.Volume {
 			Name: customPolicy.VolumeName(),
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: customPolicy.Secret.Name,
+					SecretName:  customPolicy.Secret.Name,
+					DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 				},
 			},
 		})
@@ -704,6 +740,7 @@ func (apicast *Apicast) stagingVolumes() []v1.Volume {
 							Path: apicast.Options.StagingTracingConfig.VolumeName(),
 						},
 					},
+					DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 				},
 			},
 		})
@@ -714,8 +751,9 @@ func (apicast *Apicast) stagingVolumes() []v1.Volume {
 			Name: OpentelemetryConfigurationVolumeName,
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: apicast.Options.StagingOpentelemetry.Secret.Name,
-					Optional:   &[]bool{false}[0],
+					SecretName:  apicast.Options.StagingOpentelemetry.Secret.Name,
+					Optional:    &[]bool{false}[0],
+					DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 				},
 			},
 		})
@@ -726,7 +764,8 @@ func (apicast *Apicast) stagingVolumes() []v1.Volume {
 			Name: customEnvVolumeName(customEnvSecret),
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: customEnvSecret.GetName(),
+					SecretName:  customEnvSecret.GetName(),
+					DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 				},
 			},
 		})
@@ -737,7 +776,8 @@ func (apicast *Apicast) stagingVolumes() []v1.Volume {
 			Name: HTTPSCertificatesVolumeName,
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: *apicast.Options.StagingHTTPSCertificateSecretName,
+					SecretName:  *apicast.Options.StagingHTTPSCertificateSecretName,
+					DefaultMode: ptr.To(v1.SecretVolumeSourceDefaultMode),
 				},
 			},
 		})

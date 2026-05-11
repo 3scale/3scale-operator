@@ -25,6 +25,8 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	uberzap "go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -57,6 +59,7 @@ var (
 	testK8sClient    client.Client
 	testK8sAPIClient client.Reader
 	testEnv          *envtest.Environment
+	reconcileCounter *ReconcileCounter
 )
 
 func TestAPIManager(t *testing.T) {
@@ -65,7 +68,38 @@ func TestAPIManager(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
+	// List of operator-managed deployments to monitor for updates
+	monitoredDeployments := []string{
+		"apicast-production",
+		"apicast-staging",
+		"backend-cron",
+		"backend-listener",
+		"backend-worker",
+		"system-app",
+		"system-memcache",
+		"system-sidekiq",
+		"system-searchd",
+		"zync",
+		"zync-que",
+		"zync-database",
+	}
+
+	// Build a base zapcore.Core writing to GinkgoWriter so ReconcileCounter can wrap it.
+	baseCore := zapcore.NewCore(
+		zapcore.NewConsoleEncoder(uberzap.NewDevelopmentEncoderConfig()),
+		zapcore.AddSync(GinkgoWriter),
+		zapcore.DebugLevel,
+	)
+	reconcileCounter = NewReconcileCounter(baseCore, monitoredDeployments)
+
+	// Inject the wrapped core into the controller-runtime logger via RawZapOpts.
+	logf.SetLogger(zap.New(
+		zap.WriteTo(GinkgoWriter),
+		zap.UseDevMode(true),
+		zap.RawZapOpts(uberzap.WrapCore(func(_ zapcore.Core) zapcore.Core {
+			return reconcileCounter
+		})),
+	))
 
 	By("bootstrapping test environment")
 

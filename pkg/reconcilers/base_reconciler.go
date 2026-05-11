@@ -67,6 +67,13 @@ func (b *BaseReconciler) Reconcile(ctx context.Context, req reconcile.Request) (
 	return reconcile.Result{}, nil
 }
 
+// WithRequest returns a shallow copy with a logger enriched with the request's namespace/name.
+func (b *BaseReconciler) WithRequest(req reconcile.Request) *BaseReconciler {
+	c := *b
+	c.logger = b.logger.WithValues("namespace", req.Namespace, "name", req.Name)
+	return &c
+}
+
 // Client returns a split client that reads objects from
 // the cache and writes to the Kubernetes APIServer
 func (b *BaseReconciler) Client() client.Client {

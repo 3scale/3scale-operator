@@ -160,7 +160,7 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return res, nil
 	}
 
-	specResult, specErr := r.reconcileAPIManagerLogic(instance)
+	specResult, specErr := r.reconcileAPIManagerLogic(r.WithRequest(req), instance)
 	statusResult, statusErr := r.reconcileAPIManagerStatus(instance, preflightChecksError)
 	if statusErr != nil {
 		return ctrl.Result{}, statusErr
@@ -402,8 +402,8 @@ func (r *APIManagerReconciler) setAPIManagerDefaults(cr *appsv1alpha1.APIManager
 	return ctrl.Result{Requeue: updated}, err
 }
 
-func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	baseAPIManagerLogicReconciler := operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr)
+func (r *APIManagerReconciler) reconcileAPIManagerLogic(b *reconcilers.BaseReconciler, cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+	baseAPIManagerLogicReconciler := operator.NewBaseAPIManagerLogicReconciler(b, cr)
 	imageReconciler := operator.NewAMPImagesReconciler(baseAPIManagerLogicReconciler)
 	result, err := imageReconciler.Reconcile()
 	if err != nil || result.Requeue {
