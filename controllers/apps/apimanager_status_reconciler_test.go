@@ -609,10 +609,10 @@ func TestAPIManagerStatusReconciler_Reconcile_statusConditions(t *testing.T) {
 	}
 }
 
-// TestAPIManagerStatusReconciler_Reconcile_requeueOnTrueToFalseTransition is a regression
-// test for the stale-read requeue bug: when Available transitions from True to False the
-// reconciler must requeue, not settle silently at Available=False.
-func TestAPIManagerStatusReconciler_Reconcile_requeueOnTrueToFalseTransition(t *testing.T) {
+// TestAPIManagerStatusReconciler_Reconcile_requeueAfterWhenUnavailable verifies that when
+// Available transitions from True to False the reconciler schedules a requeue rather than
+// settling silently at Available=False.
+func TestAPIManagerStatusReconciler_Reconcile_requeueAfterWhenUnavailable(t *testing.T) {
 	namespace := "test-namespace"
 	t.Setenv("PREFLIGHT_CHECKS_BYPASS", "true")
 
@@ -640,7 +640,7 @@ func TestAPIManagerStatusReconciler_Reconcile_requeueOnTrueToFalseTransition(t *
 	if err != nil {
 		t.Fatalf("Reconcile() unexpected error: %v", err)
 	}
-	if !result.Requeue {
-		t.Errorf("Reconcile() Requeue = false, want true on Available True-to-False transition")
+	if result.RequeueAfter == 0 {
+		t.Errorf("Reconcile() RequeueAfter = 0, want non-zero on Available True-to-False transition")
 	}
 }

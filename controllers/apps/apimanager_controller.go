@@ -175,7 +175,7 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return specResult, nil
 	}
 
-	if statusResult.Requeue {
+	if statusResult.Requeue || statusResult.RequeueAfter > 0 {
 		logger.Info("Reconciling not finished. Requeueing.")
 		return statusResult, nil
 	}
