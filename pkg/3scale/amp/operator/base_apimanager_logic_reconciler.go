@@ -18,7 +18,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -209,11 +208,8 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileHpa(desired *hpa.HorizontalPodA
 		}
 	}
 	// Delete HPA in all other cases
-	err := r.DeleteResource(desired)
-	if err != nil && !errors.IsNotFound(err) {
-		return err
-	}
-	return nil
+	helper.TagObjectToDelete(desired)
+	return r.ReconcileResource(&hpa.HorizontalPodAutoscaler{}, desired, mutateFn)
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcilePodMonitor(desired *monitoringv1.PodMonitor, mutateFn reconcilers.MutateFn) error {
