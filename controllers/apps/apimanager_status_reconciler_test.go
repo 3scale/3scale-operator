@@ -174,11 +174,15 @@ func getRequiredSecrets(namespace string) []runtime.Object {
 	}
 }
 
-// makeAdmittedRoute returns a Route with the Admitted condition set to True.
+// makeAdmittedRoute returns a Route with the Admitted condition set to True and the Zync created-by label.
 func makeAdmittedRoute(name, namespace, host string) *routev1.Route {
 	return &routev1.Route{
-		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
-		Spec:       routev1.RouteSpec{Host: host},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    map[string]string{zyncCreatedByLabel: zyncCreatedByValue},
+		},
+		Spec: routev1.RouteSpec{Host: host},
 		Status: routev1.RouteStatus{
 			Ingress: []routev1.RouteIngress{
 				{Conditions: []routev1.RouteIngressCondition{
