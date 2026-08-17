@@ -108,7 +108,7 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		if statusErr != nil {
 			return ctrl.Result{}, statusErr
 		}
-		if statusResult.Requeue {
+		if statusResult.Requeue || statusResult.RequeueAfter > 0 {
 			logger.Info("Reconciling not finished. Requeueing.")
 			return statusResult, nil
 		}
@@ -138,7 +138,7 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 				if statusErr != nil {
 					return ctrl.Result{}, statusErr
 				}
-				if statusResult.Requeue {
+				if statusResult.Requeue || statusResult.RequeueAfter > 0 {
 					logger.Info("Reconciling not finished. Requeueing.")
 					return statusResult, nil
 				}
@@ -175,7 +175,7 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return specResult, nil
 	}
 
-	if statusResult.Requeue {
+	if statusResult.Requeue || statusResult.RequeueAfter > 0 {
 		logger.Info("Reconciling not finished. Requeueing.")
 		return statusResult, nil
 	}

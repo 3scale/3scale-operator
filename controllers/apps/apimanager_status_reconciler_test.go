@@ -609,38 +609,100 @@ func TestAPIManagerStatusReconciler_Reconcile_statusConditions(t *testing.T) {
 	}
 }
 
-// TestAPIManagerStatusReconciler_Reconcile_requeueOnTrueToFalseTransition is a regression
-// test for the stale-read requeue bug: when Available transitions from True to False the
-// reconciler must requeue, not settle silently at Available=False.
-func TestAPIManagerStatusReconciler_Reconcile_requeueOnTrueToFalseTransition(t *testing.T) {
+// TestAPIManagerStatusReconciler_Reconcile_requeueBehaviour verifies the requeue semantics
+// under three scenarios:
+//
+//   - True→False transition: status changes; RequeueAfter is set
+//   - Unavailable steady-state: status is already equal (False); no write, RequeueAfter still set
+//   - Available steady-state: status is already equal (True); no write, RequeueAfter is zero
+func TestAPIManagerStatusReconciler_Reconcile_requeueBehaviour(t *testing.T) {
 	namespace := "test-namespace"
 	t.Setenv("PREFLIGHT_CHECKS_BYPASS", "true")
 
-	// Seed the CR with Available=True in its current status (old state).
-	am := getTestAPIManager(namespace)
-	am.Status.Conditions = common.Conditions{
-		{Type: appsv1alpha1.APIManagerAvailableConditionType, Status: corev1.ConditionTrue},
+	tests := []struct {
+		name             string
+		deploymentsUp    bool
+		steadyState      bool                   // if true, pre-seed exact status so equalStatus==true
+		seedAvailable    corev1.ConditionStatus // Available condition _before_ Reconcile - only used if steadyState == false
+		wantRequeueAfter bool
+	}{
+		{
+			name:             "unavailable transition (True to False)",
+			deploymentsUp:    false,
+			steadyState:      false,
+			seedAvailable:    corev1.ConditionTrue,
+			wantRequeueAfter: true,
+		},
+		{
+			name:             "unavailable steady-state (False to False, equal)",
+			deploymentsUp:    false,
+			steadyState:      true,
+			wantRequeueAfter: true,
+		},
+		{
+			name:             "available transition (False to True)",
+			deploymentsUp:    true,
+			steadyState:      false,
+			seedAvailable:    corev1.ConditionFalse,
+			wantRequeueAfter: false,
+		},
+		{
+			name:             "available steady-state (True to True, equal)",
+			deploymentsUp:    true,
+			steadyState:      true,
+			wantRequeueAfter: false,
+		},
 	}
 
-	// Cluster state: deployments not available, so calculateStatus() will return Available=False.
-	objects := concat(
-		getAllStandardDeployments(namespace, string(am.UID), false),
-		getRequiredSecrets(namespace),
-		getRequiredRoutes(namespace, testWildcardDomain, testTenantName),
-		[]runtime.Object{am},
-	)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			am := getTestAPIManager(namespace)
 
-	s := &APIManagerStatusReconciler{
-		BaseReconciler:     getAPIManagerBaseReconciler(objects...),
-		apimanagerResource: am,
-		logger:             logr.Discard(),
-	}
+			objects := concat(
+				getAllStandardDeployments(namespace, string(am.UID), tt.deploymentsUp),
+				getRequiredSecrets(namespace),
+				getRequiredRoutes(namespace, testWildcardDomain, testTenantName),
+				[]runtime.Object{am},
+			)
 
-	result, err := s.Reconcile()
-	if err != nil {
-		t.Fatalf("Reconcile() unexpected error: %v", err)
-	}
-	if !result.Requeue {
-		t.Errorf("Reconcile() Requeue = false, want true on Available True-to-False transition")
+			s := &APIManagerStatusReconciler{
+				BaseReconciler:     getAPIManagerBaseReconciler(objects...),
+				apimanagerResource: am,
+				logger:             logr.Discard(),
+			}
+
+			if tt.steadyState {
+				// Pre-seed am.Status with the exact value calculateStatus() will compute so
+				// that Equals() returns true and the equalStatus short-circuit is exercised.
+				computed, err := s.calculateStatus()
+				if err != nil {
+					t.Fatalf("calculateStatus() unexpected error: %v", err)
+				}
+				am.Status = *computed
+			} else {
+				am.Status.Conditions = common.Conditions{
+					{Type: appsv1alpha1.APIManagerAvailableConditionType, Status: tt.seedAvailable},
+				}
+			}
+
+			result, err := s.Reconcile()
+			if err != nil {
+				t.Fatalf("Reconcile() unexpected error: %v", err)
+			}
+
+			if result.Requeue {
+				t.Errorf("Requeue = true, normal (non-error) reconcile should only return requeueAfter")
+			}
+
+			if tt.wantRequeueAfter {
+				if result.RequeueAfter == 0 {
+					t.Errorf("RequeueAfter = 0, want non-zero when unavailable")
+				}
+			} else {
+				if result.RequeueAfter != 0 {
+					t.Errorf("RequeueAfter = %v, want 0 when available", result.RequeueAfter)
+				}
+			}
+		})
 	}
 }
