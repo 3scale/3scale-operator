@@ -1458,7 +1458,7 @@ func (system *System) getSystemRollingUpdatesConfData() string {
 
 func (system *System) getSystemServiceDiscoveryData() string {
 	return `production:
-  enabled: <%= cluster_token_file_exists = File.exists?(cluster_token_file_path = '/var/run/secrets/kubernetes.io/serviceaccount/token') %>
+  enabled: <%= cluster_token_file_exists = File.exist?(cluster_token_file_path = '/var/run/secrets/kubernetes.io/serviceaccount/token') %>
   server_scheme: 'https'
   server_host: 'kubernetes.default.svc.cluster.local'
   server_port: 443
