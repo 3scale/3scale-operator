@@ -13,8 +13,6 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-logr/logr"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	corev1 "k8s.io/api/core/v1"
 	apimachineryerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -100,32 +98,32 @@ func (s *ActiveDocThreescaleReconciler) Reconcile() (*threescaleapi.ActiveDoc, e
 	}
 
 	if remoteActiveDoc.Element.Name == nil || *remoteActiveDoc.Element.Name != s.resource.Spec.Name {
-		s.logger.V(1).Info("update Name", "Difference", cmp.Diff(remoteActiveDoc.Element.Name, s.resource.Spec.Name))
+		s.logger.V(1).Info("update Name")
 		updatedActiveDoc.Element.Name = &s.resource.Spec.Name
 		update = true
 	}
 
 	// s.resource.Spec.SystemName is not nil (defaults are set)
 	if remoteActiveDoc.Element.SystemName == nil || *remoteActiveDoc.Element.SystemName != *s.resource.Spec.SystemName {
-		s.logger.V(1).Info("update SystemName", "Difference", cmp.Diff(remoteActiveDoc.Element.SystemName, s.resource.Spec.SystemName))
+		s.logger.V(1).Info("update SystemName")
 		updatedActiveDoc.Element.SystemName = s.resource.Spec.SystemName
 		update = true
 	}
 
 	if s.resource.Spec.Description != nil && !reflect.DeepEqual(s.resource.Spec.Description, remoteActiveDoc.Element.Description) {
-		s.logger.V(1).Info("update Description", "Difference", cmp.Diff(remoteActiveDoc.Element.Description, s.resource.Spec.Description))
+		s.logger.V(1).Info("update Description")
 		updatedActiveDoc.Element.Description = s.resource.Spec.Description
 		update = true
 	}
 
 	if s.resource.Spec.Published != nil && !reflect.DeepEqual(s.resource.Spec.Published, remoteActiveDoc.Element.Published) {
-		s.logger.V(1).Info("update Published", "Difference", cmp.Diff(remoteActiveDoc.Element.Published, s.resource.Spec.Published))
+		s.logger.V(1).Info("update Published")
 		updatedActiveDoc.Element.Published = s.resource.Spec.Published
 		update = true
 	}
 
 	if s.resource.Spec.SkipSwaggerValidations != nil && !reflect.DeepEqual(s.resource.Spec.SkipSwaggerValidations, remoteActiveDoc.Element.SkipSwaggerValidations) {
-		s.logger.V(1).Info("update SkipSwaggerValidations", "Difference", cmp.Diff(remoteActiveDoc.Element.SkipSwaggerValidations, s.resource.Spec.SkipSwaggerValidations))
+		s.logger.V(1).Info("update SkipSwaggerValidations")
 		updatedActiveDoc.Element.SkipSwaggerValidations = s.resource.Spec.SkipSwaggerValidations
 		update = true
 	}
@@ -135,7 +133,7 @@ func (s *ActiveDocThreescaleReconciler) Reconcile() (*threescaleapi.ActiveDoc, e
 	// If desired Product ID needs to be changed to null, the update needs a different client call
 	if desiredProductID != nil {
 		if remoteActiveDoc.Element.ServiceID == nil || *desiredProductID != *remoteActiveDoc.Element.ServiceID {
-			s.logger.V(1).Info("update ProductID", "Difference", cmp.Diff(remoteActiveDoc.Element.ServiceID, desiredProductID))
+			s.logger.V(1).Info("update ProductID")
 			updatedActiveDoc.Element.ServiceID = desiredProductID
 			update = true
 		}
@@ -149,8 +147,7 @@ func (s *ActiveDocThreescaleReconciler) Reconcile() (*threescaleapi.ActiveDoc, e
 	// Compare parsed openapi3 objects
 	// Avoid detecting differences from serialization
 	if !reflect.DeepEqual(desiredOpenapiObj, existingOpenapiObj) {
-		s.logger.V(1).Info("update BODY", "Difference",
-			cmp.Diff(desiredOpenapiObj, existingOpenapiObj, cmpopts.IgnoreUnexported(openapi3.Schema{})))
+		s.logger.V(1).Info("update Body")
 		updatedActiveDoc.Element.Body = &desiredBody
 		update = true
 	}
