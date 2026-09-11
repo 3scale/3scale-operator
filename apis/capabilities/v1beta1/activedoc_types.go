@@ -84,7 +84,7 @@ type ActiveDocSpec struct {
 
 	// SystemName identifies uniquely the activedoc within the account provider
 	// Default value will be sanitized Name
-	// +kubebuilder:validation:Pattern=`^[a-z0-9]+$`
+	// +kubebuilder:validation:Pattern=`^\w[\w\-/_]+$`
 	// +optional
 	SystemName *string `json:"systemName,omitempty"`
 
