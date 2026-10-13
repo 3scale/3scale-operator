@@ -40,7 +40,6 @@ import (
 	subController "github.com/3scale/3scale-operator/controllers/subscription"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
-	"github.com/3scale/3scale-operator/pkg/handlers"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
@@ -315,10 +314,10 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Namespace: r.WatchedNamespace,
 	}
 
-	handlers := &handlers.APIManagerRoutesEventMapper{
+	zyncRouteMapper := &ZyncRouteToAPIManagerMapper{
 		Context:   r.Context(),
 		K8sClient: r.Client(),
-		Logger:    r.Logger().WithName("APIManagerRoutesHandler"),
+		Logger:    r.Logger().WithName("zyncRouteToAPIManagerMapper"),
 	}
 
 	operatorNamespace, err := helper.GetOperatorNamespace()
@@ -341,7 +340,10 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			builder.WithPredicates(labelSelectorPredicate),
 		).
 		Owns(&k8sappsv1.Deployment{}).
-		Watches(&routev1.Route{}, handler.EnqueueRequestsFromMapFunc(handlers.Map)).
+		Watches(
+			&routev1.Route{},
+			handler.EnqueueRequestsFromMapFunc(zyncRouteMapper.Map),
+		).
 		Watches(
 			&v1.ConfigMap{
 				ObjectMeta: apimachinerymetav1.ObjectMeta{
