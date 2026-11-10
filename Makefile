@@ -259,10 +259,10 @@ fmt:
 vet:
 	$(GO) vet ./...
 
-GOLANGCI-LINT_VERSION ?= v2.7.2
+GOLANGCI-LINT_VERSION ?= v2.15.0
 GOLANGCI-LINT = $(PROJECT_PATH)/bin/golangci-lint
 $(GOLANGCI-LINT):
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_PATH)/bin $(GOLANGCI-LINT_VERSION)
+	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(PROJECT_PATH)/bin $(GOLANGCI-LINT_VERSION)
 
 .PHONY: golangci-lint
 golangci-lint: $(GOLANGCI-LINT) ## Download golangci-lint locally if necessary.
